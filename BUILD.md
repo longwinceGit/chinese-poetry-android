@@ -93,12 +93,12 @@ targetSdkVersion 33
 │       │   ├── MainActivity.java        # Fragment 容器（99行）
 │       │   ├── data/                    # 数据层（Room + Repository）
 │       │   ├── domain/                  # 领域层（5个引擎）
-│       │   ├── ui/                      # UI 层（7个 Fragment）
+│       │   ├── ui/                      # UI 层（8个 Fragment）
 │       │   └── util/                    # 工具类
 │       ├── res/
 │       │   ├── layout/                  # 布局文件（10+ 个）
-│       │   ├── drawable/                # 形状/按钮/图标
-│       │   ├── anim/                    # 过渡动画
+│       │   ├── drawable/                # 形状/按钮/图标/矢量图标
+│       │   ├── anim/                    # 过渡动画 + 弹簧动效
 │       │   └── values/                  # 颜色/样式/字符串
 │       └── assets/web/data/             # 诗词 JSON 数据
 ├── build.gradle              # 根配置
