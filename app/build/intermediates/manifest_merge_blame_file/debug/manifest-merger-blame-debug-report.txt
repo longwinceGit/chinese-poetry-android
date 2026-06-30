@@ -1,0 +1,97 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.poetry"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="21"
+8-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml
+9        android:targetSdkVersion="33" />
+9-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml
+10
+11    <!-- 网络权限（搜索功能可选使用） -->
+12    <uses-permission android:name="android.permission.INTERNET" />
+12-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml:7:5-67
+12-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml:7:22-64
+13    <!-- 防止息屏 -->
+14    <uses-permission android:name="android.permission.WAKE_LOCK" />
+14-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml:9:5-68
+14-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml:9:22-65
+15
+16    <permission
+16-->[androidx.core:core:1.9.0] F:\softManage\gradlejar\caches\transforms-2\files-2.1\83409a8976bbbf0ec1b4434f5a24c2e0\core-1.9.0\AndroidManifest.xml:22:5-24:47
+17        android:name="com.poetry.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+17-->[androidx.core:core:1.9.0] F:\softManage\gradlejar\caches\transforms-2\files-2.1\83409a8976bbbf0ec1b4434f5a24c2e0\core-1.9.0\AndroidManifest.xml:23:9-81
+18        android:protectionLevel="signature" />
+18-->[androidx.core:core:1.9.0] F:\softManage\gradlejar\caches\transforms-2\files-2.1\83409a8976bbbf0ec1b4434f5a24c2e0\core-1.9.0\AndroidManifest.xml:24:9-44
+19
+20    <uses-permission android:name="com.poetry.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+20-->[androidx.core:core:1.9.0] F:\softManage\gradlejar\caches\transforms-2\files-2.1\83409a8976bbbf0ec1b4434f5a24c2e0\core-1.9.0\AndroidManifest.xml:26:5-97
+20-->[androidx.core:core:1.9.0] F:\softManage\gradlejar\caches\transforms-2\files-2.1\83409a8976bbbf0ec1b4434f5a24c2e0\core-1.9.0\AndroidManifest.xml:26:22-94
+21
+22    <application
+22-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml:11:5-32:19
+23        android:allowBackup="true"
+23-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml:12:9-35
+24        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+24-->[androidx.core:core:1.9.0] F:\softManage\gradlejar\caches\transforms-2\files-2.1\83409a8976bbbf0ec1b4434f5a24c2e0\core-1.9.0\AndroidManifest.xml:28:18-86
+25        android:debuggable="true"
+26        android:icon="@drawable/ic_launcher_foreground"
+26-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml:13:9-56
+27        android:label="@string/app_name"
+27-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml:15:9-41
+28        android:roundIcon="@drawable/ic_launcher_foreground"
+28-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml:14:9-61
+29        android:supportsRtl="true"
+29-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml:17:9-35
+30        android:theme="@style/Theme.Poetry"
+30-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml:16:9-44
+31        android:usesCleartextTraffic="true" >
+31-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml:18:9-44
+32        <activity
+32-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml:21:9-30:20
+33            android:name="com.poetry.MainActivity"
+33-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml:22:13-41
+34            android:exported="true"
+34-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml:23:13-36
+35            android:screenOrientation="portrait"
+35-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml:24:13-49
+36            android:windowSoftInputMode="adjustResize" >
+36-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml:25:13-55
+37            <intent-filter>
+37-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml:26:13-29:29
+38                <action android:name="android.intent.action.MAIN" />
+38-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml:27:17-69
+38-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml:27:25-66
+39
+40                <category android:name="android.intent.category.LAUNCHER" />
+40-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml:28:17-77
+40-->D:\SourceCode\gitCode\chinese-poetry\android\app\src\main\AndroidManifest.xml:28:27-74
+41            </intent-filter>
+42        </activity>
+43
+44        <provider
+44-->[androidx.emoji2:emoji2:1.2.0] F:\softManage\gradlejar\caches\transforms-2\files-2.1\647368f7a952cb2c0708ee657b0f3cc7\emoji2-1.2.0\AndroidManifest.xml:24:9-32:20
+45            android:name="androidx.startup.InitializationProvider"
+45-->[androidx.emoji2:emoji2:1.2.0] F:\softManage\gradlejar\caches\transforms-2\files-2.1\647368f7a952cb2c0708ee657b0f3cc7\emoji2-1.2.0\AndroidManifest.xml:25:13-67
+46            android:authorities="com.poetry.androidx-startup"
+46-->[androidx.emoji2:emoji2:1.2.0] F:\softManage\gradlejar\caches\transforms-2\files-2.1\647368f7a952cb2c0708ee657b0f3cc7\emoji2-1.2.0\AndroidManifest.xml:26:13-68
+47            android:exported="false" >
+47-->[androidx.emoji2:emoji2:1.2.0] F:\softManage\gradlejar\caches\transforms-2\files-2.1\647368f7a952cb2c0708ee657b0f3cc7\emoji2-1.2.0\AndroidManifest.xml:27:13-37
+48            <meta-data
+48-->[androidx.emoji2:emoji2:1.2.0] F:\softManage\gradlejar\caches\transforms-2\files-2.1\647368f7a952cb2c0708ee657b0f3cc7\emoji2-1.2.0\AndroidManifest.xml:29:13-31:52
+49                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+49-->[androidx.emoji2:emoji2:1.2.0] F:\softManage\gradlejar\caches\transforms-2\files-2.1\647368f7a952cb2c0708ee657b0f3cc7\emoji2-1.2.0\AndroidManifest.xml:30:17-75
+50                android:value="androidx.startup" />
+50-->[androidx.emoji2:emoji2:1.2.0] F:\softManage\gradlejar\caches\transforms-2\files-2.1\647368f7a952cb2c0708ee657b0f3cc7\emoji2-1.2.0\AndroidManifest.xml:31:17-49
+51            <meta-data
+51-->[androidx.lifecycle:lifecycle-process:2.4.1] F:\softManage\gradlejar\caches\transforms-2\files-2.1\1fce80bc4269949518cd548d4f73fe6f\lifecycle-process-2.4.1\AndroidManifest.xml:31:13-33:52
+52                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+52-->[androidx.lifecycle:lifecycle-process:2.4.1] F:\softManage\gradlejar\caches\transforms-2\files-2.1\1fce80bc4269949518cd548d4f73fe6f\lifecycle-process-2.4.1\AndroidManifest.xml:32:17-78
+53                android:value="androidx.startup" />
+53-->[androidx.lifecycle:lifecycle-process:2.4.1] F:\softManage\gradlejar\caches\transforms-2\files-2.1\1fce80bc4269949518cd548d4f73fe6f\lifecycle-process-2.4.1\AndroidManifest.xml:33:17-49
+54        </provider>
+55    </application>
+56
+57</manifest>

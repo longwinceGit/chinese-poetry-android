@@ -1,0 +1,11 @@
+<resources>
+    <style name="Theme.Poetry" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- 状态栏颜色 -->
+        <item name="android:statusBarColor">#1a0f08</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <!-- 导航栏颜色 -->
+        <item name="android:navigationBarColor">#1a0f08</item>
+        <!-- 背景色 -->
+        <item name="android:windowBackground">#faf7f0</item>
+    </style>
+</resources>

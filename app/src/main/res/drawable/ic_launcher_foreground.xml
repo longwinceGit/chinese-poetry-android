@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 卷轴 - 上轴杆 -->
+    <path
+        android:fillColor="#FFF8F0"
+        android:pathData="M26,30 L82,30 A3,3 0 0,1 85,33 L85,35 A3,3 0 0,1 82,38 L26,38 A3,3 0 0,1 23,35 L23,33 A3,3 0 0,1 26,30 Z"/>
+    <!-- 轴杆左端圆头 -->
+    <path
+        android:fillColor="#E8C87A"
+        android:pathData="M22,32 A3,3 0 1,1 22,36 A3,3 0 1,1 22,32 Z"/>
+    <!-- 轴杆右端圆头 -->
+    <path
+        android:fillColor="#E8C87A"
+        android:pathData="M86,32 A3,3 0 1,1 86,36 A3,3 0 1,1 86,32 Z"/>
+
+    <!-- 卷轴 - 下轴杆 -->
+    <path
+        android:fillColor="#FFF8F0"
+        android:pathData="M26,82 L82,82 A3,3 0 0,1 85,85 L85,87 A3,3 0 0,1 82,90 L26,90 A3,3 0 0,1 23,87 L23,85 A3,3 0 0,1 26,82 Z"/>
+    <path
+        android:fillColor="#E8C87A"
+        android:pathData="M22,84 A3,3 0 1,1 22,88 A3,3 0 1,1 22,84 Z"/>
+    <path
+        android:fillColor="#E8C87A"
+        android:pathData="M86,84 A3,3 0 1,1 86,88 A3,3 0 1,1 86,88 Z"/>
+
+    <!-- 卷轴主体 - 暖白纸面 -->
+    <path
+        android:fillColor="#FFF8F0"
+        android:pathData="M26,36 L82,36 L82,84 L26,84 Z"/>
+    <!-- 纸面微光泽 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.5"
+        android:pathData="M27,37 L55,37 L55,83 L27,83 Z"/>
+
+    <!-- "诗" 字 - 用简化的笔画勾勒 -->
+    <!-- 言字旁：点 -->
+    <path
+        android:fillColor="#FF6B6B"
+        android:pathData="M37,48 A2,2 0 1,1 37,47.9 Z"/>
+    <!-- 言字旁：横 -->
+    <path
+        android:fillColor="#FF6B6B"
+        android:strokeWidth="2"
+        android:strokeColor="#FF6B6B"
+        android:pathData="M35,52 L45,52"/>
+    <!-- 言字旁：下面两横 + 口 -->
+    <path
+        android:fillColor="#FF6B6B"
+        android:strokeWidth="1.8"
+        android:strokeColor="#FF6B6B"
+        android:pathData="M35,56 L43,56"/>
+    <path
+        android:fillColor="#FF6B6B"
+        android:strokeWidth="1.8"
+        android:strokeColor="#FF6B6B"
+        android:pathData="M36,60 L42,60"/>
+    <path
+        android:fillColor="#FF6B6B"
+        android:strokeWidth="1.5"
+        android:strokeColor="#FF6B6B"
+        android:pathData="M38,60 L38,67 L43,67 L43,60"/>
+
+    <!-- 右边：寺 部分 - 横 -->
+    <path
+        android:fillColor="#FF6B6B"
+        android:strokeWidth="2"
+        android:strokeColor="#FF6B6B"
+        android:pathData="M50,50 L68,50"/>
+    <path
+        android:fillColor="#FF6B6B"
+        android:strokeWidth="1.8"
+        android:strokeColor="#FF6B6B"
+        android:pathData="M52,55 L66,55"/>
+    <!-- 竖钩 -->
+    <path
+        android:fillColor="#FF6B6B"
+        android:strokeWidth="1.8"
+        android:strokeColor="#FF6B6B"
+        android:pathData="M59,50 L59,70"/>
+    <!-- 点 -->
+    <path
+        android:fillColor="#4ECDC4"
+        android:pathData="M52,63 A2,2 0 1,1 52,62.9 Z"/>
+    <path
+        android:fillColor="#FFD93D"
+        android:pathData="M52,70 A2.5,2.5 0 1,1 52,69.9 Z"/>
+
+    <!-- 装饰：右上角小云朵 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.9"
+        android:pathData="M68,40 A6,4 0 0,1 72,36 A4,4 0 0,1 76,40 A5,5 0 0,1 70,44 L68,44 Z"/>
+
+    <!-- 装饰：左下角花/叶 -->
+    <path
+        android:fillColor="#4ECDC4"
+        android:fillAlpha="0.8"
+        android:pathData="M30,75 Q36,68 34,75 Q36,82 30,75 Z"/>
+
+    <!-- 装饰小星星 -->
+    <path
+        android:fillColor="#FFD93D"
+        android:fillAlpha="0.9"
+        android:pathData="M78,72 L79.5,75.5 L83,76 L80.5,78 L81,81.5 L78,79.5 L75,81.5 L75.5,78 L73,76 L76.5,75.5 Z"/>
+</vector>

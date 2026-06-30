@@ -1,0 +1,18 @@
+com/poetry/PoemAdapter.java
+ com.poetry.PoemAdapter
+ com.poetry.PoemAdapter$OnPoemClickListener
+ com.poetry.PoemAdapter$ViewHolder
+com/poetry/Poem.java
+ com.poetry.Poem
+com/poetry/BuildConfig.java
+ com.poetry.BuildConfig
+com/poetry/ConfettiView.java
+ com.poetry.ConfettiView
+ com.poetry.ConfettiView$1
+ com.poetry.ConfettiView$Confetti
+com/poetry/PoemLoader.java
+ com.poetry.PoemLoader
+com/poetry/MainActivity.java
+ com.poetry.MainActivity
+ com.poetry.MainActivity$1
+ com.poetry.MainActivity$2

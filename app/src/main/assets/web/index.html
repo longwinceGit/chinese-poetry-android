@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中华诗词库 - Chinese Poetry Database</title>
+<style>
+:root {
+  --ink: #2c2c2c;
+  --ink-light: #5a5a5a;
+  --ink-lighter: #888;
+  --paper: #faf7f0;
+  --paper-dark: #f0ebdd;
+  --accent: #8b4513;
+  --accent-light: #a0522d;
+  --border: #d4c5a9;
+  --gold: #c9a030;
+  --red-seal: #c04040;
+  --shadow: rgba(0,0,0,0.06);
+  --card-bg: #fffef9;
+  --nav-bg: #2c1810;
+  --nav-text: #d4c5b0;
+  --hover-bg: #f5efe0;
+  --active-bg: #f0e8d5;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+@font-face {
+  font-family: 'Poem Serif';
+  src: local('Noto Serif SC'), local('Source Han Serif SC'), local('SimSun'), local('KaiTi'), local('serif');
+}
+
+body {
+  font-family: 'Poem Serif', 'Noto Serif SC', 'Source Han Serif SC', SimSun, KaiTi, serif;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== Header ===== */
+.header {
+  background: linear-gradient(135deg, #1a0f08, #2c1810 40%, #3c2f1e);
+  color: var(--nav-text);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.brand {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  white-space: nowrap;
+  user-select: none;
+}
+.brand em { font-style: normal; color: var(--gold); margin: 0 2px; }
+
+.search-row {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  flex: 1;
+  max-width: 520px;
+  min-width: 260px;
+}
+.search-row input {
+  flex: 1;
+  padding: 9px 14px;
+  border: 1px solid #8b7355;
+  border-radius: 4px 0 0 4px;
+  font-size: 14px;
+  background: #fffef9;
+  color: var(--ink);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.search-row input:focus { border-color: var(--gold); }
+.search-row select {
+  padding: 9px 6px;
+  border: 1px solid #8b7355;
+  border-left: none;
+  font-size: 13px;
+  background: #fffef9;
+  color: var(--ink);
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  min-width: 80px;
+}
+.search-row button {
+  padding: 9px 18px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 0 4px 4px 0;
+  font-size: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: 1px;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.search-row button:hover { background: var(--accent-light); }
+
+/* ===== Layout ===== */
+.main-wrap { display: flex; min-height: calc(100vh - 56px); }
+
+/* ===== Sidebar ===== */
+.sidebar {
+  width: 290px;
+  min-width: 290px;
+  background: var(--card-bg);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  position: sticky;
+  top: 56px;
+  height: calc(100vh - 56px);
+  box-shadow: 2px 0 8px var(--shadow);
+  display: flex;
+  flex-direction: column;
+}
+
+.dynasty-tabs { padding: 0 6px 8px; flex-shrink: 0; }
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--ink-lighter);
+  padding: 10px 10px 8px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid var(--border);
+  margin: 0 2px 4px;
+  transition: color 0.15s;
+}
+.section-header:hover { color: var(--accent); }
+.section-header .toggle-arrow {
+  font-size: 10px;
+  transition: transform 0.3s;
+  color: var(--ink-lighter);
+}
+.section-header .toggle-arrow.collapsed { transform: rotate(-90deg); }
+.section-body {
+  overflow: hidden;
+  max-height: 600px;
+  transition: max-height 0.35s ease, opacity 0.25s ease;
+  opacity: 1;
+}
+.section-body.collapsed {
+  max-height: 0;
+  opacity: 0;
+  margin: 0;
+  padding: 0;
+}
+.dynasty-tab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s;
+  font-size: 15px;
+  border-left: 3px solid transparent;
+  margin: 1px 0;
+}
+.dynasty-tab:hover { background: var(--hover-bg); }
+.dynasty-tab.active {
+  background: var(--active-bg);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+.dynasty-tab .cnt {
+  font-size: 11px;
+  background: var(--paper-dark);
+  color: var(--ink-lighter);
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-weight: 400;
+}
+.dynasty-tab .arrow { font-size: 10px; color: var(--ink-lighter); margin-left: auto; margin-right: 2px; }
+
+.author-panel { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.author-panel .section-header {
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.author-search-wrap { padding: 4px 10px 4px; flex-shrink: 0; }
+.author-search-wrap input {
+  width: 100%;
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: inherit;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.author-search-wrap input:focus { border-color: var(--accent-light); }
+.author-list { flex: 1; overflow-y: auto; padding: 2px 6px; }
+.author-item {
+  padding: 7px 10px 7px 24px;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 3px;
+  transition: background 0.12s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 1px 2px;
+}
+.author-item:hover { background: var(--hover-bg); }
+.author-item.selected { background: var(--active-bg); font-weight: 600; }
+.author-item .cnt {
+  font-size: 11px;
+  color: var(--ink-lighter);
+  background: var(--paper-dark);
+  padding: 1px 7px;
+  border-radius: 8px;
+  font-weight: 400;
+}
+.author-item.all { font-weight: 500; }
+
+/* ===== Content ===== */
+.content { flex: 1; padding: 24px; overflow-y: auto; height: calc(100vh - 56px); }
+
+/* Welcome */
+.welcome {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--ink-light);
+}
+.welcome h1 { font-size: 32px; color: var(--ink); margin-bottom: 12px; letter-spacing: 6px; }
+.welcome p { font-size: 16px; margin-bottom: 6px; }
+.welcome .stat-line { margin-top: 24px; font-size: 14px; color: var(--ink-lighter); }
+
+/* Results header */
+.results-bar {
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.results-bar h2 { font-size: 20px; letter-spacing: 2px; color: var(--accent); font-weight: 700; }
+.results-bar .info { font-size: 13px; color: var(--ink-lighter); }
+
+/* Poem grid */
+.poem-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 14px;
+}
+.poem-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 20px 24px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.poem-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  border-color: var(--accent-light);
+  transform: translateY(-1px);
+}
+.poem-card .ct {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 4px;
+  letter-spacing: 1px;
+}
+.poem-card .ca {
+  font-size: 13px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.poem-card .cm {
+  font-size: 11px;
+  color: var(--ink-lighter);
+  margin-bottom: 4px;
+}
+.poem-card .cl {
+  font-size: 14px;
+  line-height: 2;
+  color: var(--ink-light);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+}
+.poem-card .seal {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  width: 26px;
+  height: 26px;
+  border: 1.5px solid var(--red-seal);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--red-seal);
+  transform: rotate(8deg);
+  opacity: 0.35;
+  font-weight: 700;
+}
+
+/* Detail modal */
+.detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20,15,10,0.55);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(2px);
+}
+.detail-card {
+  background: var(--card-bg);
+  max-width: 720px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  border-radius: 10px;
+  padding: 40px 36px;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.25);
+  position: relative;
+}
+.detail-card .close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  width: 36px; height: 36px;
+  border: none; background: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--ink-lighter);
+  border-radius: 50%;
+  display: flex;
+  align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.detail-card .close:hover { background: var(--hover-bg); }
+.detail-card .dt {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: 2px;
+  text-align: center;
+}
+.detail-card .da {
+  font-size: 15px;
+  color: var(--accent);
+  text-align: center;
+  margin-bottom: 6px;
+}
+.detail-card .dm {
+  font-size: 12px;
+  color: var(--ink-lighter);
+  text-align: center;
+  margin-bottom: 28px;
+}
+.detail-card .dl {
+  font-size: 18px;
+  line-height: 2.4;
+  text-align: center;
+  color: var(--ink);
+  letter-spacing: 1px;
+}
+.detail-card .dl p { margin: 2px 0; }
+
+/* Pagination */
+.pager {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+.pager button {
+  padding: 8px 15px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--ink);
+  transition: all 0.15s;
+  min-width: 36px;
+}
+.pager button:hover:not(:disabled):not(.cur) { background: var(--hover-bg); border-color: var(--accent-light); }
+.pager button:disabled { opacity: 0.35; cursor: not-allowed; }
+.pager button.cur { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+.pager .pi { font-size: 13px; color: var(--ink-lighter); padding: 0 8px; }
+
+/* Loading & Empty */
+.spinner-wrap { text-align: center; padding: 60px; color: var(--ink-lighter); }
+.spin {
+  width: 34px; height: 34px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 14px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty { text-align: center; padding: 60px 20px; color: var(--ink-lighter); }
+.empty .icon { font-size: 48px; margin-bottom: 10px; opacity: 0.5; }
+
+/* Highlight */
+mark { background: #fff3b0; color: var(--ink); padding: 0 1px; border-radius: 2px; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 24px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: #fff;
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  z-index: 300;
+  animation: slideUp 0.3s;
+  white-space: nowrap;
+}
+@keyframes slideUp { from{opacity:0;transform:translateX(-50%) translateY(10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+
+/* Search mode badge */
+.search-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  background: #fff3cd;
+  color: #856404;
+  border-radius: 3px;
+  font-size: 12px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.search-badge .clear-search {
+  margin-left: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #856404;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .main-wrap { flex-direction: column; }
+  .sidebar {
+    width: 100%; min-width: 100%; height: auto; max-height: 50vh;
+    position: static; border-right: none; border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .dynasty-tabs { padding: 0 2px 4px; }
+  .section-header { margin: 0; padding: 8px 10px; }
+  .dynasty-tab { font-size: 13px; padding: 6px 10px; }
+  .dynasty-tab .cnt { display: none; }
+  .section-body:not(.collapsed) .dynasty-tabs { display: flex; flex-wrap: wrap; gap: 2px; overflow-x: auto; }
+  .content { height: auto; min-height: 60vh; padding: 16px; }
+  .poem-grid { grid-template-columns: 1fr; }
+  .search-row { max-width: 100%; }
+  .detail-card { padding: 24px 16px; margin: 8px; border-radius: 6px; }
+  .detail-card .dl { font-size: 16px; }
+  .header { padding: 10px 14px; }
+  .brand { font-size: 18px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">中华<em>诗</em>词库</div>
+  <div class="search-row">
+    <input id="q" type="text" placeholder="作者 / 标题 / 诗句..." autocomplete="off">
+    <select id="qt">
+      <option value="all">全文</option>
+      <option value="author">作者</option>
+      <option value="verse">诗句</option>
+      <option value="title">标题</option>
+    </select>
+    <button id="searchBtn">搜索</button>
+  </div>
+</div>
+
+<div class="main-wrap">
+  <aside class="sidebar">
+    <div class="dynasty-tabs">
+      <div class="section-header" onclick="toggleSection('dynasty')">
+        <span>朝代</span>
+        <span class="toggle-arrow" id="arrow-dynasty">▼</span>
+      </div>
+      <div class="section-body" id="dtabs"></div>
+    </div>
+    <div class="author-panel" id="apnl">
+      <div class="section-header" onclick="toggleSection('author')">
+        <span>作者</span>
+        <span class="toggle-arrow" id="arrow-author">▼</span>
+      </div>
+      <div class="section-body" id="author-body">
+        <div class="author-search-wrap"><input id="af" type="text" placeholder="筛选作者..." autocomplete="off"></div>
+        <div class="author-list" id="alist"></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="content" id="main">
+    <div class="welcome">
+      <h1>中华诗词库</h1>
+      <p>收录先秦至清代经典诗词文赋</p>
+      <p class="stat-line" id="stats">数据加载中...</p>
+    </div>
+  </main>
+</div>
+
+<div class="detail-overlay" id="dov">
+  <div class="detail-card" id="dcard"></div>
+</div>
+
+<script>
+// ========== STATE ==========
+const S = {
+  nav: null, authors: null,
+  curDynasty: null, curAuthor: null,
+  poems: [],     // current displayed poems (may be filtered)
+  searchResults: null, // non-null = search mode
+  page: 1, perPage: 30,
+  poemCache: {},   // dynasty -> poems[]
+  searchIdx: {},   // dynasty -> [[id,title,author,text],...]
+  loading: new Set(),
+};
+
+const DD = 'data/';
+
+// ========== INIT ==========
+async function init() {
+  try {
+    const [n, a] = await Promise.all([
+      fetch(DD + 'nav.json').then(r => r.json()),
+      fetch(DD + 'authors.json').then(r => r.json()),
+    ]);
+    S.nav = n; S.authors = a;
+
+    const total = n.reduce((s,d) => s + d.count, 0);
+    const ta = a.reduce((s,d) => s + d.authors.length, 0);
+    document.getElementById('stats').textContent =
+      `共计 ${total.toLocaleString()} 首 · ${ta} 位作者 · ${n.length} 个朝代`;
+
+    renderTabs();
+    if (n.length) selectDynasty(n[0]);
+  } catch (e) {
+    console.error(e);
+    document.getElementById('stats').textContent = '数据加载失败。请确认 web/data/ 目录下数据文件完整。';
+  }
+}
+
+// ========== DYNASTY TABS ==========
+function renderTabs() {
+  const c = document.getElementById('dtabs');
+  S.nav.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'dynasty-tab';
+    el.innerHTML = `${d.dynasty}<span class="cnt">${d.count.toLocaleString()}</span>`;
+    el.onclick = () => selectDynasty(d);
+    c.appendChild(el);
+  });
+}
+
+async function selectDynasty(dyn) {
+  S.curDynasty = dyn;
+  S.curAuthor = null;
+  S.searchResults = null;
+  S.page = 1;
+
+  document.querySelectorAll('.dynasty-tab').forEach((el, i) => {
+    el.classList.toggle('active', S.nav[i] === dyn);
+  });
+
+  // Ensure author section is visible and expanded
+  const apnl = document.getElementById('apnl');
+  apnl.style.display = '';
+  const ab = document.getElementById('author-body');
+  const aa = document.getElementById('arrow-author');
+  ab.classList.remove('collapsed');
+  aa.classList.remove('collapsed');
+  document.getElementById('af').value = '';
+
+  const ad = S.authors.find(a => a.dynasty === dyn.dynasty);
+  renderAuthors(ad ? ad.authors : []);
+
+  // Load poems if needed
+  if (!S.poemCache[dyn.dynasty]) await loadPoems(dyn);
+  S.poems = S.poemCache[dyn.dynasty] || [];
+  renderContent();
+}
+
+// ========== AUTHORS ==========
+function renderAuthors(authors) {
+  const list = document.getElementById('alist');
+  list.innerHTML = '';
+
+  const allEl = mk('div', 'author-item all selected',
+    `<span>全部作者</span><span class="cnt">${authors.reduce((s,a)=>s+a.c,0)}</span>`);
+  allEl.onclick = () => { S.curAuthor = null; S.page = 1; refreshAuthorSel(list); renderContent(); };
+  list.appendChild(allEl);
+
+  authors.forEach(a => {
+    const el = mk('div', 'author-item',
+      `<span>${esc(a.n)}</span><span class="cnt">${a.c}</span>`);
+    el.onclick = () => {
+      S.curAuthor = a.n; S.page = 1;
+      refreshAuthorSel(list, el); renderContent();
+    };
+    list.appendChild(el);
+  });
+
+  // Filter
+  document.getElementById('af').oninput = e => {
+    const q = e.target.value.trim();
+    list.querySelectorAll('.author-item').forEach((it, i) => {
+      if (i === 0) return;
+      it.style.display = it.querySelector('span').textContent.includes(q) ? '' : 'none';
+    });
+  };
+}
+
+function refreshAuthorSel(list, sel) {
+  list.querySelectorAll('.author-item').forEach(el => el.classList.remove('selected'));
+  if (sel) sel.classList.add('selected');
+  else list.querySelector('.author-item.all').classList.add('selected');
+}
+
+// ========== POEM LOADING ==========
+async function loadPoems(dyn) {
+  if (S.poemCache[dyn.dynasty]) return;
+  if (S.loading.has(dyn.dynasty)) return;
+  S.loading.add(dyn.dynasty);
+  showSpinner();
+  try {
+    const all = [];
+    for (const f of dyn.files) {
+      const chunk = await fetch(DD + f).then(r => r.json());
+      all.push(...chunk);
+    }
+    S.poemCache[dyn.dynasty] = all;
+    S.poems = all;
+  } catch (e) { console.error(e); toast('加载失败'); }
+  S.loading.delete(dyn.dynasty);
+  hideSpinner();
+}
+
+async function loadSearchIdx(dyn) {
+  if (S.searchIdx[dyn.dynasty]) return S.searchIdx[dyn.dynasty];
+  try {
+    const data = await fetch(DD + dyn.searchFile).then(r => r.json());
+    S.searchIdx[dyn.dynasty] = data;
+    return data;
+  } catch (e) { console.error(e); return []; }
+}
+
+// ========== RENDER ==========
+function getDisplayPoems() {
+  if (S.searchResults) return S.searchResults;
+  let p = S.poems;
+  if (S.curAuthor) p = p.filter(x => x.a === S.curAuthor);
+  return p;
+}
+
+async function renderContent() {
+  // If in search mode and poems not loaded for current dynasty, load them
+  if (S.searchResults && S.curDynasty && !S.poemCache[S.curDynasty.dynasty]) {
+    await loadPoems(S.curDynasty);
+  }
+
+  const poems = getDisplayPoems();
+  const total = poems.length;
+  const pages = Math.ceil(total / S.perPage);
+  const start = (S.page - 1) * S.perPage;
+  const slice = poems.slice(start, start + S.perPage);
+
+  const main = document.getElementById('main');
+  let h = '';
+
+  if (S.searchResults) {
+    h += `<div class="results-bar"><h2>搜索结果<span class="search-badge">全局搜索<a class="clear-search" title="清除搜索" onclick="clearSearch()">✕</a></span></h2><span class="info">匹配 ${total.toLocaleString()} 条</span></div>`;
+  } else {
+    h += `<div class="results-bar"><h2>${S.curDynasty.dynasty} · ${S.curAuthor || '全部作者'}</h2><span class="info">${total.toLocaleString()} 首</span></div>`;
+  }
+
+  if (!slice.length) {
+    h += '<div class="empty"><div class="icon">📭</div><p>暂无数据</p></div>';
+    main.innerHTML = h; return;
+  }
+
+  h += '<div class="poem-grid">';
+  slice.forEach((poem, i) => {
+    const idx = start + i;
+    const lines = poem.p.slice(0, 4).join(' / ');
+    const seal = poem.d ? poem.d[0] : '诗';
+    h += `<div class="poem-card" data-idx="${idx}">
+      <div class="seal">${seal}</div>
+      <div class="ct">${esc(poem.t)}</div>
+      <div class="ca">${esc(poem.a)}</div>
+      <div class="cm">${esc(poem.s)}</div>
+      <div class="cl">${esc(lines)}</div>
+    </div>`;
+  });
+  h += '</div>';
+
+  if (pages > 1) {
+    h += '<div class="pager">';
+    h += btn(pageBtn(S.page - 1, pages, '上一页'), '上一页');
+    const ms = 7, s2 = Math.max(1, S.page - 3);
+    let ep = Math.min(pages, s2 + ms - 1);
+    let sp = Math.max(1, ep - ms + 1);
+    if (sp > 1) { h += btn(1, '1'); if (sp > 2) h += '<span class="pi">...</span>'; }
+    for (let p = sp; p <= ep; p++) h += btn(p, String(p), p === S.page);
+    if (ep < pages) { if (ep < pages - 1) h += '<span class="pi">...</span>'; h += btn(pages, String(pages)); }
+    h += btn(pageBtn(S.page + 1, pages, '下一页'), '下一页');
+    h += `<span class="pi">${S.page}/${pages} 页</span>`;
+    h += '</div>';
+  }
+
+  main.innerHTML = h;
+
+  // Card click → detail
+  main.querySelectorAll('.poem-card').forEach(card => {
+    card.onclick = () => showDetail(parseInt(card.dataset.idx));
+  });
+
+  // Pager clicks
+  main.querySelectorAll('.pager button').forEach(b => {
+    b.onclick = () => {
+      const p = parseInt(b.dataset.page);
+      if (p >= 1 && p <= pages) { S.page = p; renderContent(); main.scrollTop = 0; }
+    };
+  });
+}
+
+function pageBtn(p, max) { return { p, disabled: p < 1 || p > max }; }
+function btn(cfg, text, cur) {
+  const d = cfg.disabled ? ' disabled' : '';
+  const c = cur ? ' cur' : '';
+  const cls = (c + d).trim();
+  return `<button data-page="${cfg.p}" class="${cls}"${d}>${text}</button>`;
+}
+
+// ========== DETAIL ==========
+function showDetail(idx) {
+  const poems = getDisplayPoems();
+  const poem = poems[idx];
+  if (!poem) return;
+
+  const ov = document.getElementById('dov');
+  document.getElementById('dcard').innerHTML = `
+    <button class="close" onclick="closeDetail()">✕</button>
+    <div class="dt">${esc(poem.t)}</div>
+    <div class="da">${esc(poem.a)}</div>
+    <div class="dm">${esc(poem.d)} · ${esc(poem.s)}</div>
+    <div class="dl">${poem.p.map(l => `<p>${esc(l)}</p>`).join('')}</div>`;
+  ov.style.display = 'flex';
+  ov.onclick = e => { if (e.target === ov) closeDetail(); };
+}
+
+function closeDetail() { document.getElementById('dov').style.display = 'none'; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+
+// ========== SEARCH ==========
+async function doSearch() {
+  const q = document.getElementById('q').value.trim();
+  if (!q) return;
+
+  S.searchResults = [];
+  S.page = 1;
+  showSpinner('搜索中...');
+
+  const type = document.getElementById('qt').value;
+  const query = q.toLowerCase().replace(/\s/g, '');
+
+  // Collect matched poem ids per dynasty
+  const matches = []; // {dynasty, localIdx}
+
+  for (const dyn of S.nav) {
+    const idx = await loadSearchIdx(dyn);
+    // idx format: [id, title_lower, author_lower, full_text_lower]
+    for (const entry of idx) {
+      const [gid, titleTxt, authorTxt, allTxt] = entry;
+      let match = false;
+
+      if (type === 'all') {
+        match = allTxt.includes(query);
+      } else if (type === 'author') {
+        match = authorTxt.includes(query);
+      } else if (type === 'verse') {
+        // Search only verse text (after title+author in allTxt)
+        // allTxt = title + " " + author + " " + verse_text
+        const verseStart = titleTxt.length + 1 + authorTxt.length + 1;
+        match = allTxt.slice(verseStart).includes(query);
+      } else if (type === 'title') {
+        match = titleTxt.includes(query);
+      }
+
+      if (match) {
+        matches.push({ dynasty: dyn.dynasty, id: gid });
+      }
+    }
+  }
+
+  // Load poem data for matched dynasties
+  const needed = new Set(matches.map(m => m.dynasty));
+  for (const dyn of S.nav) {
+    if (needed.has(dyn.dynasty) && !S.poemCache[dyn.dynasty]) {
+      await loadPoems(dyn);
+    }
+  }
+
+  // Build search results
+  for (const m of matches) {
+    const poems = S.poemCache[m.dynasty];
+    if (!poems) continue;
+    const dynNav = S.nav.find(n => n.dynasty === m.dynasty);
+    if (!dynNav) continue;
+    const localId = m.id - dynNav.startId;
+    if (localId >= 0 && localId < poems.length) {
+      S.searchResults.push({ ...poems[localId], _dynasty: m.dynasty });
+    }
+  }
+
+  hideSpinner();
+  // Collapse sidebar sections in search mode
+  document.getElementById('dtabs').classList.add('collapsed');
+  document.getElementById('arrow-dynasty').classList.add('collapsed');
+  document.getElementById('apnl').style.display = 'none';
+  document.querySelectorAll('.dynasty-tab').forEach(el => el.classList.remove('active'));
+
+  if (!S.searchResults.length) {
+    document.getElementById('main').innerHTML =
+      `<div class="empty"><div class="icon">🔍</div><p>未找到与 "${esc(q)}" 相关的诗词</p></div>`;
+  } else {
+    // Temporarily set curAuthor to null so getDisplayPoems returns searchResults
+    S.curAuthor = null;
+    S.poems = [];
+    renderContent();
+  }
+}
+
+function clearSearch() {
+  S.searchResults = null;
+  S.page = 1;
+  S.poems = S.poemCache[S.curDynasty.dynasty] || [];
+  document.getElementById('q').value = '';
+  document.getElementById('apnl').style.display = '';
+  document.getElementById('dtabs').classList.remove('collapsed');
+  document.getElementById('arrow-dynasty').classList.remove('collapsed');
+  document.querySelectorAll('.dynasty-tab').forEach((el, i) => {
+    el.classList.toggle('active', S.nav[i] === S.curDynasty);
+  });
+  renderContent();
+}
+
+// ========== HELPERS ==========
+function toggleSection(section) {
+  const body = section === 'dynasty'
+    ? document.getElementById('dtabs')
+    : document.getElementById('author-body');
+  const arrow = document.getElementById('arrow-' + section);
+  body.classList.toggle('collapsed');
+  arrow.classList.toggle('collapsed');
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+function mk(tag, cls, html) {
+  const el = document.createElement(tag);
+  el.className = cls;
+  el.innerHTML = html;
+  return el;
+}
+function showSpinner(msg) {
+  document.getElementById('main').innerHTML =
+    `<div class="spinner-wrap"><div class="spin"></div><p>${msg || '加载中...'}</p></div>`;
+}
+function hideSpinner() {}
+function toast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+// ========== EVENTS ==========
+document.getElementById('searchBtn').onclick = doSearch;
+document.getElementById('q').onkeydown = e => { if (e.key === 'Enter') doSearch(); };
+
+init();
+</script>
+</body>
+</html>
