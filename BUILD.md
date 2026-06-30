@@ -9,7 +9,7 @@
 | Android Studio | Arctic Fox (2020.3.1+) |
 | JDK | 11+ |
 | Android SDK | API 21–33 |
-| Gradle | 4.2.2（构建时自动处理） |
+| Gradle | 7.5（脚本自动处理） |
 
 ---
 
@@ -86,20 +86,21 @@ targetSdkVersion 33
 ```
 .
 ├── app/
-│   ├── build.gradle        # 模块配置（compileSdk=33, minSdk=21）
+│   ├── build.gradle          # 模块配置（compileSdk=33, minSdk=21）
 │   └── src/main/
 │       ├── AndroidManifest.xml
-│       ├── java/com/poetry/          # 源码
-│       │   ├── MainActivity.java     # 主界面（入口）
-│       │   ├── Poem.java             # 数据模型
-│       │   ├── PoemAdapter.java      # RecyclerView 适配器
-│       │   ├── PoemLoader.java       # JSON 加载器
-│       │   └── ConfettiView.java     # 彩纸动画 View
+│       ├── java/com/poetry/
+│       │   ├── MainActivity.java        # Fragment 容器（99行）
+│       │   ├── data/                    # 数据层（Room + Repository）
+│       │   ├── domain/                  # 领域层（5个引擎）
+│       │   ├── ui/                      # UI 层（7个 Fragment）
+│       │   └── util/                    # 工具类
 │       ├── res/
-│       │   ├── layout/               # 布局文件
-│       │   ├── drawable/             # 形状/按钮背景
-│       │   └── values/               # 颜色/样式/字符串
-│       └── assets/web/data/          # 诗词 JSON 数据
+│       │   ├── layout/                  # 布局文件（10+ 个）
+│       │   ├── drawable/                # 形状/按钮/图标
+│       │   ├── anim/                    # 过渡动画
+│       │   └── values/                  # 颜色/样式/字符串
+│       └── assets/web/data/             # 诗词 JSON 数据
 ├── build.gradle              # 根配置
 ├── settings.gradle           # 模块设置
 └── build-apk.bat             # Windows 构建脚本
@@ -115,6 +116,8 @@ sdk.dir=C:\\Users\\你的用户名\\AppData\\Local\\Android\\sdk
 ```
 
 **构建失败 / 依赖下载慢**：`build.gradle` 已配置阿里云 Maven 镜像加速。
+
+**Room 编译错误**：确保 `UserProfile` 等实体类的 `@PrimaryKey` 字段标注了 `@NonNull`；参数化构造器需加 `@Ignore`。
 
 **TTS 无声**：手机需安装中文 TTS 语音包（设置 → 文字转语音 → 首选引擎 → 安装中文语音数据）。
 

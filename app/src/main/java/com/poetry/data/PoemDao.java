@@ -71,4 +71,10 @@ public interface PoemDao {
 
     @Query("SELECT COUNT(*) FROM learning_records WHERE favorite = 1")
     int getFavCountSync();
+
+    @Query("SELECT * FROM learning_records WHERE learnedAt >= :startOfDay")
+    List<LearningRecord> getTodayRecords(long startOfDay);
+
+    @Query("SELECT * FROM daily_stats WHERE date >= :startDate ORDER BY date ASC")
+    List<DailyStats> getRecentStats(String startDate);
 }

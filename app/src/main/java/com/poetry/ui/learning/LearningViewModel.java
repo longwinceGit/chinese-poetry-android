@@ -10,7 +10,6 @@ import com.poetry.data.LearningDatabase;
 import com.poetry.data.LearningRecord;
 import com.poetry.data.UserProfile;
 import com.poetry.domain.AchievementEngine;
-import com.poetry.domain.LearningEngine;
 import com.poetry.ui.adapter.AchievementAdapter;
 
 import java.util.ArrayList;
@@ -28,10 +27,6 @@ public class LearningViewModel extends AndroidViewModel {
 
     public LiveData<UserProfile> getUserProfile() {
         return db.poemDao().getUserProfile();
-    }
-
-    public LiveData<Integer> getLearnedCount() {
-        return db.poemDao().getLearnedCount();
     }
 
     public LiveData<List<LearningRecord>> getFavorites() {
@@ -54,13 +49,5 @@ public class LearningViewModel extends AndroidViewModel {
             }
             achievements.postValue(entries);
         }).start();
-    }
-
-    public String getLevelName(int level) {
-        return LearningEngine.getLevelName(level);
-    }
-
-    public int getLevelProgress(int totalPoints) {
-        return LearningEngine.getLevelProgress(totalPoints);
     }
 }

@@ -123,7 +123,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:padding="12dp"
+        android:padding="8dp"
         android:background="@color/card"
         android:elevation="4dp">
 
@@ -141,9 +141,29 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="🔊 朗读"
-                android:textSize="15sp"
+                android:text="🔊"
+                android:textSize="16sp"
                 android:textColor="@color/teal" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btn_pinyin"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground">
+
+            <TextView
+                android:id="@+id/tv_pinyin_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🔤 拼音"
+                android:textSize="13sp"
+                android:textColor="@color/text_secondary" />
         </LinearLayout>
 
         <LinearLayout
@@ -161,8 +181,8 @@
                 android:id="@+id/tv_fav_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="🤍 收藏"
-                android:textSize="15sp"
+                android:text="🤍"
+                android:textSize="16sp"
                 android:textColor="@color/text_secondary" />
         </LinearLayout>
 
@@ -180,8 +200,8 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="✏️ 我会背"
-                android:textSize="15sp"
+                android:text="✏️"
+                android:textSize="16sp"
                 android:textColor="@color/coral" />
         </LinearLayout>
 

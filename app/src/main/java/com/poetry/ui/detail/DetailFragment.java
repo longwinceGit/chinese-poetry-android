@@ -1,9 +1,11 @@
 package com.poetry.ui.detail;
 
+import android.animation.ObjectAnimator;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.OvershootInterpolator;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -27,8 +29,8 @@ public class DetailFragment extends Fragment {
     private DetailViewModel viewModel;
     private TtsManager ttsManager;
 
-    private TextView tvTitle, tvAuthor, tvLines, tvPinyin, tvFavText;
-    private View btnBack, btnVoice, btnFavorite, btnQuiz, btnFavHeader;
+    private TextView tvTitle, tvAuthor, tvLines, tvPinyin, tvFavText, tvPinyinBtn;
+    private View btnBack, btnVoice, btnPinyin, btnFavorite, btnQuiz;
 
     public static DetailFragment newInstance(Poem poem) {
         DetailFragment f = new DetailFragment();
@@ -81,10 +83,11 @@ public class DetailFragment extends Fragment {
         tvAuthor = v.findViewById(R.id.tv_detail_author);
         tvLines = v.findViewById(R.id.tv_detail_lines);
         btnVoice = v.findViewById(R.id.btn_voice);
+        btnPinyin = v.findViewById(R.id.btn_pinyin);
+        tvPinyinBtn = v.findViewById(R.id.tv_pinyin_text);
         btnFavorite = v.findViewById(R.id.btn_favorite);
         tvFavText = v.findViewById(R.id.tv_fav_text);
         btnQuiz = v.findViewById(R.id.btn_quiz);
-        btnFavHeader = v.findViewById(R.id.btn_favorite_header);
     }
 
     private void setupListeners() {
@@ -101,22 +104,50 @@ public class DetailFragment extends Fragment {
             }
         });
 
-        btnFavorite.setOnClickListener(v -> viewModel.toggleFavorite());
-        btnFavHeader.setOnClickListener(v -> viewModel.toggleFavorite());
+        btnPinyin.setOnClickListener(v -> viewModel.togglePinyin());
+
+        btnFavorite.setOnClickListener(v -> {
+            viewModel.toggleFavorite();
+            springView(tvFavText);
+        });
+
+        btnQuiz.setOnClickListener(v -> {
+            if (getActivity() != null) {
+                com.poetry.ui.quiz.QuizFragment qf = new com.poetry.ui.quiz.QuizFragment();
+                getActivity().getSupportFragmentManager().beginTransaction()
+                    .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left,
+                                         R.anim.slide_in_left, R.anim.slide_out_right)
+                    .replace(R.id.fragment_container, qf)
+                    .addToBackStack(null)
+                    .commit();
+            }
+        });
     }
 
     private void observeData() {
         viewModel.getIsFavorite().observe(getViewLifecycleOwner(), fav -> {
             if (fav != null && fav) {
-                tvFavText.setText("❤️ 已收藏");
-                if (btnFavHeader instanceof TextView) {
-                    ((TextView) btnFavHeader).setText("❤️");
-                }
+                tvFavText.setText("❤️");
+                tvFavText.setTextColor(getResources().getColor(R.color.coral));
             } else {
-                tvFavText.setText("🤍 收藏");
-                if (btnFavHeader instanceof TextView) {
-                    ((TextView) btnFavHeader).setText("🤍");
-                }
+                tvFavText.setText("🤍");
+                tvFavText.setTextColor(getResources().getColor(R.color.text_secondary));
+            }
+        });
+
+        viewModel.getShowPinyin().observe(getViewLifecycleOwner(), show -> {
+            if (show != null && show) {
+                tvPinyin.setVisibility(View.VISIBLE);
+                tvPinyinBtn.setTextColor(getResources().getColor(R.color.coral));
+            } else {
+                tvPinyin.setVisibility(View.GONE);
+                tvPinyinBtn.setTextColor(getResources().getColor(R.color.text_secondary));
+            }
+        });
+
+        viewModel.getPinyinText().observe(getViewLifecycleOwner(), text -> {
+            if (text != null) {
+                tvPinyin.setText(text);
             }
         });
     }
@@ -132,6 +163,19 @@ public class DetailFragment extends Fragment {
             }
         }
         tvLines.setText(linesBuilder.toString().trim());
+        tvPinyin.setText("");
+        tvPinyin.setVisibility(View.GONE);
+    }
+
+    private void springView(View v) {
+        ObjectAnimator scaleX = ObjectAnimator.ofFloat(v, "scaleX", 1f, 1.3f, 1f);
+        scaleX.setDuration(400);
+        scaleX.setInterpolator(new OvershootInterpolator(2f));
+        ObjectAnimator scaleY = ObjectAnimator.ofFloat(v, "scaleY", 1f, 1.3f, 1f);
+        scaleY.setDuration(400);
+        scaleY.setInterpolator(new OvershootInterpolator(2f));
+        scaleX.start();
+        scaleY.start();
     }
 
     @Override

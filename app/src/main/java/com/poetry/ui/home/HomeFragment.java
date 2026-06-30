@@ -1,5 +1,7 @@
 package com.poetry.ui.home;
 
+import android.view.animation.OvershootInterpolator;
+import android.animation.ObjectAnimator;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -10,7 +12,6 @@ import android.content.Context;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -38,7 +39,7 @@ public class HomeFragment extends Fragment {
     private View btnSearchToggle, btnSearchClose, btnLearning, btnGame, sectionAllTitle;
     private CardView dailyCard;
     private RecyclerView recyclerPoems;
-    private ProgressBar progressLoad;
+    private View progressLoad;
     private PoemAdapter adapter;
 
     @Nullable

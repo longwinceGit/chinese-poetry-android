@@ -20,27 +20,35 @@ public class ConfettiView extends View {
         0xFFFB923C, 0xFF60A5FA, 0xFFF472B6, 0xFF34D399
     };
 
-    private List<Confetti> confettiList = new ArrayList<>();
+    private static final String EMOJIS[] = {
+        "✨", "🌸", "🎉", "🎊", "⭐", "❤️", "🎵", "🏮"
+    };
+
+    private List<Particle> particles = new ArrayList<>();
     private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Random random = new Random();
     private Handler handler = new Handler(Looper.getMainLooper());
     private Runnable runnable;
     private boolean animating = false;
     private int frameCount = 0;
-    private static final int MAX_FRAMES = 150;
+    private static final int MAX_FRAMES = 180;
 
     public ConfettiView(Context context) { super(context); init(); }
     public ConfettiView(Context context, AttributeSet attrs) { super(context, attrs); init(); }
 
     private void init() {
+        textPaint.setTextSize(24);
+        textPaint.setTextAlign(Paint.Align.CENTER);
         setVisibility(GONE);
     }
 
     public void celebrate() {
-        confettiList.clear();
+        particles.clear();
         frameCount = 0;
-        for (int i = 0; i < 80; i++) {
-            confettiList.add(new Confetti());
+        int w = getWidth() > 0 ? getWidth() : 720;
+        for (int i = 0; i < 60; i++) {
+            particles.add(new Particle(w));
         }
         animating = true;
         setVisibility(VISIBLE);
@@ -67,8 +75,10 @@ public class ConfettiView extends View {
     }
 
     private void update() {
-        for (Confetti c : confettiList) {
-            c.update(getWidth(), getHeight(), frameCount);
+        int w = getWidth() > 0 ? getWidth() : 720;
+        int h = getHeight() > 0 ? getHeight() : 1280;
+        for (Particle p : particles) {
+            p.update(w, h, frameCount);
         }
     }
 
@@ -81,14 +91,36 @@ public class ConfettiView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        for (Confetti c : confettiList) {
-            paint.setColor(c.color);
-            paint.setAlpha((int)(c.alpha * 255));
-            canvas.save();
-            canvas.translate(c.x, c.y);
-            canvas.rotate(c.rotation);
-            canvas.drawRect(new RectF(0, 0, c.size, c.size * 0.6f), paint);
-            canvas.restore();
+        for (Particle p : particles) {
+            if (p.alpha < 0.01f) continue;
+
+            if (p.isEmoji) {
+                textPaint.setAlpha((int)(p.alpha * 255));
+                canvas.save();
+                canvas.translate(p.x, p.y);
+                canvas.rotate(p.rotation);
+                canvas.drawText(p.emoji, 0, 0, textPaint);
+                canvas.restore();
+            } else {
+                paint.setColor(p.color);
+                paint.setAlpha((int)(p.alpha * 255));
+                canvas.save();
+                canvas.translate(p.x, p.y);
+                canvas.rotate(p.rotation);
+                switch (p.shape) {
+                    case 0: // rect
+                        canvas.drawRoundRect(new RectF(-p.size / 2, -p.size / 3, p.size / 2, p.size / 3), 3, 3, paint);
+                        break;
+                    case 1: // circle
+                        canvas.drawCircle(0, 0, p.size / 2, paint);
+                        break;
+                    case 2: // triangle-ish (diamond)
+                        canvas.rotate(45);
+                        canvas.drawRect(new RectF(-p.size / 2, -p.size / 4, p.size / 2, p.size / 4), paint);
+                        break;
+                }
+                canvas.restore();
+            }
         }
     }
 
@@ -98,33 +130,51 @@ public class ConfettiView extends View {
         stop();
     }
 
-    private class Confetti {
+    private class Particle {
         float x, y;
-        float speedX, speedY;
+        float vx, vy;
         float rotation, rotationSpeed;
         float size;
         int color;
         float alpha = 1f;
+        int shape;
+        boolean isEmoji;
+        String emoji;
 
-        Confetti() {
-            x = random.nextInt(200) - 100;
-            y = -random.nextInt(300);
-            speedX = (random.nextFloat() - 0.5f) * 6;
-            speedY = 2 + random.nextFloat() * 5;
+        Particle(int screenW) {
+            x = screenW * 0.1f + random.nextInt((int)(screenW * 0.8f));
+            y = -random.nextInt(400) - 50;
+            vx = (random.nextFloat() - 0.5f) * 4;
+            vy = 3 + random.nextFloat() * 6;
             rotation = random.nextFloat() * 360;
-            rotationSpeed = (random.nextFloat() - 0.5f) * 12;
-            size = 8 + random.nextFloat() * 16;
+            rotationSpeed = (random.nextFloat() - 0.5f) * 10;
+            size = 10 + random.nextFloat() * 16;
+            shape = random.nextInt(3);
+            isEmoji = random.nextFloat() < 0.15f;
+            if (isEmoji) {
+                emoji = EMOJIS[random.nextInt(EMOJIS.length)];
+            }
             color = COLORS[random.nextInt(COLORS.length)];
         }
 
         void update(int screenW, int screenH, int frame) {
-            x += speedX + screenW / 2f;
-            y += speedY;
+            x += vx;
+            y += vy;
             rotation += rotationSpeed;
-            speedX *= 0.99f;
-            if (frame > 120) {
-                alpha = Math.max(0, alpha - 0.03f);
-                speedY *= 0.95f;
+            vy += 0.08f;
+
+            if (frame > 30 && frame <= 100) {
+                vx += (random.nextFloat() - 0.5f) * 0.3f;
+            }
+
+            if (y > screenH + 50) {
+                y = -random.nextInt(100) - 50;
+                x = random.nextInt(screenW);
+                vy = 3 + random.nextFloat() * 4;
+            }
+
+            if (frame > 130) {
+                alpha = Math.max(0, alpha - 0.025f);
             }
         }
     }

@@ -15,7 +15,7 @@ import com.poetry.ui.detail.DetailFragment;
 import com.poetry.ui.game.CoupletGameFragment;
 import com.poetry.ui.game.MatchGameFragment;
 import com.poetry.ui.home.HomeFragment;
-import com.poetry.ui.learning.LearningFragment;
+import com.poetry.ui.profile.ProfileFragment;
 import com.poetry.ui.quiz.QuizFragment;
 import com.poetry.ui.widget.ConfettiView;
 
@@ -94,7 +94,7 @@ public class MainActivity extends AppCompatActivity implements HomeFragment.OnPo
 
     @Override
     public void openLearning() {
-        navigateTo(new LearningFragment());
+        navigateTo(new ProfileFragment());
     }
 
     @Override

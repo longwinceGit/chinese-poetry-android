@@ -3,6 +3,7 @@ package com.poetry.ui.adapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.OvershootInterpolator;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -62,6 +63,14 @@ public class PoemAdapter extends RecyclerView.Adapter<PoemAdapter.ViewHolder> {
         holder.tvAuthor.setText(p.author + " · " + p.dynasty);
 
         holder.itemView.setOnClickListener(v -> {
+            v.animate()
+                .scaleX(0.92f).scaleY(0.92f).setDuration(80)
+                .withEndAction(() ->
+                    v.animate()
+                        .scaleX(1f).scaleY(1f).setDuration(250)
+                        .setInterpolator(new OvershootInterpolator(2f))
+                        .start()
+                ).start();
             if (listener != null) listener.onPoemClick(p, position);
         });
     }
