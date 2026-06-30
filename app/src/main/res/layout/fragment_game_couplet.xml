@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="12dp"
+        android:background="@color/card"
+        android:elevation="2dp">
+
+        <TextView
+            android:id="@+id/btn_game_back"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:gravity="center"
+            android:text="←"
+            android:textSize="22sp"
+            android:textColor="@color/text_primary"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:id="@+id/tv_game_title"
+            android:text="🎮 诗词接龙"
+            android:textSize="18sp"
+            android:textColor="@color/coral"
+            android:textStyle="bold"
+            android:gravity="center" />
+
+        <TextView
+            android:id="@+id/tv_game_score"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0分"
+            android:textSize="14sp"
+            android:textColor="@color/teal"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="20dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/tv_round_info"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="第 1 / 10 题"
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginBottom="20dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="请选出下一句"
+                android:textSize="13sp"
+                android:textColor="@color/text_light"
+                android:layout_marginBottom="12dp" />
+
+            <TextView
+                android:id="@+id/tv_given_line"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="床前明月光"
+                android:textSize="22sp"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:padding="20dp"
+                android:background="@drawable/bg_card"
+                android:layout_marginBottom="24dp" />
+
+            <TextView
+                android:id="@+id/tv_option_1"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:gravity="center"
+                android:textSize="17sp"
+                android:textColor="@color/text_primary"
+                android:background="@drawable/bg_card"
+                android:layout_marginBottom="10dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/tv_option_2"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:gravity="center"
+                android:textSize="17sp"
+                android:textColor="@color/text_primary"
+                android:background="@drawable/bg_card"
+                android:layout_marginBottom="10dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/tv_option_3"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:gravity="center"
+                android:textSize="17sp"
+                android:textColor="@color/text_primary"
+                android:background="@drawable/bg_card"
+                android:layout_marginBottom="10dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/tv_option_4"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:gravity="center"
+                android:textSize="17sp"
+                android:textColor="@color/text_primary"
+                android:background="@drawable/bg_card"
+                android:layout_marginBottom="10dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/tv_game_feedback"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:layout_marginTop="16dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>
