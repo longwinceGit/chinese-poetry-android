@@ -60,38 +60,21 @@
             android:orientation="vertical"
             android:padding="24dp">
 
-            <!-- 标题 -->
-            <TextView
-                android:id="@+id/tv_detail_title"
+            <!-- 标题+拼音容器 -->
+            <LinearLayout
+                android:id="@+id/ll_title_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="静夜思"
-                android:textSize="26sp"
-                android:textColor="@color/text_primary"
-                android:textStyle="bold"
+                android:orientation="horizontal"
                 android:gravity="center" />
 
-            <!-- 拼音 -->
-            <TextView
-                android:id="@+id/tv_detail_pinyin"
+            <!-- 作者朝代+拼音容器 -->
+            <LinearLayout
+                android:id="@+id/ll_author_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text=""
-                android:textSize="13sp"
-                android:textColor="@color/text_light"
-                android:gravity="center"
-                android:visibility="gone" />
-
-            <!-- 作者 -->
-            <TextView
-                android:id="@+id/tv_detail_author"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="李白 · 唐代"
-                android:textSize="14sp"
-                android:textColor="@color/text_secondary"
+                android:orientation="horizontal"
                 android:gravity="center" />
 
             <!-- 分隔线 -->
@@ -103,15 +86,12 @@
                 android:layout_gravity="center"
                 android:background="@color/coral" />
 
-            <!-- 诗句 -->
-            <TextView
-                android:id="@+id/tv_detail_lines"
+            <!-- 诗句+拼音容器 -->
+            <LinearLayout
+                android:id="@+id/ll_poem_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="床前明月光，\n疑是地上霜。"
-                android:textSize="18sp"
-                android:textColor="@color/text_primary"
-                android:lineSpacingExtra="10dp"
+                android:orientation="vertical"
                 android:gravity="center" />
 
         </LinearLayout>

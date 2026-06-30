@@ -78,24 +78,8 @@ public class DetailViewModel extends AndroidViewModel {
         Boolean current = showPinyin.getValue();
         boolean newVal = current == null || !current;
         showPinyin.setValue(newVal);
-
-        if (newVal) {
-            Poem p = poem.getValue();
-            if (p != null && p.lines != null) {
-                String pinyinText = com.poetry.util.PinyinHelper.getLinesPinyin(p.lines);
-                MutableLiveData<String> pinyinLive = pinyinTextLive;
-                if (pinyinLive == null) {
-                    pinyinLive = new MutableLiveData<>();
-                    pinyinTextLive = pinyinLive;
-                }
-                pinyinLive.postValue(pinyinText);
-            }
-        }
     }
 
-    private MutableLiveData<String> pinyinTextLive = new MutableLiveData<>();
-
-    public LiveData<String> getPinyinText() { return pinyinTextLive; }
     public LiveData<Poem> getPoem() { return poem; }
     public LiveData<Boolean> getIsFavorite() { return isFavorite; }
     public LiveData<Boolean> getIsLearned() { return isLearned; }

@@ -1,14 +1,15 @@
 package com.poetry.ui.home;
 
-import android.view.animation.OvershootInterpolator;
 import android.animation.ObjectAnimator;
+import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.content.Context;
+import android.view.animation.OvershootInterpolator;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -17,6 +18,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -25,6 +27,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.poetry.R;
 import com.poetry.data.model.Poem;
 import com.poetry.ui.adapter.PoemAdapter;
+import com.poetry.util.PinyinHelper;
 
 import java.util.List;
 
@@ -32,7 +35,8 @@ public class HomeFragment extends Fragment {
 
     private HomeViewModel viewModel;
 
-    private TextView tvSubtitle, tvDailyEmoji, tvDailyTitle, tvDailyAuthor;
+    private TextView tvSubtitle, tvDailyEmoji, tvDailyPinyinToggle;
+    private LinearLayout llDailyTitle, llDailyAuthor;
     private TextView tvPoemCount, tvSearchResultTitle, btnLoadMore;
     private LinearLayout categoryChips, loadMoreArea, searchBar;
     private EditText etSearch;
@@ -41,6 +45,8 @@ public class HomeFragment extends Fragment {
     private RecyclerView recyclerPoems;
     private View progressLoad;
     private PoemAdapter adapter;
+
+    private boolean dailyPinyinVisible = false;
 
     @Nullable
     @Override
@@ -62,8 +68,9 @@ public class HomeFragment extends Fragment {
         tvSubtitle = v.findViewById(R.id.tv_subtitle);
         dailyCard = v.findViewById(R.id.daily_card);
         tvDailyEmoji = v.findViewById(R.id.tv_daily_emoji);
-        tvDailyTitle = v.findViewById(R.id.tv_daily_title);
-        tvDailyAuthor = v.findViewById(R.id.tv_daily_author);
+        llDailyTitle = v.findViewById(R.id.ll_daily_title);
+        llDailyAuthor = v.findViewById(R.id.ll_daily_author);
+        tvDailyPinyinToggle = v.findViewById(R.id.tv_daily_pinyin_toggle);
         categoryChips = v.findViewById(R.id.category_chips);
         tvPoemCount = v.findViewById(R.id.tv_poem_count);
         recyclerPoems = v.findViewById(R.id.recycler_poems);
@@ -115,6 +122,17 @@ public class HomeFragment extends Fragment {
             Poem p = viewModel.getDailyPoem().getValue();
             if (p != null && getActivity() instanceof OnPoemClickListener) {
                 ((OnPoemClickListener) getActivity()).onPoemClick(p);
+            }
+        });
+
+        tvDailyPinyinToggle.setOnClickListener(v -> {
+            dailyPinyinVisible = !dailyPinyinVisible;
+            tvDailyPinyinToggle.setTextColor(dailyPinyinVisible
+                    ? getResources().getColor(R.color.coral)
+                    : getResources().getColor(R.color.text_secondary));
+            Poem p = viewModel.getDailyPoem().getValue();
+            if (p != null) {
+                buildDailyCard(p, dailyPinyinVisible);
             }
         });
 
@@ -172,8 +190,7 @@ public class HomeFragment extends Fragment {
         viewModel.getDailyPoem().observe(getViewLifecycleOwner(), poem -> {
             if (poem != null) {
                 tvDailyEmoji.setText(poem.emoji);
-                tvDailyTitle.setText(poem.title);
-                tvDailyAuthor.setText(poem.author + " · " + poem.dynasty);
+                buildDailyCard(poem, dailyPinyinVisible);
             }
         });
 
@@ -231,6 +248,96 @@ public class HomeFragment extends Fragment {
         etSearch.setText("");
         InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imm != null) imm.hideSoftInputFromWindow(etSearch.getWindowToken(), 0);
+    }
+
+    /**
+     * 构建每日推荐卡片的标题和作者（支持拼音切换）
+     */
+    private void buildDailyCard(Poem poem, boolean showPinyin) {
+        llDailyTitle.removeAllViews();
+        llDailyAuthor.removeAllViews();
+
+        int titleColor = ContextCompat.getColor(requireContext(), R.color.text_primary);
+        int authorColor = ContextCompat.getColor(requireContext(), R.color.text_secondary);
+        int pinyinColor = ContextCompat.getColor(requireContext(), R.color.text_light);
+
+        // 标题（逐字拼音）
+        buildCharLineInline(llDailyTitle, poem.title, showPinyin,
+                dpToPx(2), 20, 13, titleColor, pinyinColor, true);
+
+        // 作者 · 朝代
+        String authorText = poem.author + " · " + poem.dynasty;
+        buildCharLineInline(llDailyAuthor, authorText, showPinyin,
+                dpToPx(1), 13, 10, authorColor, pinyinColor, false);
+    }
+
+    private void buildCharLineInline(LinearLayout parent, String text, boolean showPinyin,
+                                     int charSpacing, float charSize, float pinyinSize,
+                                     int charColor, int pinyinColor, boolean bold) {
+        if (text == null || text.isEmpty()) return;
+
+        java.util.List<String> pinyins = showPinyin ? PinyinHelper.toPinyinList(text) : null;
+
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            boolean isPunct = isPunctChar(c) || c == ' ' || c == '·';
+
+            LinearLayout charBlock = new LinearLayout(getContext());
+            charBlock.setOrientation(LinearLayout.VERTICAL);
+            charBlock.setGravity(Gravity.CENTER_HORIZONTAL);
+            LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            if (!isPunct) {
+                bp.leftMargin = charSpacing;
+                bp.rightMargin = charSpacing;
+            }
+            charBlock.setLayoutParams(bp);
+
+            if (showPinyin && !isPunct && pinyins != null && i < pinyins.size()) {
+                String py = pinyins.get(i);
+                TextView tvPy = new TextView(getContext());
+                tvPy.setText(py.isEmpty() ? " " : py);
+                tvPy.setTextSize(pinyinSize);
+                tvPy.setTextColor(pinyinColor);
+                tvPy.setGravity(Gravity.CENTER);
+                tvPy.setSingleLine(true);
+                charBlock.addView(tvPy);
+            } else if (showPinyin && isPunct) {
+                TextView tvSpacer = new TextView(getContext());
+                tvSpacer.setText(" ");
+                tvSpacer.setTextSize(pinyinSize);
+                tvSpacer.setSingleLine(true);
+                charBlock.addView(tvSpacer);
+            }
+
+            TextView tvChar = new TextView(getContext());
+            tvChar.setText(String.valueOf(c));
+            tvChar.setTextSize(charSize);
+            tvChar.setTextColor(charColor);
+            tvChar.setGravity(Gravity.CENTER);
+            tvChar.setSingleLine(true);
+            tvChar.setLineSpacing(0, 1f);
+            if (bold) {
+                tvChar.setTypeface(tvChar.getTypeface(), android.graphics.Typeface.BOLD);
+            }
+            charBlock.addView(tvChar);
+
+            parent.addView(charBlock);
+        }
+    }
+
+    private boolean isPunctChar(char c) {
+        return c == '，' || c == '。' || c == '、' || c == '；'
+                || c == '：' || c == '？' || c == '！' || c == '"'
+                || c == '"' || c == '\'' || c == '\''
+                || c == '(' || c == ')' || c == '（' || c == '）'
+                || c == ',' || c == '.' || c == '!' || c == '?'
+                || c == ';' || c == ':';
+    }
+
+    private int dpToPx(int dp) {
+        float density = getResources().getDisplayMetrics().density;
+        return Math.round(dp * density);
     }
 
     public interface OnPoemClickListener {

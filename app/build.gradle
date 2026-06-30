@@ -46,8 +46,8 @@ dependencies {
     // Fragment
     implementation 'androidx.fragment:fragment:1.5.6'
 
-    // TinyPinyin
-    implementation 'com.github.promeg:tinypinyin:2.0.3'
+    // Pinyin4j (支持音调标注)
+    implementation 'com.belerweb:pinyin4j:2.5.1'
 
     // Lottie
     implementation 'com.airbnb.android:lottie:5.2.0'
