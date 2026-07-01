@@ -26,8 +26,8 @@ import com.google.android.material.chip.Chip;
 import com.poetry.R;
 import com.poetry.data.LearningDatabase;
 import com.poetry.data.model.Poem;
+import com.poetry.util.PinyinLineView;
 import com.poetry.util.TtsManager;
-import com.poetry.util.PinyinHelper;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -160,32 +160,34 @@ public class DetailFragment extends Fragment {
         }
     }
 
+    /** 拼音逐字模式下每列最小宽度（dp），用于计算每行最大字符数 */
+    private static final int MIN_CELL_DP = 22;
+
     private void renderPoemLines(boolean showPinyin) {
         llPoemLines.removeAllViews();
         if (poemLines == null) return;
 
+        int lineSpacing = dp2px(showPinyin ? 12 : 6);
+
+        // 计算可用宽度 → 每行最多几个字
+        float density = getResources().getDisplayMetrics().density;
+        int screenWidthDp = (int) (getResources().getDisplayMetrics().widthPixels / density);
+        int availableDp = screenWidthDp - 48; // 左右 margin 各 24dp
+        int maxCharsPerRow = Math.max(5, availableDp / MIN_CELL_DP);
+
         for (String line : poemLines) {
             if (showPinyin) {
-                // 诗句 + 拼音两行
-                LinearLayout lineContainer = new LinearLayout(requireContext());
-                lineContainer.setOrientation(LinearLayout.VERTICAL);
-                lineContainer.setGravity(android.view.Gravity.CENTER);
-
-                TextView pinyinTv = new TextView(requireContext());
-                pinyinTv.setText(PinyinHelper.toPinyin(line));
-                pinyinTv.setTextSize(11);
-                pinyinTv.setTextColor(ContextCompat.getColor(requireContext(), R.color.on_surface_variant));
-                pinyinTv.setAlpha(0.7f);
-                pinyinTv.setGravity(android.view.Gravity.CENTER);
-                lineContainer.addView(pinyinTv);
-
-                TextView lineTv = createLineTextView(line);
-                lineContainer.addView(lineTv);
-                llPoemLines.addView(lineContainer);
+                PinyinLineView pinyinLine = new PinyinLineView(requireContext(), line, maxCharsPerRow);
+                pinyinLine.setPadding(0, lineSpacing / 2, 0, lineSpacing / 2);
+                llPoemLines.addView(pinyinLine);
             } else {
                 llPoemLines.addView(createLineTextView(line));
             }
         }
+    }
+
+    private int dp2px(int dp) {
+        return (int) (dp * getResources().getDisplayMetrics().density);
     }
 
     private TextView createLineTextView(String text) {
