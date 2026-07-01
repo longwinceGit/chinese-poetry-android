@@ -1,59 +1,34 @@
 @echo off
-chcp 65001 >nul
-echo ================================
-echo   中华诗词库 - Android 构建脚本
-echo ================================
+echo ==================================
+echo   诗词乐园 - APK 构建脚本
+echo ==================================
 echo.
 
-REM 设置项目根目录
-set PROJECT_DIR=%~dp0
-set GRADLE_VERSION=7.5
-set GRADLE_DIR=%USERPROFILE%\.gradle\wrapper\dists\gradle-%GRADLE_VERSION%-bin
-set GRADLE_EXE=
-
-REM 查找 Gradle 7.5
-if exist "%GRADLE_DIR%\*\bin\gradle.bat" (
-    for /f "delims=" %%i in ('dir /s /b "%GRADLE_DIR%\*\bin\gradle.bat" 2^>nul') do set GRADLE_EXE=%%i
+REM 检查 Java 17
+java -version 2>&1 | find "17" >nul
+if %errorlevel% neq 0 (
+    echo [错误] 需要 JDK 17，当前 Java 版本：
+    java -version 2>&1
+    exit /b 1
 )
 
-if "%GRADLE_EXE%"=="" (
-    echo [1/3] Gradle %GRADLE_VERSION% 未找到，正在下载...
-    set DIST_URL=https://services.gradle.org/distributions/gradle-%GRADLE_VERSION%-bin.zip
-    set TMP_ZIP=%TEMP%\gradle-%GRADLE_VERSION%.zip
-    
-    REM 使用 PowerShell 下载
-    powershell -Command "& { Invoke-WebRequest -Uri '%DIST_URL%' -OutFile '%TMP_ZIP%' }"
-    
-    if not exist "%TMP_ZIP%" (
-        echo 下载失败，请手动下载 Gradle %GRADLE_VERSION% 并配置 PATH
-        pause
-        exit /b 1
-    )
-    
-    echo [2/3] 解压 Gradle...
-    powershell -Command "& { Expand-Archive -Path '%TMP_ZIP%' -DestinationPath '%USERPROFILE%\.gradle\wrapper\dists\' -Force }"
-    del "%TMP_ZIP%"
-    
-    REM 重新查找
-    for /f "delims=" %%i in ('dir /s /b "%GRADLE_DIR%\*\bin\gradle.bat" 2^>nul') do set GRADLE_EXE=%%i
-)
+echo [信息] 清理旧构建...
+if exist app\build rmdir /s /q app\build
 
-echo [3/3] 使用 Gradle 构建 APK...
-echo Gradle: %GRADLE_EXE%
-echo.
+echo [信息] 生成 Gradle Wrapper...
+call gradle wrapper --gradle-version 8.5
 
-cd /d "%PROJECT_DIR%"
-"%GRADLE_EXE%" assembleDebug --stacktrace
+echo [信息] 开始构建 Debug APK...
+call gradlew assembleDebug
 
-if exist "%PROJECT_DIR%app\build\outputs\apk\debug\app-debug.apk" (
+if %errorlevel% equ 0 (
     echo.
-    echo ================================
+    echo ==================================
     echo   构建成功！
-    echo   APK: %PROJECT_DIR%app\build\outputs\apk\debug\app-debug.apk
-    echo ================================
+    echo   APK 位置: app\build\outputs\apk\debug\app-debug.apk
+    echo ==================================
 ) else (
     echo.
-    echo [!!] 构建失败，请检查错误信息
+    echo [错误] 构建失败，请检查上方错误信息
+    exit /b 1
 )
-
-pause

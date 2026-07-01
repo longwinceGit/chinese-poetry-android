@@ -1,5 +1,6 @@
 package com.poetry.ui.profile;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,31 +11,29 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.poetry.R;
 import com.poetry.data.UserProfile;
+import com.poetry.domain.AchievementEngine;
 
 import java.util.List;
 
 public class ProfileFragment extends Fragment {
 
+    private TextView tvAvatar, tvLevelLabel, tvExp, tvFavoritesCount, tvLearnedCount;
+    private TextView tvAchievementCount;
+    private ProgressBar progressExp;
+    private LinearLayout llAchievements;
     private ProfileViewModel viewModel;
-
-    private TextView tvLevelName, tvPoints, tvTodayLearned, tvTodayQuiz, tvTodayStreak;
-    private TextView tvTotalLearned, tvTotalFav, tvTotalGames;
-    private ProgressBar progressLevel;
-    private LinearLayout weeklyChart;
-    private View btnBack;
-
-    public static ProfileFragment newInstance() {
-        return new ProfileFragment();
-    }
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_profile, container, false);
     }
 
@@ -44,27 +43,20 @@ public class ProfileFragment extends Fragment {
         initViews(view);
         viewModel = new ViewModelProvider(this).get(ProfileViewModel.class);
         observeData();
-        viewModel.loadProfile();
+        viewModel.loadData();
+
+        view.findViewById(R.id.btn_share_app).setOnClickListener(v -> shareApp());
     }
 
     private void initViews(View v) {
-        btnBack = v.findViewById(R.id.btn_profile_back);
-        tvLevelName = v.findViewById(R.id.tv_level_name);
-        progressLevel = v.findViewById(R.id.progress_level);
-        tvPoints = v.findViewById(R.id.tv_points);
-        tvTodayLearned = v.findViewById(R.id.tv_today_learned);
-        tvTodayQuiz = v.findViewById(R.id.tv_today_quiz);
-        tvTodayStreak = v.findViewById(R.id.tv_today_streak);
-        tvTotalLearned = v.findViewById(R.id.tv_total_learned);
-        tvTotalFav = v.findViewById(R.id.tv_total_fav);
-        tvTotalGames = v.findViewById(R.id.tv_total_games);
-        weeklyChart = v.findViewById(R.id.weekly_chart);
-
-        btnBack.setOnClickListener(v2 -> {
-            if (getActivity() != null) {
-                getActivity().getSupportFragmentManager().popBackStack();
-            }
-        });
+        tvAvatar = v.findViewById(R.id.tv_avatar);
+        tvLevelLabel = v.findViewById(R.id.tv_level_label);
+        tvExp = v.findViewById(R.id.tv_exp);
+        tvFavoritesCount = v.findViewById(R.id.tv_favorites_count);
+        tvLearnedCount = v.findViewById(R.id.tv_learned_count);
+        tvAchievementCount = v.findViewById(R.id.tv_achievement_count);
+        progressExp = v.findViewById(R.id.progress_exp);
+        llAchievements = v.findViewById(R.id.ll_achievements);
     }
 
     private void observeData() {
@@ -72,69 +64,91 @@ public class ProfileFragment extends Fragment {
             if (profile != null) updateProfile(profile);
         });
 
-        viewModel.getTodayLearned().observe(getViewLifecycleOwner(), v -> {
-            tvTodayLearned.setText(String.valueOf(v != null ? v : 0));
+        viewModel.getFavoriteCount().observe(getViewLifecycleOwner(), count -> {
+            if (count != null) tvFavoritesCount.setText(String.valueOf(count));
         });
 
-        viewModel.getTodayQuiz().observe(getViewLifecycleOwner(), v -> {
-            tvTodayQuiz.setText(String.valueOf(v != null ? v : 0));
+        viewModel.getLearnedCount().observe(getViewLifecycleOwner(), count -> {
+            if (count != null) tvLearnedCount.setText(String.valueOf(count));
         });
-
-        viewModel.getTotalLearned().observe(getViewLifecycleOwner(), v -> {
-            tvTotalLearned.setText(String.valueOf(v != null ? v : 0));
-        });
-
-        viewModel.getTotalFav().observe(getViewLifecycleOwner(), v -> {
-            tvTotalFav.setText(String.valueOf(v != null ? v : 0));
-        });
-
-        viewModel.getTotalGames().observe(getViewLifecycleOwner(), v -> {
-            tvTotalGames.setText(String.valueOf(v != null ? v : 0));
-        });
-
-        viewModel.getWeeklyStats().observe(getViewLifecycleOwner(), this::renderWeeklyChart);
     }
 
     private void updateProfile(UserProfile profile) {
-        tvLevelName.setText(viewModel.getLevelName(profile.level));
-        progressLevel.setProgress(viewModel.getLevelProgress(profile.totalPoints));
-        tvPoints.setText("积分：" + profile.totalPoints);
-        tvTodayStreak.setText(profile.streak + "天");
+        // 等级
+        tvLevelLabel.setText(getString(R.string.profile_level, profile.level));
+
+        // 经验条
+        int expNeeded = profile.level * 100;
+        int currentExp = profile.totalPoints % expNeeded;
+        progressExp.setMax(expNeeded);
+        progressExp.setProgress(currentExp);
+        tvExp.setText(getString(R.string.profile_exp, currentExp, expNeeded));
+
+        // 头像
+        updateAvatar(profile.level);
+
+        // 成就
+        buildAchievements(profile);
     }
 
-    private void renderWeeklyChart(List<Integer> stats) {
-        if (stats == null || stats.isEmpty()) return;
-        weeklyChart.removeAllViews();
-        int max = 1;
-        for (int v : stats) if (v > max) max = v;
-        String[] days = {"一", "二", "三", "四", "五", "六", "日"};
+    private void updateAvatar(int level) {
+        String[] avatars = {"🌱", "📚", "📖", "✒️", "🎋", "🏯", "🧠", "🏆", "👑"};
+        int idx = Math.min(level - 1, avatars.length - 1);
+        if (idx >= 0) tvAvatar.setText(avatars[idx]);
+    }
 
-        for (int i = 0; i < 7; i++) {
-            LinearLayout col = new LinearLayout(requireContext());
-            col.setOrientation(LinearLayout.VERTICAL);
-            col.setGravity(android.view.Gravity.CENTER);
-            LinearLayout.LayoutParams colLp = new LinearLayout.LayoutParams(0, -2);
-            colLp.weight = 1;
-            col.setLayoutParams(colLp);
+    private void buildAchievements(UserProfile profile) {
+        llAchievements.removeAllViews();
+        List<AchievementEngine.AchievementDef> all = AchievementEngine.ALL_ACHIEVEMENTS;
+        List<String> unlocked = AchievementEngine.getUnlockedIds(profile);
 
-            int count = stats.get(i);
-            int barHeight = Math.max(8, count * 60 / max);
+        int unlockedCount = unlocked.size();
+        tvAchievementCount.setText(
+            getString(R.string.profile_unlocked_count, unlockedCount, all.size()));
 
-            View bar = new View(requireContext());
-            LinearLayout.LayoutParams barLp = new LinearLayout.LayoutParams(24, barHeight);
-            barLp.setMargins(0, 0, 0, 4);
-            bar.setLayoutParams(barLp);
-            bar.setBackgroundResource(R.drawable.bg_chip_active);
-            bar.setAlpha(0.3f + 0.7f * count / Math.max(1, max));
+        // 最多显示 6 个
+        int showCount = Math.min(6, all.size());
+        for (int i = 0; i < showCount; i++) {
+            AchievementEngine.AchievementDef def = all.get(i);
+            boolean isUnlocked = unlocked.contains(def.id);
 
-            TextView label = new TextView(requireContext());
-            label.setText(days[i]);
-            label.setTextSize(10);
-            label.setTextColor(getResources().getColor(R.color.text_light));
+            LinearLayout item = new LinearLayout(requireContext());
+            item.setOrientation(LinearLayout.VERTICAL);
+            item.setGravity(android.view.Gravity.CENTER);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+            item.setLayoutParams(params);
 
-            col.addView(bar);
-            col.addView(label);
-            weeklyChart.addView(col);
+            // 图标
+            TextView icon = new TextView(requireContext());
+            icon.setText(isUnlocked ? def.icon : "🔒");
+            icon.setTextSize(24);
+            icon.setAlpha(isUnlocked ? 1.0f : 0.4f);
+            icon.setGravity(android.view.Gravity.CENTER);
+            item.addView(icon);
+
+            // 名称
+            TextView name = new TextView(requireContext());
+            name.setText(def.name);
+            name.setTextSize(10);
+            name.setTextColor(ContextCompat.getColor(requireContext(),
+                isUnlocked ? R.color.on_surface : R.color.outline));
+            name.setGravity(android.view.Gravity.CENTER);
+            name.setMaxLines(1);
+            name.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            item.addView(name);
+
+            llAchievements.addView(item);
         }
+    }
+
+    private void shareApp() {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_TEXT,
+            getString(R.string.share_text,
+                viewModel.getLearnedCount().getValue() != null
+                    ? viewModel.getLearnedCount().getValue() : 0));
+        startActivity(Intent.createChooser(shareIntent, getString(R.string.profile_share_app)));
     }
 }

@@ -1,3 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">诗词乐园</string>
+
+    <!-- 底部导航 -->
+    <string name="nav_home">首页</string>
+    <string name="nav_learn">学习</string>
+    <string name="nav_game">游戏</string>
+    <string name="nav_profile">我的</string>
+
+    <!-- 首页 -->
+    <string name="home_title">诗词乐园</string>
+    <string name="home_subtitle">品味千年诗词之美</string>
+    <string name="home_search_hint">搜索诗词、作者…</string>
+    <string name="home_daily_recommend">每日推荐</string>
+    <string name="home_today_poem">今日诗词</string>
+    <string name="home_all_poems">全部诗词</string>
+    <string name="home_category_all">全部</string>
+    <string name="home_loading">墨香氤氲，诗词正在加载…</string>
+    <string name="home_load_more">查看更多</string>
+    <string name="home_no_more">— 已全部呈现 —</string>
+    <string name="home_search_empty">未找到相关诗词，换个关键词试试</string>
+    <string name="home_poems_count">共收录 %d 首</string>
+
+    <!-- 学习 -->
+    <string name="learn_title">学习中心</string>
+    <string name="learn_streak">连续学习</string>
+    <string name="learn_streak_days">%d 天</string>
+    <string name="learn_total_learned">已学诗词</string>
+    <string name="learn_total_learned_count">%d 首</string>
+    <string name="learn_checkin_today">今日打卡</string>
+    <string name="learn_checkin_done">已打卡</string>
+    <string name="learn_checkin_claimed">+%d 积分</string>
+    <string name="learn_daily_tasks">每日任务</string>
+    <string name="learn_task_poem">学一首诗</string>
+    <string name="learn_task_quiz">做一套题</string>
+    <string name="learn_task_game">玩一局游戏</string>
+    <string name="learn_task_done">已完成</string>
+    <string name="learn_weekly_calendar">本周记录</string>
+    <string name="learn_stats_title">学习统计</string>
+
+    <!-- 游戏 -->
+    <string name="game_title">诗词游戏</string>
+    <string name="game_subtitle">趣味挑战，寓教于乐</string>
+    <string name="game_couplet">对诗</string>
+    <string name="game_couplet_desc">给出上句，对下句</string>
+    <string name="game_match">消消乐</string>
+    <string name="game_match_desc">配对诗句与作者</string>
+    <string name="game_quiz">填空</string>
+    <string name="game_quiz_desc">补全缺失的字词</string>
+    <string name="game_select_title">选择游戏</string>
+    <string name="game_score">得分</string>
+    <string name="game_correct">正确</string>
+    <string name="game_wrong">错误</string>
+    <string name="game_restart">再来一局</string>
+    <string name="game_next">下一题</string>
+    <string name="game_finish">完成挑战</string>
+    <string name="game_progress">%d / %d</string>
+
+    <!-- 诗词详情 -->
+    <string name="detail_title_info">诗词详情</string>
+    <string name="detail_read">朗读</string>
+    <string name="detail_pause">暂停</string>
+    <string name="detail_favorite">收藏</string>
+    <string name="detail_unfavorite">取消收藏</string>
+    <string name="detail_share">分享</string>
+    <string name="detail_learn">标记已学</string>
+    <string name="detail_learned">已学习</string>
+    <string name="detail_author_prefix">—— </string>
+    <string name="detail_dynasty">朝代</string>
+    <string name="detail_category">分类</string>
+    <string name="detail_share_title">分享诗词</string>
+
+    <!-- 个人中心 -->
+    <string name="profile_title">我的</string>
+    <string name="profile_level">等级 %d</string>
+    <string name="profile_exp">%d / %d 经验</string>
+    <string name="profile_favorites">我的收藏</string>
+    <string name="profile_learned">已学诗词</string>
+    <string name="profile_achievements">成就徽章</string>
+    <string name="profile_settings">设置</string>
+    <string name="profile_about">关于</string>
+    <string name="profile_unlocked_count">%d / %d</string>
+    <string name="profile_share_app">分享给好友</string>
+
+    <!-- 成就 -->
+    <string name="achievement_unlocked_title">🎉 成就解锁！</string>
+    <string name="achievement_all">全部成就</string>
+
+    <!-- 通用 -->
+    <string name="btn_back">返回</string>
+    <string name="btn_confirm">确定</string>
+    <string name="btn_cancel">取消</string>
+    <string name="loading">加载中…</string>
+    <string name="error_occurred">出现了一些问题</string>
+    <string name="retry">重试</string>
+    <string name="no_data">暂无内容</string>
+    <string name="share_text">我正在用「诗词乐园」学习古诗词，已学%d首，你也来试试吧！</string>
 </resources>

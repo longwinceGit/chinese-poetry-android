@@ -1,77 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/bg">
+    android:background="@color/background"
+    android:padding="16dp">
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:id="@+id/ll_header"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:padding="12dp"
-        android:background="@color/card"
-        android:elevation="2dp">
-
-        <TextView
-            android:id="@+id/btn_match_back"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:gravity="center"
-            android:text="←"
-            android:textSize="22sp"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackgroundBorderless" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="🃏 翻翻卡配对"
-            android:textSize="18sp"
-            android:textColor="@color/purple"
+            android:text="🃏 消消乐"
+            android:textSize="20sp"
+            android:textColor="@color/primary"
             android:textStyle="bold"
-            android:gravity="center" />
+            android:fontFamily="serif" />
 
         <TextView
-            android:id="@+id/tv_match_progress"
+            android:id="@+id/tv_score"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="0/6"
-            android:textSize="14sp"
-            android:textColor="@color/text_secondary" />
+            android:textSize="18sp"
+            android:textColor="@color/score_gold"
+            android:textStyle="bold"
+            tools:text="得分: 0" />
     </LinearLayout>
 
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="点击两张卡片，配对上句和下句"
-        android:textSize="13sp"
-        android:textColor="@color/text_light"
-        android:padding="12dp" />
-
-    <GridView
-        android:id="@+id/grid_match_cards"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:numColumns="3"
-        android:horizontalSpacing="8dp"
-        android:verticalSpacing="8dp"
-        android:padding="12dp"
-        android:stretchMode="columnWidth"
-        android:gravity="center" />
-
-    <TextView
-        android:id="@+id/tv_match_feedback"
+        android:id="@+id/tv_progress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:padding="16dp" />
+        android:layout_marginTop="8dp"
+        android:textSize="12sp"
+        android:textColor="@color/on_surface_variant"
+        app:layout_constraintTop_toBottomOf="@id/ll_header"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="配对成功: 0/6" />
 
-</LinearLayout>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_cards"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/tv_progress"
+        app:layout_constraintBottom_toTopOf="@id/btn_restart"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:listitem="@layout/item_poem_card" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_restart"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="16dp"
+        android:text="@string/game_restart"
+        android:textSize="14sp"
+        app:cornerRadius="12dp"
+        style="@style/Widget.Poetry.Button.Outlined"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

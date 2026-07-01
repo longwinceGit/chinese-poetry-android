@@ -6,15 +6,19 @@ import com.poetry.data.model.Poem;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.JSONTokener;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 /**
- * 从 assets 目录加载诗词 JSON 数据
+ * 从 assets 目录加载诗词 JSON 数据。
+ * 优化版：使用 JSONTokener 流式解析，避免中间 String 对象的双重内存占用。
  */
 public class PoemLoader {
 
@@ -24,9 +28,8 @@ public class PoemLoader {
     public static List<Poem> loadAll(AssetManager assets) throws Exception {
         List<Poem> all = new ArrayList<>();
 
-        // 1. 读取 nav.json
-        String navJson = readAsset(assets, "web/data/nav.json");
-        JSONArray nav = new JSONArray(navJson);
+        // 1. 解析 nav.json
+        JSONArray nav = readJsonArray(assets, "web/data/nav.json");
 
         for (int i = 0; i < nav.length(); i++) {
             JSONObject dyn = nav.getJSONObject(i);
@@ -35,8 +38,7 @@ public class PoemLoader {
 
             for (int j = 0; j < files.length(); j++) {
                 String file = "web/data/" + files.getString(j);
-                String poemJson = readAsset(assets, file);
-                JSONArray poems = new JSONArray(poemJson);
+                JSONArray poems = readJsonArray(assets, file);
 
                 for (int k = 0; k < poems.length(); k++) {
                     JSONObject p = poems.getJSONObject(k);
@@ -46,6 +48,27 @@ public class PoemLoader {
             }
         }
         return all;
+    }
+
+    /** 从 assets 读取 JSONArray。org.json.JSONTokener 不支持 InputStream 构造，先读为 String */
+    private static JSONArray readJsonArray(AssetManager assets, String path) throws Exception {
+        InputStream is = assets.open(path);
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+            JSONTokener tokener = new JSONTokener(sb.toString());
+            Object value = tokener.nextValue();
+            if (value instanceof JSONArray) {
+                return (JSONArray) value;
+            }
+            throw new Exception("Expected JSONArray but got " + value.getClass().getSimpleName());
+        } finally {
+            is.close();
+        }
     }
 
     /** 解析单首诗 */
@@ -65,10 +88,8 @@ public class PoemLoader {
             lines = new String[0];
         }
 
-        // 分类 = 朝代
         String category = dynasty;
 
-        // tag 用于卡片标签颜色
         String tag;
         switch (dynasty) {
             case "宋代": tag = "song"; break;
@@ -82,28 +103,12 @@ public class PoemLoader {
             default: tag = "tang"; break;
         }
 
-        // emoji
         String[] emojis = {"📖", "🌸", "🌙", "🏔️", "🌊", "🍃", "🎋", "🦋", "🐦", "⭐"};
         String emoji = emojis[index % emojis.length];
 
-        Poem poem = new Poem(
+        return new Poem(
             "d" + index, title, author, dynasty, category, tag, emoji, lines
         );
-        return poem;
-    }
-
-    /** 从 assets 读取整个文件为字符串 */
-    public static String readAsset(AssetManager assets, String path) throws Exception {
-        InputStream is = assets.open(path);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            sb.append(line);
-        }
-        reader.close();
-        is.close();
-        return sb.toString();
     }
 
     /** 随机 emoji */

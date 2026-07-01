@@ -51,11 +51,11 @@ public class AchievementAdapter extends RecyclerView.Adapter<AchievementAdapter.
 
         if (entry.unlocked) {
             holder.tvStatus.setText("已达成");
-            holder.tvStatus.setTextColor(holder.itemView.getContext().getColor(R.color.teal));
+            holder.tvStatus.setTextColor(holder.itemView.getContext().getColor(R.color.answer_correct));
             holder.itemView.setAlpha(1f);
         } else {
             holder.tvStatus.setText("未达成");
-            holder.tvStatus.setTextColor(holder.itemView.getContext().getColor(R.color.text_light));
+            holder.tvStatus.setTextColor(holder.itemView.getContext().getColor(R.color.on_surface_variant));
             holder.itemView.setAlpha(0.5f);
         }
     }

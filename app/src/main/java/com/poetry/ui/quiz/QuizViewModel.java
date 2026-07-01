@@ -13,6 +13,7 @@ import com.poetry.data.model.Poem;
 import com.poetry.domain.LearningEngine;
 import com.poetry.domain.QuizGenerator;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -90,9 +91,10 @@ public class QuizViewModel extends AndroidViewModel {
             totalCorrect.setValue(correct);
         }
 
-        // 保存积分
+        // 保存积分 + 更新每日统计
         final boolean finalCorrect = allCorrect;
         final int blanksCount = q.blanks.size();
+        final String poemId = q.poem.id;
         new Thread(() -> {
             UserProfile profile = db.poemDao().getUserProfileSync();
             if (profile == null) {
@@ -103,6 +105,11 @@ public class QuizViewModel extends AndroidViewModel {
             profile.level = LearningEngine.calcLevel(profile.totalPoints);
             db.poemDao().insertUserProfile(profile);
             score.postValue(profile.totalPoints);
+
+            // 持久化 quizScore 到 learning_records，供每日任务检测
+            db.poemDao().ensureRecordExists(poemId);
+            int newScore = (finalCorrect ? blanksCount : 0);
+            db.poemDao().updateQuizScore(poemId, newScore);
         }).start();
     }
 
@@ -114,6 +121,17 @@ public class QuizViewModel extends AndroidViewModel {
     }
 
     private void finishQuiz() {
+        // 更新每日统计：答题完成
+        final String today = LocalDate.now().toString();
+        new Thread(() -> {
+            // 确保今日行存在
+            com.poetry.data.DailyStats existing = db.poemDao().getDailyStatsSync(today);
+            if (existing == null) {
+                db.poemDao().upsertDailyStats(new com.poetry.data.DailyStats(today));
+            }
+            db.poemDao().incrementQuizCompleted(today);
+        }).start();
+
         isFinished.setValue(true);
     }
 

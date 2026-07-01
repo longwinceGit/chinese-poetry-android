@@ -13,23 +13,31 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.google.android.material.chip.ChipGroup;
 import com.poetry.R;
 import com.poetry.data.model.Poem;
 import com.poetry.domain.QuizGenerator;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class QuizFragment extends Fragment {
 
     private QuizViewModel viewModel;
 
-    private TextView tvPoemTitle, tvPoemAuthor, tvProgress, tvScore;
-    private LinearLayout layoutLines, layoutCandidates;
+    private TextView tvPoemTitle, tvScore;
+    private LinearLayout layoutLines;
+    private ViewGroup layoutCandidates;
     private View btnBack, btnTip, btnSubmit, btnNext;
     private List<TextView> blankViews = new ArrayList<>();
     private List<String> userAnswers = new ArrayList<>();
+    /** 候选词 chip 视图，用于撤销时恢复 */
+    private List<View> candidateChips = new ArrayList<>();
     private int currentBlankIndex = 0;
+    /** 用于 View.setTag 的 key，标记候选词对应的空位索引 */
+    private static final int TAG_KEY = 0x7f090001;
 
     public static QuizFragment newInstance() {
         return new QuizFragment();
@@ -52,47 +60,23 @@ public class QuizFragment extends Fragment {
     }
 
     private void initViews(View v) {
-        btnBack = v.findViewById(R.id.btn_quiz_back);
-        tvPoemTitle = v.findViewById(R.id.tv_quiz_poem_title);
-        tvPoemAuthor = v.findViewById(R.id.tv_quiz_poem_author);
-        tvProgress = v.findViewById(R.id.tv_quiz_progress);
-        tvScore = v.findViewById(R.id.tv_quiz_progress);
-        layoutLines = v.findViewById(R.id.layout_quiz_lines);
-        layoutCandidates = v.findViewById(R.id.layout_candidates);
-        btnTip = v.findViewById(R.id.btn_quiz_tip);
-        btnSubmit = v.findViewById(R.id.btn_quiz_submit);
-        btnNext = v.findViewById(R.id.btn_quiz_next);
+        tvPoemTitle = v.findViewById(R.id.tv_title);
+        tvScore = v.findViewById(R.id.tv_score);
+        layoutLines = v.findViewById(R.id.ll_poem_display);
+        layoutCandidates = v.findViewById(R.id.chip_candidates);
+        btnSubmit = v.findViewById(R.id.btn_submit);
+        btnNext = v.findViewById(R.id.btn_next);
+        btnNext.setVisibility(View.GONE);
     }
 
     private void setupListeners() {
-        btnBack.setOnClickListener(v -> {
-            if (getActivity() != null) {
-                getActivity().getSupportFragmentManager().popBackStack();
-            }
-        });
-
         btnSubmit.setOnClickListener(v -> {
-            if (blankViews.isEmpty()) return;
-            // 检查所有空位是否已填
-            boolean allFilled = true;
-            for (TextView tv : blankViews) {
-                if ("____".equals(tv.getText().toString())) {
-                    allFilled = false;
-                    break;
-                }
-            }
-            if (!allFilled) {
-                Toast.makeText(requireContext(), "请完成所有填空", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            viewModel.submitAnswer(userAnswers);
-        });
-
-        btnTip.setOnClickListener(v -> {
-            // 自动填入当前空位的正确答案
-            QuizGenerator.QuizQuestion q = viewModel.getCurrentQuestion().getValue();
-            if (q != null && currentBlankIndex < q.blanks.size()) {
-                fillBlank(currentBlankIndex, q.blanks.get(currentBlankIndex).answer);
+            if (userAnswers.size() == blankViews.size()) {
+                viewModel.submitAnswer(userAnswers);
+                btnSubmit.setEnabled(false);
+                btnSubmit.setAlpha(0.5f);
+            } else {
+                Toast.makeText(requireContext(), "请填完所有空位", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -107,14 +91,11 @@ public class QuizFragment extends Fragment {
         });
 
         viewModel.getQuestionIndex().observe(getViewLifecycleOwner(), idx -> {
-            if (idx != null) {
-                tvProgress.setText("第" + idx + "/" + viewModel.getTotalQuestions() + "题");
-            }
+            // Progress tracked in ViewModel
         });
 
         viewModel.getIsCorrect().observe(getViewLifecycleOwner(), correct -> {
             if (correct != null) {
-                btnSubmit.setVisibility(View.GONE);
                 btnNext.setVisibility(View.VISIBLE);
                 if (correct) {
                     Toast.makeText(requireContext(), "✅ 回答正确！", Toast.LENGTH_SHORT).show();
@@ -130,22 +111,24 @@ public class QuizFragment extends Fragment {
                 int total = viewModel.getTotalQuestions();
                 String msg = "🎉 你完成了 " + total + " 题，答对 " + (correct != null ? correct : 0) + " 题！";
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show();
-                if (getActivity() != null) {
-                    getActivity().getSupportFragmentManager().popBackStack();
-                }
+                requireActivity().onBackPressed();
             }
         });
     }
 
     private void renderQuestion(QuizGenerator.QuizQuestion q) {
         Poem p = q.poem;
-        tvPoemTitle.setText(p.title);
-        tvPoemAuthor.setText(p.author + " · " + p.dynasty);
+        tvPoemTitle.setText(p.title + " — " + p.author + " · " + p.dynasty);
 
         layoutLines.removeAllViews();
         blankViews.clear();
         userAnswers.clear();
+        candidateChips.clear();
         currentBlankIndex = 0;
+        btnSubmit.setEnabled(true);
+        btnSubmit.setAlpha(1f);
+        btnNext.setVisibility(View.GONE);
+        layoutCandidates.setEnabled(true);
 
         // 逐行渲染
         for (int i = 0; i < q.displayLines.length; i++) {
@@ -197,10 +180,12 @@ public class QuizFragment extends Fragment {
         tv.setLayoutParams(lp);
         tv.setText("____");
         tv.setTextSize(18);
-        tv.setTextColor(getResources().getColor(R.color.coral));
+        tv.setTextColor(getResources().getColor(R.color.tertiary, null));
         tv.setBackgroundResource(R.drawable.bg_chip);
         tv.setPadding(8, 4, 8, 4);
         tv.setTag(index);
+        // 点击已填写的空位 → 撤销
+        tv.setOnClickListener(v -> undoBlank(index));
         return tv;
     }
 
@@ -208,13 +193,14 @@ public class QuizFragment extends Fragment {
         TextView tv = new TextView(requireContext());
         tv.setText(text);
         tv.setTextSize(20);
-        tv.setTextColor(getResources().getColor(R.color.text_primary));
+        tv.setTextColor(getResources().getColor(R.color.on_surface, null));
         tv.setLineSpacing(0f, 1.6f);
         parent.addView(tv);
     }
 
     private void renderCandidates(List<String> candidates, QuizGenerator.QuizQuestion q) {
         layoutCandidates.removeAllViews();
+        candidateChips.clear();
         int rows = (candidates.size() + 2) / 3;
         for (int r = 0; r < rows; r++) {
             LinearLayout row = new LinearLayout(requireContext());
@@ -234,7 +220,7 @@ public class QuizFragment extends Fragment {
                 chip.setLayoutParams(lp);
                 chip.setText(word);
                 chip.setTextSize(18);
-                chip.setTextColor(getResources().getColor(R.color.text_primary));
+                chip.setTextColor(getResources().getColor(R.color.on_surface, null));
                 chip.setBackgroundResource(R.drawable.bg_chip_active);
                 chip.setPadding(24, 12, 24, 12);
                 chip.setClickable(true);
@@ -242,6 +228,8 @@ public class QuizFragment extends Fragment {
 
                 chip.setOnClickListener(v -> {
                     if (currentBlankIndex < blankViews.size()) {
+                        // 标记该 chip 对应的空位索引，用于撤销
+                        v.setTag(TAG_KEY, currentBlankIndex);
                         fillBlank(currentBlankIndex, word);
                         // 标记已使用（变灰）
                         chip.setAlpha(0.4f);
@@ -250,6 +238,7 @@ public class QuizFragment extends Fragment {
                 });
 
                 row.addView(chip);
+                candidateChips.add(chip);
             }
             layoutCandidates.addView(row);
         }
@@ -258,7 +247,7 @@ public class QuizFragment extends Fragment {
     private void fillBlank(int index, String word) {
         if (index < blankViews.size()) {
             blankViews.get(index).setText(word);
-            blankViews.get(index).setTextColor(getResources().getColor(R.color.teal));
+            blankViews.get(index).setTextColor(getResources().getColor(R.color.answer_correct, null));
             while (userAnswers.size() <= index) {
                 userAnswers.add("");
             }
@@ -266,8 +255,73 @@ public class QuizFragment extends Fragment {
             currentBlankIndex = index + 1;
             // 自动跳到下一个空位
             if (currentBlankIndex < blankViews.size()) {
-                blankViews.get(currentBlankIndex).setTextColor(getResources().getColor(R.color.coral));
+                blankViews.get(currentBlankIndex).setTextColor(getResources().getColor(R.color.tertiary, null));
             }
+            // 填满所有空位 → 自动提交
+            if (allBlanksFilled()) {
+                viewModel.submitAnswer(userAnswers);
+                btnSubmit.setEnabled(false);
+                btnSubmit.setAlpha(0.5f);
+                disableAllCandidates();
+            }
+        }
+    }
+
+    /** 检查是否所有空位都已填写 */
+    private boolean allBlanksFilled() {
+        if (userAnswers.size() < blankViews.size()) return false;
+        for (String ans : userAnswers) {
+            if (ans == null || ans.isEmpty()) return false;
+        }
+        return true;
+    }
+
+    /** 禁用所有候选词点击 */
+    private void disableAllCandidates() {
+        layoutCandidates.setEnabled(false);
+        for (int i = 0; i < layoutCandidates.getChildCount(); i++) {
+            View child = layoutCandidates.getChildAt(i);
+            if (child instanceof LinearLayout) {
+                LinearLayout row = (LinearLayout) child;
+                for (int j = 0; j < row.getChildCount(); j++) {
+                    View chip = row.getChildAt(j);
+                    chip.setClickable(false);
+                }
+            }
+        }
+    }
+
+    /** 撤销指定空位的填写，恢复候选词 */
+    private void undoBlank(int index) {
+        if (index < 0 || index >= blankViews.size()) return;
+        String currentAnswer = userAnswers.size() > index ? userAnswers.get(index) : "";
+        if (currentAnswer == null || currentAnswer.isEmpty()) return; // 未填写，无需撤销
+
+        // 清空空位
+        blankViews.get(index).setText("____");
+        blankViews.get(index).setTextColor(getResources().getColor(R.color.tertiary, null));
+        userAnswers.set(index, "");
+
+        // 恢复对应的候选词 chip
+        for (View chip : candidateChips) {
+            Object tag = chip.getTag(TAG_KEY);
+            if (tag instanceof Integer && (Integer) tag == index) {
+                chip.setAlpha(1.0f);
+                chip.setClickable(true);
+                chip.setTag(TAG_KEY, null);
+                break;
+            }
+        }
+
+        // 回退当前空位索引到该位置
+        if (index < currentBlankIndex) {
+            currentBlankIndex = index;
+        }
+
+        // 恢复提交按钮
+        if (!allBlanksFilled()) {
+            btnSubmit.setEnabled(true);
+            btnSubmit.setAlpha(1.0f);
         }
     }
 }

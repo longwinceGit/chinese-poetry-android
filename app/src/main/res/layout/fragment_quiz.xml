@@ -1,157 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/bg">
+    android:background="@color/background"
+    android:padding="16dp">
 
-    <!-- 顶部栏 -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:id="@+id/ll_header"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:padding="12dp"
-        android:background="@color/card"
-        android:elevation="2dp">
-
-        <TextView
-            android:id="@+id/btn_quiz_back"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:gravity="center"
-            android:text="←"
-            android:textSize="22sp"
-            android:textColor="@color/text_primary"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackgroundBorderless" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="✏️ 我会背"
-            android:textSize="18sp"
-            android:textColor="@color/coral"
-            android:textStyle="bold"
-            android:gravity="center" />
-
-        <TextView
-            android:id="@+id/tv_quiz_progress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="第1题"
-            android:textSize="14sp"
-            android:textColor="@color/text_secondary" />
-    </LinearLayout>
-
-    <!-- 诗词标题 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="20dp"
-        android:paddingBottom="8dp">
-
-        <TextView
-            android:id="@+id/tv_quiz_poem_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="静夜思"
+            android:text="✏️ 填空挑战"
             android:textSize="20sp"
-            android:textColor="@color/text_primary"
-            android:textStyle="bold" />
+            android:textColor="@color/primary"
+            android:textStyle="bold"
+            android:fontFamily="serif" />
 
         <TextView
-            android:id="@+id/tv_quiz_poem_author"
+            android:id="@+id/tv_score"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="李白 · 唐代"
-            android:textSize="13sp"
-            android:textColor="@color/text_secondary"
-            android:layout_marginTop="4dp" />
+            android:textSize="18sp"
+            android:textColor="@color/score_gold"
+            android:textStyle="bold"
+            tools:text="得分: 0" />
     </LinearLayout>
 
-    <!-- 诗句展示区 -->
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_margin="16dp"
-        android:layout_marginTop="0dp"
-        android:background="@drawable/bg_card"
-        android:padding="20dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:id="@+id/layout_quiz_lines"
-            android:gravity="center" />
-    </ScrollView>
-
-    <!-- 候选词区域 -->
-    <LinearLayout
-        android:id="@+id/layout_candidates"
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:textSize="16sp"
+        android:textColor="@color/on_surface_variant"
         android:gravity="center"
-        android:padding="16dp"
-        android:orientation="vertical" />
+        app:layout_constraintTop_toBottomOf="@id/ll_header"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="《静夜思》— 李白" />
 
-    <!-- 底部按钮 -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:id="@+id/ll_poem_display"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:layout_marginTop="24dp"
+        android:orientation="vertical"
         android:gravity="center"
-        android:padding="12dp"
-        android:background="@color/card"
-        android:elevation="4dp">
+        app:layout_constraintTop_toBottomOf="@id/tv_title"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-        <TextView
-            android:id="@+id/btn_quiz_tip"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="💡 提示"
-            android:textSize="15sp"
-            android:textColor="@color/text_secondary"
-            android:background="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true" />
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/chip_candidates"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        app:chipSpacingHorizontal="8dp"
+        app:chipSpacingVertical="8dp"
+        app:layout_constraintTop_toBottomOf="@id/ll_poem_display"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-        <TextView
-            android:id="@+id/btn_quiz_submit"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="✅ 确认"
-            android:textSize="15sp"
-            android:textColor="@color/card"
-            android:background="@drawable/bg_button_primary"
-            android:clickable="true"
-            android:focusable="true"
-            android:layout_marginStart="12dp" />
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_submit"
+        style="@style/Widget.Poetry.Button.Outlined"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="20dp"
+        android:text="提交答案"
+        android:textSize="14sp"
+        app:cornerRadius="12dp"
+        app:layout_constraintTop_toBottomOf="@id/chip_candidates"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-        <TextView
-            android:id="@+id/btn_quiz_next"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="➡️ 下一题"
-            android:textSize="15sp"
-            android:textColor="@color/teal"
-            android:visibility="gone"
-            android:background="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"
-            android:layout_marginStart="12dp" />
-    </LinearLayout>
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_next"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="12dp"
+        android:text="@string/game_next"
+        android:textSize="14sp"
+        app:cornerRadius="12dp"
+        app:icon="@drawable/ic_learn"
+        app:iconGravity="textStart"
+        app:layout_constraintTop_toBottomOf="@id/btn_submit"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

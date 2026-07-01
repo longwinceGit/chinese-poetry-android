@@ -1,56 +1,57 @@
 package com.poetry.ui.home;
 
-import android.animation.ObjectAnimator;
-import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.OvershootInterpolator;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.cardview.widget.CardView;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
 import com.poetry.R;
 import com.poetry.data.model.Poem;
 import com.poetry.ui.adapter.PoemAdapter;
-import com.poetry.util.PinyinHelper;
 
 import java.util.List;
 
 public class HomeFragment extends Fragment {
 
-    private HomeViewModel viewModel;
-
-    private TextView tvSubtitle, tvDailyEmoji, tvDailyPinyinToggle;
-    private LinearLayout llDailyTitle, llDailyAuthor;
-    private TextView tvPoemCount, tvSearchResultTitle, btnLoadMore;
-    private LinearLayout categoryChips, loadMoreArea, searchBar;
+    // Views
+    private View dailyCard, loadingContainer, loadMoreArea, btnLoadMore;
+    private View progressLoad, btnSearchClear, tvEmpty, tvNoMore;
+    private TextView tvDailyEmoji, tvDailyTitle, tvDailyAuthor, tvDailyExcerpt;
+    private TextView tvSectionTitle, tvPoemCount, tvLoadingMessage;
     private EditText etSearch;
-    private View btnSearchToggle, btnSearchClose, btnLearning, btnGame, sectionAllTitle;
-    private CardView dailyCard;
+    private ChipGroup chipCategories;
     private RecyclerView recyclerPoems;
-    private View progressLoad;
-    private PoemAdapter adapter;
+    private ProgressBar progressLoading;
 
-    private boolean dailyPinyinVisible = false;
+    private HomeViewModel viewModel;
+    private PoemAdapter adapter;
+    private NavController navController;
+    private final Handler searchHandler = new Handler(Looper.getMainLooper());
+    private Runnable searchRunnable;
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_home, container, false);
     }
 
@@ -64,288 +65,164 @@ public class HomeFragment extends Fragment {
         setupListeners();
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (searchRunnable != null) {
+            searchHandler.removeCallbacks(searchRunnable);
+        }
+    }
+
     private void initViews(View v) {
-        tvSubtitle = v.findViewById(R.id.tv_subtitle);
+        navController = Navigation.findNavController(v);
+
         dailyCard = v.findViewById(R.id.daily_card);
         tvDailyEmoji = v.findViewById(R.id.tv_daily_emoji);
-        llDailyTitle = v.findViewById(R.id.ll_daily_title);
-        llDailyAuthor = v.findViewById(R.id.ll_daily_author);
-        tvDailyPinyinToggle = v.findViewById(R.id.tv_daily_pinyin_toggle);
-        categoryChips = v.findViewById(R.id.category_chips);
+        tvDailyTitle = v.findViewById(R.id.tv_daily_title);
+        tvDailyAuthor = v.findViewById(R.id.tv_daily_author);
+        tvDailyExcerpt = v.findViewById(R.id.tv_daily_excerpt);
+
+        chipCategories = v.findViewById(R.id.chip_categories);
+        tvSectionTitle = v.findViewById(R.id.tv_section_title);
         tvPoemCount = v.findViewById(R.id.tv_poem_count);
-        recyclerPoems = v.findViewById(R.id.recycler_poems);
+        tvEmpty = v.findViewById(R.id.tv_empty);
+        tvNoMore = v.findViewById(R.id.tv_no_more);
+
+        loadingContainer = v.findViewById(R.id.loading_container);
+        progressLoading = v.findViewById(R.id.progress_loading);
+        tvLoadingMessage = v.findViewById(R.id.tv_loading_message);
+
         loadMoreArea = v.findViewById(R.id.load_more_area);
         btnLoadMore = v.findViewById(R.id.btn_load_more);
-        progressLoad = v.findViewById(R.id.progress_load);
-        searchBar = v.findViewById(R.id.search_bar);
-        etSearch = v.findViewById(R.id.et_search);
-        btnSearchToggle = v.findViewById(R.id.btn_search_toggle);
-        btnSearchClose = v.findViewById(R.id.btn_search_close);
-        btnLearning = v.findViewById(R.id.btn_learning);
-        btnGame = v.findViewById(R.id.btn_game);
-        tvSearchResultTitle = v.findViewById(R.id.tv_search_result_title);
-        sectionAllTitle = v.findViewById(R.id.section_all_title);
+        progressLoad = v.findViewById(R.id.progress_load_more);
 
-        GridLayoutManager glm = new GridLayoutManager(requireContext(), 3);
-        recyclerPoems.setLayoutManager(glm);
-        adapter = new PoemAdapter((poem, pos) -> {
-            if (getActivity() instanceof OnPoemClickListener) {
-                ((OnPoemClickListener) getActivity()).onPoemClick(poem);
-            }
-        });
+        etSearch = v.findViewById(R.id.et_search);
+        btnSearchClear = v.findViewById(R.id.btn_search_clear);
+
+        recyclerPoems = v.findViewById(R.id.recycler_poems);
+        recyclerPoems.setLayoutManager(new GridLayoutManager(requireContext(), 3));
+        adapter = new PoemAdapter((poem, pos) -> navigateToDetail(poem));
         recyclerPoems.setAdapter(adapter);
     }
 
-    private void setupListeners() {
-        btnSearchToggle.setOnClickListener(v -> toggleSearch());
-        btnSearchClose.setOnClickListener(v -> closeSearch());
-
-        etSearch.addTextChangedListener(new TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
-            @Override public void onTextChanged(CharSequence s, int a, int b, int c) {
-                viewModel.search(s.toString());
+    private void observeData() {
+        viewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {
+            if (isLoading != null && isLoading) {
+                loadingContainer.setVisibility(View.VISIBLE);
+                recyclerPoems.setVisibility(View.GONE);
+                tvEmpty.setVisibility(View.GONE);
+            } else {
+                loadingContainer.setVisibility(View.GONE);
             }
-            @Override public void afterTextChanged(Editable s) {}
         });
 
+        viewModel.getLoadingMessage().observe(getViewLifecycleOwner(), msg ->
+            tvLoadingMessage.setText(msg != null ? msg : getString(R.string.loading)));
+
+        viewModel.getPoems().observe(getViewLifecycleOwner(), poems -> {
+            if (poems == null) return;
+            recyclerPoems.setVisibility(poems.isEmpty() ? View.GONE : View.VISIBLE);
+            adapter.setPoems(poems);
+
+            updateLoadMoreUI();
+        });
+
+        viewModel.getDailyPoem().observe(getViewLifecycleOwner(), this::updateDailyCard);
+
+        viewModel.getCategories().observe(getViewLifecycleOwner(), this::setupCategoryChips);
+
+        viewModel.getTotalCount().observe(getViewLifecycleOwner(), count -> {
+            if (count != null) {
+                tvPoemCount.setText(getString(R.string.home_poems_count, count));
+            }
+        });
+    }
+
+    private void setupListeners() {
+        // 每日卡片点击 → 详情
+        dailyCard.setOnClickListener(v -> {
+            Poem poem = viewModel.getDailyPoem().getValue();
+            if (poem != null) navigateToDetail(poem);
+        });
+
+        // 搜索：debounce 500ms
+        etSearch.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
+            @Override public void afterTextChanged(Editable s) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int a, int b, int c) {
+                if (searchRunnable != null) searchHandler.removeCallbacks(searchRunnable);
+                boolean hasText = s.length() > 0;
+                btnSearchClear.setVisibility(hasText ? View.VISIBLE : View.GONE);
+                searchRunnable = () -> viewModel.search(s.toString());
+                searchHandler.postDelayed(searchRunnable, 500);
+            }
+        });
+
+        btnSearchClear.setOnClickListener(v -> {
+            etSearch.setText("");
+            viewModel.search("");
+        });
+
+        // 加载更多
         btnLoadMore.setOnClickListener(v -> {
             progressLoad.setVisibility(View.VISIBLE);
             btnLoadMore.setVisibility(View.GONE);
             recyclerPoems.postDelayed(() -> {
                 viewModel.loadMore();
                 progressLoad.setVisibility(View.GONE);
-                btnLoadMore.setVisibility(View.VISIBLE);
             }, 300);
         });
-
-        dailyCard.setOnClickListener(v -> {
-            Poem p = viewModel.getDailyPoem().getValue();
-            if (p != null && getActivity() instanceof OnPoemClickListener) {
-                ((OnPoemClickListener) getActivity()).onPoemClick(p);
-            }
-        });
-
-        tvDailyPinyinToggle.setOnClickListener(v -> {
-            dailyPinyinVisible = !dailyPinyinVisible;
-            tvDailyPinyinToggle.setTextColor(dailyPinyinVisible
-                    ? getResources().getColor(R.color.coral)
-                    : getResources().getColor(R.color.text_secondary));
-            Poem p = viewModel.getDailyPoem().getValue();
-            if (p != null) {
-                buildDailyCard(p, dailyPinyinVisible);
-            }
-        });
-
-        btnLearning.setOnClickListener(v -> {
-            if (getActivity() instanceof OnNavigateListener) {
-                ((OnNavigateListener) getActivity()).openLearning();
-            }
-        });
-
-        btnGame.setOnClickListener(v -> {
-            if (getActivity() instanceof OnNavigateListener) {
-                ((OnNavigateListener) getActivity()).openGameMenu();
-            }
-        });
     }
 
-    private void observeData() {
-        viewModel.getIsLoading().observe(getViewLifecycleOwner(), loading -> {
-            if (loading) {
-                tvSubtitle.setText("加载中...");
-            } else {
-                int total = viewModel.getTotalCountValue();
-                tvSubtitle.setText("共 " + String.format("%,d", total) + " 首古诗");
-            }
-        });
-
-        viewModel.getTotalCount().observe(getViewLifecycleOwner(), total -> {
-            if (total != null) {
-                tvSubtitle.setText("共 " + String.format("%,d", total) + " 首古诗");
-            }
-        });
-
-        viewModel.getPoems().observe(getViewLifecycleOwner(), poems -> {
-            adapter.setPoems(poems);
-            if (!viewModel.isSearchMode()) {
-                int total = viewModel.getTotalCountValue();
-                tvPoemCount.setText(String.format("%,d首", total));
-                tvSearchResultTitle.setVisibility(View.GONE);
-                sectionAllTitle.setVisibility(View.VISIBLE);
-                int current = poems != null ? poems.size() : 0;
-                boolean hasMore = current < total;
-                loadMoreArea.setVisibility(hasMore ? View.VISIBLE : View.GONE);
-                if (hasMore) {
-                    btnLoadMore.setText("📖 加载更多（" + current + " / " + total + "）");
-                }
-            } else {
-                int count = poems != null ? poems.size() : 0;
-                tvSearchResultTitle.setVisibility(View.VISIBLE);
-                tvSearchResultTitle.setText("搜索「" + viewModel.getSearchQuery() + "」找到 " + count + " 首");
-                sectionAllTitle.setVisibility(View.GONE);
-                loadMoreArea.setVisibility(View.GONE);
-            }
-        });
-
-        viewModel.getDailyPoem().observe(getViewLifecycleOwner(), poem -> {
-            if (poem != null) {
-                tvDailyEmoji.setText(poem.emoji);
-                buildDailyCard(poem, dailyPinyinVisible);
-            }
-        });
-
-        viewModel.getCategories().observe(getViewLifecycleOwner(), cats -> {
-            if (cats != null) {
-                setupCategoryChips(cats, viewModel.getCategoryIcons().getValue());
-            }
-        });
+    private void updateDailyCard(Poem poem) {
+        if (poem == null) return;
+        tvDailyEmoji.setText(poem.emoji != null ? poem.emoji : "📖");
+        tvDailyTitle.setText(poem.title);
+        tvDailyAuthor.setText(poem.author + " · " + poem.dynasty);
+        String excerpt = poem.getFirstLine();
+        if (excerpt != null && excerpt.length() > 20) {
+            excerpt = excerpt.substring(0, 20) + "...";
+        }
+        tvDailyExcerpt.setText(excerpt);
+        tvDailyExcerpt.setVisibility(excerpt != null ? View.VISIBLE : View.GONE);
     }
 
-    private void setupCategoryChips(List<String> categories, List<String> icons) {
-        if (icons == null) return;
-        categoryChips.removeAllViews();
+    private void setupCategoryChips(List<String> categories) {
+        if (categories == null || categories.isEmpty()) return;
+        chipCategories.removeAllViews();
         for (int i = 0; i < categories.size(); i++) {
-            final String cat = categories.get(i);
-            TextView chip = new TextView(requireContext());
-            chip.setText(icons.get(i) + " " + cat);
-            chip.setTextSize(13);
-            chip.setPadding(20, 10, 20, 10);
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            lp.setMargins(8, 0, 8, 0);
-            chip.setLayoutParams(lp);
-
-            if (cat.equals(viewModel.getCurrentCategory())) {
-                chip.setBackgroundResource(R.drawable.bg_chip_active);
-                chip.setTextColor(getResources().getColor(R.color.coral));
-            } else {
-                chip.setBackgroundResource(R.drawable.bg_chip);
-                chip.setTextColor(getResources().getColor(R.color.text_secondary));
-            }
-
-            chip.setOnClickListener(v -> {
-                viewModel.setCategory(cat);
-                setupCategoryChips(categories, icons);
-                closeSearch();
+            String cat = categories.get(i);
+            Chip chip = new Chip(requireContext());
+            chip.setText(cat);
+            chip.setCheckable(true);
+            chip.setChecked(i == 0);
+            chip.setOnCheckedChangeListener((button, checked) -> {
+                if (checked) viewModel.setCategory(cat);
             });
-            categoryChips.addView(chip);
+            chipCategories.addView(chip);
         }
     }
 
-    private void toggleSearch() {
-        if (searchBar.getVisibility() == View.VISIBLE) {
-            closeSearch();
-        } else {
-            searchBar.setVisibility(View.VISIBLE);
-            etSearch.requestFocus();
-            InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-            if (imm != null) imm.showSoftInput(etSearch, InputMethodManager.SHOW_IMPLICIT);
-        }
+    private void navigateToDetail(Poem poem) {
+        if (poem == null) return;
+        Bundle args = new Bundle();
+        args.putString("poem_id", poem.id);
+        args.putString("poem_title", poem.title);
+        args.putString("poem_author", poem.author);
+        args.putString("poem_dynasty", poem.dynasty);
+        args.putString("poem_category", poem.category != null ? poem.category : "");
+        args.putString("poem_tag", poem.tag != null ? poem.tag : "");
+        args.putString("poem_emoji", poem.emoji != null ? poem.emoji : "");
+        args.putStringArray("poem_lines", poem.lines);
+        navController.navigate(R.id.nav_detail, args);
     }
 
-    private void closeSearch() {
-        searchBar.setVisibility(View.GONE);
-        etSearch.setText("");
-        InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-        if (imm != null) imm.hideSoftInputFromWindow(etSearch.getWindowToken(), 0);
-    }
-
-    /**
-     * 构建每日推荐卡片的标题和作者（支持拼音切换）
-     */
-    private void buildDailyCard(Poem poem, boolean showPinyin) {
-        llDailyTitle.removeAllViews();
-        llDailyAuthor.removeAllViews();
-
-        int titleColor = ContextCompat.getColor(requireContext(), R.color.text_primary);
-        int authorColor = ContextCompat.getColor(requireContext(), R.color.text_secondary);
-        int pinyinColor = ContextCompat.getColor(requireContext(), R.color.text_light);
-
-        // 标题（逐字拼音）
-        buildCharLineInline(llDailyTitle, poem.title, showPinyin,
-                dpToPx(2), 20, 13, titleColor, pinyinColor, true);
-
-        // 作者 · 朝代
-        String authorText = poem.author + " · " + poem.dynasty;
-        buildCharLineInline(llDailyAuthor, authorText, showPinyin,
-                dpToPx(1), 13, 10, authorColor, pinyinColor, false);
-    }
-
-    private void buildCharLineInline(LinearLayout parent, String text, boolean showPinyin,
-                                     int charSpacing, float charSize, float pinyinSize,
-                                     int charColor, int pinyinColor, boolean bold) {
-        if (text == null || text.isEmpty()) return;
-
-        java.util.List<String> pinyins = showPinyin ? PinyinHelper.toPinyinList(text) : null;
-
-        for (int i = 0; i < text.length(); i++) {
-            char c = text.charAt(i);
-            boolean isPunct = isPunctChar(c) || c == ' ' || c == '·';
-
-            LinearLayout charBlock = new LinearLayout(getContext());
-            charBlock.setOrientation(LinearLayout.VERTICAL);
-            charBlock.setGravity(Gravity.CENTER_HORIZONTAL);
-            LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            if (!isPunct) {
-                bp.leftMargin = charSpacing;
-                bp.rightMargin = charSpacing;
-            }
-            charBlock.setLayoutParams(bp);
-
-            if (showPinyin && !isPunct && pinyins != null && i < pinyins.size()) {
-                String py = pinyins.get(i);
-                TextView tvPy = new TextView(getContext());
-                tvPy.setText(py.isEmpty() ? " " : py);
-                tvPy.setTextSize(pinyinSize);
-                tvPy.setTextColor(pinyinColor);
-                tvPy.setGravity(Gravity.CENTER);
-                tvPy.setSingleLine(true);
-                charBlock.addView(tvPy);
-            } else if (showPinyin && isPunct) {
-                TextView tvSpacer = new TextView(getContext());
-                tvSpacer.setText(" ");
-                tvSpacer.setTextSize(pinyinSize);
-                tvSpacer.setSingleLine(true);
-                charBlock.addView(tvSpacer);
-            }
-
-            TextView tvChar = new TextView(getContext());
-            tvChar.setText(String.valueOf(c));
-            tvChar.setTextSize(charSize);
-            tvChar.setTextColor(charColor);
-            tvChar.setGravity(Gravity.CENTER);
-            tvChar.setSingleLine(true);
-            tvChar.setLineSpacing(0, 1f);
-            if (bold) {
-                tvChar.setTypeface(tvChar.getTypeface(), android.graphics.Typeface.BOLD);
-            }
-            charBlock.addView(tvChar);
-
-            parent.addView(charBlock);
-        }
-    }
-
-    private boolean isPunctChar(char c) {
-        return c == '，' || c == '。' || c == '、' || c == '；'
-                || c == '：' || c == '？' || c == '！' || c == '"'
-                || c == '"' || c == '\'' || c == '\''
-                || c == '(' || c == ')' || c == '（' || c == '）'
-                || c == ',' || c == '.' || c == '!' || c == '?'
-                || c == ';' || c == ':';
-    }
-
-    private int dpToPx(int dp) {
-        float density = getResources().getDisplayMetrics().density;
-        return Math.round(dp * density);
-    }
-
-    public interface OnPoemClickListener {
-        void onPoemClick(Poem poem);
-    }
-
-    public interface OnNavigateListener {
-        void openLearning();
-        void openGameMenu();
+    private void updateLoadMoreUI() {
+        int total = viewModel.getTotalCountValue();
+        int loaded = (viewModel.getCurrentPage() + 1) * HomeViewModel.getPageSize();
+        loadMoreArea.setVisibility(loaded < total ? View.VISIBLE : View.GONE);
+        tvNoMore.setVisibility(loaded >= total && viewModel.isSearchMode() ? View.VISIBLE : View.GONE);
     }
 }

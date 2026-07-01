@@ -6,38 +6,37 @@ import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.GridView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.poetry.R;
 import com.poetry.domain.GameEngine;
 
-import java.util.ArrayList;
-
 public class MatchGameFragment extends Fragment {
 
     private GameViewModel viewModel;
-    private Handler handler = new Handler(Looper.getMainLooper());
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
-    private GridView gridView;
-    private TextView tvProgress, tvFeedback;
-    private View btnBack;
+    private RecyclerView recyclerCards;
+    private TextView tvProgress;
+    private View btnRestart;
 
     private MatchCardAdapter adapter;
     private GameEngine.MatchCard firstSelected;
 
-    public static MatchGameFragment newInstance() {
-        return new MatchGameFragment();
-    }
-
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_game_match, container, false);
     }
 
@@ -51,42 +50,40 @@ public class MatchGameFragment extends Fragment {
     }
 
     private void initViews(View v) {
-        btnBack = v.findViewById(R.id.btn_match_back);
-        gridView = v.findViewById(R.id.grid_match_cards);
-        tvProgress = v.findViewById(R.id.tv_match_progress);
-        tvFeedback = v.findViewById(R.id.tv_match_feedback);
+        recyclerCards = v.findViewById(R.id.recycler_cards);
+        tvProgress = v.findViewById(R.id.tv_progress);
+        btnRestart = v.findViewById(R.id.btn_restart);
 
-        btnBack.setOnClickListener(v2 -> {
-            if (getActivity() != null) {
-                getActivity().getSupportFragmentManager().popBackStack();
-            }
+        recyclerCards.setLayoutManager(new GridLayoutManager(requireContext(), 3));
+        btnRestart.setOnClickListener(v2 -> {
+            firstSelected = null;
+            viewModel.startMatchGame();
         });
     }
 
     private void observeData() {
         viewModel.getMatchGame().observe(getViewLifecycleOwner(), game -> {
             if (game != null) {
-                adapter = new MatchCardAdapter(getContext(), game.cards, this::onCardClick);
-                gridView.setAdapter(adapter);
+                adapter = new MatchCardAdapter(game.cards, this::onCardClick);
+                recyclerCards.setAdapter(adapter);
             }
         });
 
         viewModel.getMatchedCount().observe(getViewLifecycleOwner(), count -> {
             if (count != null) {
-                tvProgress.setText(count + "/" + (viewModel.getMatchGame().getValue() != null ? viewModel.getMatchGame().getValue().totalPairs : 6));
+                GameEngine.MatchGame game = viewModel.getMatchGame().getValue();
+                int total = game != null ? game.totalPairs : 6;
+                tvProgress.setText(getString(R.string.game_progress, count, total));
             }
         });
 
         viewModel.getMatchFinished().observe(getViewLifecycleOwner(), finished -> {
             if (finished != null && finished) {
                 Integer attempts = viewModel.getMatchAttempts().getValue();
-                tvFeedback.setText("🎉 全部配对成功！共尝试 " + (attempts != null ? attempts : 0) + " 次");
-                tvFeedback.setTextColor(getResources().getColor(R.color.purple));
-                handler.postDelayed(() -> {
-                    if (getActivity() != null) {
-                        getActivity().getSupportFragmentManager().popBackStack();
-                    }
-                }, 3000);
+                Toast.makeText(requireContext(),
+                    "🎉 全部配对成功！共尝试 " + (attempts != null ? attempts : 0) + " 次",
+                    Toast.LENGTH_LONG).show();
+                handler.postDelayed(() -> requireActivity().onBackPressed(), 3000);
             }
         });
     }
@@ -102,19 +99,13 @@ public class MatchGameFragment extends Fragment {
         if (firstSelected == card) return;
 
         boolean success = viewModel.tryMatch(firstSelected, card);
-
-        if (success) {
-            tvFeedback.setText("✅ 配对成功！");
-            tvFeedback.setTextColor(getResources().getColor(R.color.teal));
-        } else {
-            tvFeedback.setText("❌ 配对失败，再试一次");
-            tvFeedback.setTextColor(getResources().getColor(R.color.coral));
-        }
+        Toast.makeText(requireContext(),
+            success ? "✅ 配对成功！" : "❌ 再试试",
+            Toast.LENGTH_SHORT).show();
 
         firstSelected = null;
-        // 刷新 GridView
         GameEngine.MatchGame game = viewModel.getMatchGame().getValue();
-        if (game != null) {
+        if (game != null && adapter != null) {
             adapter.notifyDataSetChanged();
         }
     }

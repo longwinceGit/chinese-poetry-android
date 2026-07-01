@@ -1,190 +1,212 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/bg">
+    android:background="@color/background">
 
-    <!-- 顶部栏 -->
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="12dp"
-        android:background="@color/card"
-        android:elevation="2dp">
+        android:paddingBottom="40dp">
 
-        <TextView
-            android:id="@+id/btn_back"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:gravity="center"
-            android:text="←"
-            android:textSize="22sp"
-            android:textColor="@color/text_primary"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackgroundBorderless" />
+        <!-- 装饰条 -->
+        <View
+            android:id="@+id/divider_top"
+            android:layout_width="48dp"
+            android:layout_height="2dp"
+            android:layout_marginTop="24dp"
+            android:background="@color/tertiary"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
+        <!-- 标题 -->
         <TextView
+            android:id="@+id/tv_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="诗词详情"
-            android:textSize="18sp"
-            android:textColor="@color/text_primary"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="24dp"
+            app:layout_constraintTop_toBottomOf="@id/divider_top"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:textSize="28sp"
+            android:textColor="@color/primary"
+            android:fontFamily="serif"
             android:textStyle="bold"
-            android:gravity="center" />
-
-        <TextView
-            android:id="@+id/btn_favorite_header"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
             android:gravity="center"
-            android:text="🤍"
-            android:textSize="18sp"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackgroundBorderless" />
-    </LinearLayout>
+            android:lineSpacingExtra="4dp"
+            tools:text="静夜思" />
 
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-
+        <!-- 作者 & 朝代 -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/ll_author"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="24dp">
-
-            <!-- 标题+拼音容器 -->
-            <LinearLayout
-                android:id="@+id/ll_title_container"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center" />
-
-            <!-- 作者朝代+拼音容器 -->
-            <LinearLayout
-                android:id="@+id/ll_author_container"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:orientation="horizontal"
-                android:gravity="center" />
-
-            <!-- 分隔线 -->
-            <View
-                android:layout_width="60dp"
-                android:layout_height="2dp"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="20dp"
-                android:layout_gravity="center"
-                android:background="@color/coral" />
-
-            <!-- 诗句+拼音容器 -->
-            <LinearLayout
-                android:id="@+id/ll_poem_container"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:gravity="center" />
-
-        </LinearLayout>
-    </ScrollView>
-
-    <!-- 底部操作栏 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:padding="8dp"
-        android:background="@color/card"
-        android:elevation="4dp">
-
-        <LinearLayout
-            android:id="@+id/btn_voice"
-            android:layout_width="0dp"
-            android:layout_height="52dp"
-            android:layout_weight="1"
+            android:layout_marginTop="8dp"
             android:orientation="horizontal"
             android:gravity="center"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackground">
+            app:layout_constraintTop_toBottomOf="@id/tv_title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
             <TextView
+                android:id="@+id/tv_emoji"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="🔊"
+                android:textSize="20sp"
+                tools:text="🌸" />
+
+            <TextView
+                android:id="@+id/tv_author"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
                 android:textSize="16sp"
-                android:textColor="@color/teal" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/btn_pinyin"
-            android:layout_width="0dp"
-            android:layout_height="52dp"
-            android:layout_weight="1"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackground">
+                android:textColor="@color/on_surface"
+                android:textStyle="bold"
+                tools:text="李白" />
 
             <TextView
-                android:id="@+id/tv_pinyin_text"
+                android:id="@+id/tv_dynasty"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="🔤 拼音"
+                android:layout_marginStart="8dp"
                 android:textSize="13sp"
-                android:textColor="@color/text_secondary" />
+                android:textColor="@color/on_surface_variant"
+                tools:text="唐代" />
         </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/btn_favorite"
+        <!-- 分类标签 -->
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_tag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textSize="11sp"
+            android:clickable="false"
+            app:layout_constraintTop_toBottomOf="@id/ll_author"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:text="唐代" />
+
+        <!-- 分隔线 -->
+        <View
+            android:id="@+id/divider_poem"
             android:layout_width="0dp"
-            android:layout_height="52dp"
-            android:layout_weight="1"
+            android:layout_height="1dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="28dp"
+            android:layout_marginEnd="32dp"
+            android:background="@color/divider"
+            app:layout_constraintTop_toBottomOf="@id/chip_tag"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- 诗句内容 -->
+        <LinearLayout
+            android:id="@+id/ll_poem_lines"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginEnd="24dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            app:layout_constraintTop_toBottomOf="@id/divider_poem"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- 拼音切换按钮 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_pinyin"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_marginTop="16dp"
+            android:text="拼音"
+            android:textSize="12sp"
+            style="@style/Widget.Poetry.Button.Outlined"
+            app:layout_constraintTop_toBottomOf="@id/ll_poem_lines"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- 底部操作栏 -->
+        <LinearLayout
+            android:id="@+id/ll_actions"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="32dp"
+            android:layout_marginEnd="16dp"
             android:orientation="horizontal"
             android:gravity="center"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackground">
+            app:layout_constraintTop_toBottomOf="@id/btn_pinyin"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
-            <TextView
-                android:id="@+id/tv_fav_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🤍"
-                android:textSize="16sp"
-                android:textColor="@color/text_secondary" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_favorite"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="@string/detail_favorite"
+                android:textSize="13sp"
+                app:icon="@drawable/ic_favorite"
+                app:iconGravity="textStart"
+                app:iconPadding="6dp"
+                style="@style/Widget.Poetry.Button.Outlined" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_read"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:text="@string/detail_read"
+                android:textSize="13sp"
+                app:icon="@drawable/ic_volume"
+                app:iconGravity="textStart"
+                app:iconPadding="6dp"
+                style="@style/Widget.Poetry.Button" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_share"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="@string/detail_share"
+                android:textSize="13sp"
+                app:icon="@drawable/ic_share"
+                app:iconGravity="textStart"
+                app:iconPadding="6dp"
+                style="@style/Widget.Poetry.Button.Outlined" />
+
         </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/btn_quiz"
+        <!-- 学习按钮 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_learn"
             android:layout_width="0dp"
-            android:layout_height="52dp"
-            android:layout_weight="1"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackground">
+            android:layout_height="48dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="16dp"
+            android:text="@string/detail_learn"
+            android:textSize="14sp"
+            app:icon="@drawable/ic_check_circle"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp"
+            app:cornerRadius="12dp"
+            app:layout_constraintTop_toBottomOf="@id/ll_actions"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="✏️"
-                android:textSize="16sp"
-                android:textColor="@color/coral" />
-        </LinearLayout>
-
-    </LinearLayout>
-
-</LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.core.widget.NestedScrollView>

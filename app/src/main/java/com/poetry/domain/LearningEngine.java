@@ -1,12 +1,9 @@
 package com.poetry.domain;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 public class LearningEngine {
-
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
     public static final int[] LEVEL_THRESHOLDS = {0, 100, 300, 600, 1000, 2000, 3500, 5000, 8000};
     public static final String[] LEVEL_NAMES = {"诗词小学徒", "小秀才", "小举人", "小进士", "小翰林", "大诗仙", "诗词宗师", "一代文豪", "千古诗圣"};
@@ -81,16 +78,15 @@ public class LearningEngine {
     }
 
     public static String getToday() {
-        return DATE_FORMAT.format(new Date());
+        return LocalDate.now().toString();
     }
 
     public static boolean isYesterday(String lastDate, String today) {
         try {
-            Date last = DATE_FORMAT.parse(lastDate);
-            Date now = DATE_FORMAT.parse(today);
-            if (last == null || now == null) return false;
-            long diff = now.getTime() - last.getTime();
-            return diff > 0 && diff < 48 * 60 * 60 * 1000;
+            LocalDate last = LocalDate.parse(lastDate);
+            LocalDate now = LocalDate.parse(today);
+            long daysBetween = ChronoUnit.DAYS.between(last, now);
+            return daysBetween == 1;
         } catch (Exception e) {
             return false;
         }

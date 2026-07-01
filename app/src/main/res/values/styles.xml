@@ -1,11 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Poetry" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- 状态栏颜色 -->
-        <item name="android:statusBarColor">#1a0f08</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <!-- 导航栏颜色 -->
-        <item name="android:navigationBarColor">#1a0f08</item>
-        <!-- 背景色 -->
-        <item name="android:windowBackground">#faf7f0</item>
+    <!-- 基础主题：中国风水墨淡彩 -->
+    <style name="Theme.Poetry" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorOnPrimary">@color/on_primary</item>
+        <item name="colorPrimaryContainer">@color/primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/on_primary_container</item>
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorOnSecondary">@color/on_secondary</item>
+        <item name="colorSecondaryContainer">@color/secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/on_secondary_container</item>
+        <item name="colorTertiary">@color/tertiary</item>
+        <item name="colorOnTertiary">@color/on_tertiary</item>
+        <item name="colorTertiaryContainer">@color/tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/on_tertiary_container</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="colorSurfaceVariant">@color/surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/on_surface_variant</item>
+        <item name="android:colorBackground">@color/background</item>
+        <item name="colorOnBackground">@color/on_background</item>
+        <item name="colorError">@color/error</item>
+        <item name="colorOnError">@color/on_error</item>
+        <item name="colorOutline">@color/outline</item>
+        <item name="colorOutlineVariant">@color/outline_variant</item>
+        <item name="android:statusBarColor">@color/background</item>
+        <item name="android:navigationBarColor">@color/surface</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="fontFamily">sans-serif</item>
+    </style>
+
+    <!-- 底部导航样式 -->
+    <style name="Widget.Poetry.BottomNavigation" parent="Widget.Material3.BottomNavigationView">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.Poetry.BottomNav</item>
+        <item name="itemActiveIndicatorStyle">@style/Widget.Poetry.BottomNav.ActiveIndicator</item>
+        <item name="itemIconSize">24dp</item>
+        <item name="itemTextAppearanceActive">@style/TextAppearance.Poetry.BottomNav</item>
+        <item name="itemTextAppearanceInactive">@style/TextAppearance.Poetry.BottomNav.Inactive</item>
+        <item name="labelVisibilityMode">labeled</item>
+    </style>
+
+    <style name="ThemeOverlay.Poetry.BottomNav" parent="">
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/primary</item>
+        <item name="colorOnSurfaceVariant">@color/outline_variant</item>
+    </style>
+
+    <style name="Widget.Poetry.BottomNav.ActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@color/primary_container</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Poetry.Pill</item>
+    </style>
+
+    <style name="TextAppearance.Poetry.BottomNav" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textColor">@color/primary</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="TextAppearance.Poetry.BottomNav.Inactive" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textColor">@color/on_surface_variant</item>
+    </style>
+
+    <!-- 形状 -->
+    <style name="ShapeAppearance.Poetry.Pill" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Poetry.Small" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Poetry.Medium" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Poetry.Large" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">20dp</item>
+    </style>
+
+    <!-- 文字样式 -->
+    <style name="TextAppearance.Poetry.Display" parent="TextAppearance.Material3.DisplaySmall">
+        <item name="android:textColor">@color/primary</item>
+        <item name="android:fontFamily">serif</item>
+    </style>
+
+    <style name="TextAppearance.Poetry.Headline" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:textColor">@color/on_surface</item>
+        <item name="android:fontFamily">serif</item>
+    </style>
+
+    <style name="TextAppearance.Poetry.Title" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:textColor">@color/primary</item>
+        <item name="android:fontFamily">serif</item>
+    </style>
+
+    <style name="TextAppearance.Poetry.Body" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:textColor">@color/on_surface</item>
+        <item name="android:lineSpacingExtra">4dp</item>
+    </style>
+
+    <style name="TextAppearance.Poetry.Label" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textColor">@color/on_surface_variant</item>
+    </style>
+
+    <!-- 卡片样式 -->
+    <style name="Widget.Poetry.Card" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardBackgroundColor">@color/surface</item>
+        <item name="cardElevation">1dp</item>
+        <item name="cardCornerRadius">12dp</item>
+        <item name="strokeColor">@color/outline_variant</item>
+        <item name="strokeWidth">0.5dp</item>
+        <item name="contentPadding">16dp</item>
+    </style>
+
+    <!-- 按钮样式 -->
+    <style name="Widget.Poetry.Button" parent="Widget.Material3.Button">
+        <item name="shapeAppearance">@style/ShapeAppearance.Poetry.Small</item>
+    </style>
+
+    <style name="Widget.Poetry.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="shapeAppearance">@style/ShapeAppearance.Poetry.Small</item>
+        <item name="strokeColor">@color/primary</item>
+    </style>
+
+    <!-- Chip 样式 -->
+    <style name="Widget.Poetry.Chip" parent="Widget.Material3.Chip.Filter">
+        <item name="chipBackgroundColor">@color/surface_variant</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Poetry.Pill</item>
+        <item name="android:textColor">@color/on_surface_variant</item>
+        <item name="chipStrokeColor">@color/outline_variant</item>
+        <item name="chipStrokeWidth">0.5dp</item>
     </style>
 </resources>

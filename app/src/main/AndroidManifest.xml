@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.poetry">
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- 网络权限（搜索功能可选使用） -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- 防止息屏 -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
@@ -15,8 +12,7 @@
         android:label="@string/app_name"
         android:theme="@style/Theme.Poetry"
         android:supportsRtl="true"
-        android:usesCleartextTraffic="true"
-        tools:targetApi="31">
+        tools:targetApi="34">
 
         <activity
             android:name=".MainActivity"
@@ -28,6 +24,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 </manifest>

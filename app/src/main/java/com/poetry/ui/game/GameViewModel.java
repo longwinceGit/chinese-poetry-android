@@ -6,6 +6,7 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.poetry.data.DailyStats;
 import com.poetry.data.LearningDatabase;
 import com.poetry.data.PoemRepository;
 import com.poetry.data.UserProfile;
@@ -13,6 +14,7 @@ import com.poetry.data.model.Poem;
 import com.poetry.domain.GameEngine;
 import com.poetry.domain.LearningEngine;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,6 +82,7 @@ public class GameViewModel extends AndroidViewModel {
         if (round + 1 < rounds.size()) {
             currentRound.setValue(round + 1);
         } else {
+            recordGameActivity();
             coupletFinished.setValue(true);
         }
     }
@@ -113,6 +116,7 @@ public class GameViewModel extends AndroidViewModel {
             if (GameEngine.isGameComplete(game)) {
                 int score = GameEngine.calcMatchScore(matchAttempts.getValue() != null ? matchAttempts.getValue() : 0);
                 savePoints(score);
+                recordGameActivity();
                 matchFinished.setValue(true);
             }
         }
@@ -130,6 +134,20 @@ public class GameViewModel extends AndroidViewModel {
             profile.totalPoints += points;
             profile.level = LearningEngine.calcLevel(profile.totalPoints);
             db.poemDao().insertUserProfile(profile);
+        }).start();
+    }
+
+    /**
+     * 记录游戏活动：更新每日统计，让"玩游戏"任务可被检测
+     */
+    private void recordGameActivity() {
+        final String today = LocalDate.now().toString();
+        new Thread(() -> {
+            com.poetry.data.DailyStats existing = db.poemDao().getDailyStatsSync(today);
+            if (existing == null) {
+                db.poemDao().upsertDailyStats(new com.poetry.data.DailyStats(today));
+            }
+            db.poemDao().incrementGamesPlayed(today);
         }).start();
     }
 

@@ -26,6 +26,11 @@ public class Poem {
         this.pinyin = "";
     }
 
+    public String getFirstLine() {
+        if (lines == null || lines.length == 0) return null;
+        return lines[0];
+    }
+
     public String getFullText() {
         if (lines == null || lines.length == 0) return "";
         StringBuilder sb = new StringBuilder();

@@ -5,6 +5,7 @@ import android.content.res.AssetManager;
 import com.poetry.data.model.Poem;
 import com.poetry.PoemLoader;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -89,6 +90,18 @@ public class PoemRepository {
         return null;
     }
 
+    /**
+     * 基于日期 Hash 固定每日推荐 —— 同一天始终返回同一首诗。
+     * 保证"每日推荐"概念名副其实。
+     */
+    public Poem getDailyPoem() {
+        if (allPoems.isEmpty()) return null;
+        String dateKey = LocalDate.now().toString();
+        int idx = Math.abs(dateKey.hashCode()) % allPoems.size();
+        return allPoems.get(idx);
+    }
+
+    /** 保留随机接口供其他场景使用（游戏等） */
     public Poem getRandomPoem() {
         if (allPoems.isEmpty()) return null;
         int idx = (int) (Math.random() * allPoems.size());

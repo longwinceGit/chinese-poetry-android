@@ -60,6 +60,19 @@ public class PinyinHelper {
         return list;
     }
 
+    /**
+     * 获取句子中每个字符的拼音，空格分隔，如 "床前明" → "chuáng qián míng"
+     */
+    public static String toPinyin(String chinese) {
+        List<String> list = toPinyinList(chinese);
+        StringBuilder sb = new StringBuilder();
+        for (String p : list) {
+            if (sb.length() > 0) sb.append(' ');
+            sb.append(p);
+        }
+        return sb.toString();
+    }
+
     private static boolean isPunctuation(char c) {
         // 中文标点
         if (c == '，' || c == '。' || c == '、' || c == '；' || c == '：'

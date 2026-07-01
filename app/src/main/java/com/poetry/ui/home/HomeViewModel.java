@@ -47,7 +47,7 @@ public class HomeViewModel extends AndroidViewModel {
                 List<Poem> result = repo.loadPoemsAsync(getApplication().getAssets()).get();
                 java.util.List<String> cats = repo.getCategories();
                 java.util.List<String> icons = repo.getCategoryIcons();
-                Poem daily = repo.getRandomPoem();
+                Poem daily = repo.getDailyPoem();
                 categories.postValue(cats);
                 categoryIcons.postValue(icons);
                 dailyPoem.postValue(daily);
@@ -72,7 +72,7 @@ public class HomeViewModel extends AndroidViewModel {
     }
 
     public void selectDailyPoem() {
-        Poem p = repo.getRandomPoem();
+        Poem p = repo.getDailyPoem();
         if (p != null) {
             dailyPoem.setValue(p);
         }

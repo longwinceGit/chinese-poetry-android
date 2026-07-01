@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nav_home">
+
+    <!-- 底部导航 Tab 页面 -->
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.poetry.ui.home.HomeFragment"
+        android:label="@string/nav_home"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/nav_learn"
+        android:name="com.poetry.ui.learning.LearningFragment"
+        android:label="@string/nav_learn"
+        tools:layout="@layout/fragment_learning" />
+
+    <fragment
+        android:id="@+id/nav_game"
+        android:name="com.poetry.ui.game.GameHubFragment"
+        android:label="@string/nav_game"
+        tools:layout="@layout/fragment_game_hub" />
+
+    <fragment
+        android:id="@+id/nav_profile"
+        android:name="com.poetry.ui.profile.ProfileFragment"
+        android:label="@string/nav_profile"
+        tools:layout="@layout/fragment_profile" />
+
+    <!-- 详情/游戏/答题 - 二级页面 -->
+    <fragment
+        android:id="@+id/nav_detail"
+        android:name="com.poetry.ui.detail.DetailFragment"
+        android:label="@string/detail_title_info"
+        tools:layout="@layout/fragment_detail">
+        <argument
+            android:name="poem_id"
+            app:argType="string" />
+        <argument
+            android:name="poem_title"
+            app:argType="string" />
+        <argument
+            android:name="poem_author"
+            app:argType="string" />
+        <argument
+            android:name="poem_dynasty"
+            app:argType="string" />
+        <argument
+            android:name="poem_category"
+            app:argType="string" />
+        <argument
+            android:name="poem_tag"
+            app:argType="string" />
+        <argument
+            android:name="poem_emoji"
+            app:argType="string" />
+        <argument
+            android:name="poem_lines"
+            app:argType="string[]" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_quiz"
+        android:name="com.poetry.ui.quiz.QuizFragment"
+        android:label="填空挑战"
+        tools:layout="@layout/fragment_quiz" />
+
+    <fragment
+        android:id="@+id/nav_game_couplet"
+        android:name="com.poetry.ui.game.CoupletGameFragment"
+        android:label="对诗"
+        tools:layout="@layout/fragment_game_couplet" />
+
+    <fragment
+        android:id="@+id/nav_game_match"
+        android:name="com.poetry.ui.game.MatchGameFragment"
+        android:label="消消乐"
+        tools:layout="@layout/fragment_game_match" />
+</navigation>

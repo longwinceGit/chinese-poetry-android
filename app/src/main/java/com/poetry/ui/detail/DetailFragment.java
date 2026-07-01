@@ -1,317 +1,448 @@
 package com.poetry.ui.detail;
 
-import android.animation.ObjectAnimator;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.net.Uri;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.OvershootInterpolator;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.chip.Chip;
 import com.poetry.R;
+import com.poetry.data.LearningDatabase;
 import com.poetry.data.model.Poem;
-import com.poetry.util.PinyinHelper;
 import com.poetry.util.TtsManager;
+import com.poetry.util.PinyinHelper;
 
-import java.util.List;
+import java.io.File;
+import java.io.FileOutputStream;
 
 public class DetailFragment extends Fragment {
 
-    private static final String ARG_POEM_ID = "poem_id";
-    private static final String ARG_POEM_TITLE = "poem_title";
-    private static final String ARG_POEM_AUTHOR = "poem_author";
-    private static final String ARG_POEM_DYNASTY = "poem_dynasty";
-    private static final String ARG_POEM_EMOJI = "poem_emoji";
-    private static final String ARG_POEM_LINES = "poem_lines";
+    public static final String ARG_ID = "poem_id";
+    public static final String ARG_TITLE = "poem_title";
+    public static final String ARG_AUTHOR = "poem_author";
+    public static final String ARG_DYNASTY = "poem_dynasty";
+    public static final String ARG_CATEGORY = "poem_category";
+    public static final String ARG_TAG = "poem_tag";
+    public static final String ARG_EMOJI = "poem_emoji";
+    public static final String ARG_LINES = "poem_lines";
 
+    private TextView tvTitle, tvAuthor, tvDynasty, tvEmoji;
+    private Chip chipTag;
+    private LinearLayout llPoemLines;
+    private MaterialButton btnFavorite, btnRead, btnShare, btnLearn, btnPinyin;
     private DetailViewModel viewModel;
     private TtsManager ttsManager;
-
-    private LinearLayout llTitleContainer, llAuthorContainer, llPoemContainer;
-    private TextView tvFavText, tvPinyinBtn;
-    private View btnBack, btnVoice, btnPinyin, btnFavorite, btnQuiz;
-
-    private Poem currentPoem;
+    private boolean isFavorite = false;
+    private boolean isLearned = false;
     private boolean pinyinVisible = false;
+    private String ttsErrorMsg = null;
 
-    public static DetailFragment newInstance(Poem poem) {
-        DetailFragment f = new DetailFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_POEM_ID, poem.id);
-        args.putString(ARG_POEM_TITLE, poem.title);
-        args.putString(ARG_POEM_AUTHOR, poem.author);
-        args.putString(ARG_POEM_DYNASTY, poem.dynasty);
-        args.putString(ARG_POEM_EMOJI, poem.emoji);
-        if (poem.lines != null) {
-            args.putStringArray(ARG_POEM_LINES, poem.lines);
-        }
-        f.setArguments(args);
-        return f;
-    }
+    private String poemId, poemTitle, poemAuthor, poemDynasty, poemCategory, poemTag, poemEmoji;
+    private String[] poemLines;
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_detail, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        readArgs();
         initViews(view);
         viewModel = new ViewModelProvider(this).get(DetailViewModel.class);
-        ttsManager = new TtsManager(requireContext());
-        observeData();
-        setupListeners();
+        ttsManager = new TtsManager(requireContext(), new TtsManager.OnInitListener() {
+            @Override
+            public void onReady() {
+                ttsErrorMsg = null;
+            }
 
+            @Override
+            public void onError(String reason) {
+                ttsErrorMsg = reason;
+            }
+        });
+        setupData();
+        setupListeners();
+        checkStatus();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (ttsManager != null) {
+            ttsManager.shutdown();
+        }
+    }
+
+    private void readArgs() {
         Bundle args = getArguments();
         if (args != null) {
-            String id = args.getString(ARG_POEM_ID, "");
-            String title = args.getString(ARG_POEM_TITLE, "");
-            String author = args.getString(ARG_POEM_AUTHOR, "");
-            String dynasty = args.getString(ARG_POEM_DYNASTY, "");
-            String emoji = args.getString(ARG_POEM_EMOJI, "📖");
-            String[] lines = args.getStringArray(ARG_POEM_LINES);
-            Poem poem = new Poem(id, title, author, dynasty, dynasty, "", emoji, lines != null ? lines : new String[0]);
-            renderPoem(poem);
-            viewModel.loadPoem(poem);
+            poemId = args.getString(ARG_ID, "");
+            poemTitle = args.getString(ARG_TITLE, "");
+            poemAuthor = args.getString(ARG_AUTHOR, "");
+            poemDynasty = args.getString(ARG_DYNASTY, "");
+            poemCategory = args.getString(ARG_CATEGORY, "");
+            poemTag = args.getString(ARG_TAG, "");
+            poemEmoji = args.getString(ARG_EMOJI, "📖");
+            poemLines = args.getStringArray(ARG_LINES);
         }
     }
 
     private void initViews(View v) {
-        btnBack = v.findViewById(R.id.btn_back);
-        llTitleContainer = v.findViewById(R.id.ll_title_container);
-        llAuthorContainer = v.findViewById(R.id.ll_author_container);
-        llPoemContainer = v.findViewById(R.id.ll_poem_container);
-        btnVoice = v.findViewById(R.id.btn_voice);
-        btnPinyin = v.findViewById(R.id.btn_pinyin);
-        tvPinyinBtn = v.findViewById(R.id.tv_pinyin_text);
+        tvTitle = v.findViewById(R.id.tv_title);
+        tvAuthor = v.findViewById(R.id.tv_author);
+        tvDynasty = v.findViewById(R.id.tv_dynasty);
+        tvEmoji = v.findViewById(R.id.tv_emoji);
+        chipTag = v.findViewById(R.id.chip_tag);
+        llPoemLines = v.findViewById(R.id.ll_poem_lines);
         btnFavorite = v.findViewById(R.id.btn_favorite);
-        tvFavText = v.findViewById(R.id.tv_fav_text);
-        btnQuiz = v.findViewById(R.id.btn_quiz);
+        btnRead = v.findViewById(R.id.btn_read);
+        btnShare = v.findViewById(R.id.btn_share);
+        btnLearn = v.findViewById(R.id.btn_learn);
+        btnPinyin = v.findViewById(R.id.btn_pinyin);
+    }
+
+    private void setupData() {
+        tvTitle.setText(poemTitle);
+        tvEmoji.setText(poemEmoji);
+        tvAuthor.setText(poemAuthor);
+        tvDynasty.setText(poemDynasty);
+
+        // 设置标签
+        String tagText = !poemCategory.isEmpty() ? poemCategory : poemDynasty;
+        chipTag.setText(tagText);
+        chipTag.setChipBackgroundColorResource(getTagColorRes(poemTag));
+
+        // 渲染诗句
+        renderPoemLines(false);
+    }
+
+    private int getTagColorRes(String tag) {
+        if (tag == null) return R.color.tag_tang;
+        switch (tag) {
+            case "song": return R.color.tag_song;
+            case "qin": return R.color.tag_qin;
+            case "wei": return R.color.tag_wei;
+            case "yuan": return R.color.tag_yuan;
+            case "qing": return R.color.tag_qing;
+            case "wu": return R.color.tag_wu;
+            default: return R.color.tag_tang;
+        }
+    }
+
+    private void renderPoemLines(boolean showPinyin) {
+        llPoemLines.removeAllViews();
+        if (poemLines == null) return;
+
+        for (String line : poemLines) {
+            if (showPinyin) {
+                // 诗句 + 拼音两行
+                LinearLayout lineContainer = new LinearLayout(requireContext());
+                lineContainer.setOrientation(LinearLayout.VERTICAL);
+                lineContainer.setGravity(android.view.Gravity.CENTER);
+
+                TextView pinyinTv = new TextView(requireContext());
+                pinyinTv.setText(PinyinHelper.toPinyin(line));
+                pinyinTv.setTextSize(11);
+                pinyinTv.setTextColor(ContextCompat.getColor(requireContext(), R.color.on_surface_variant));
+                pinyinTv.setAlpha(0.7f);
+                pinyinTv.setGravity(android.view.Gravity.CENTER);
+                lineContainer.addView(pinyinTv);
+
+                TextView lineTv = createLineTextView(line);
+                lineContainer.addView(lineTv);
+                llPoemLines.addView(lineContainer);
+            } else {
+                llPoemLines.addView(createLineTextView(line));
+            }
+        }
+    }
+
+    private TextView createLineTextView(String text) {
+        TextView tv = new TextView(requireContext());
+        tv.setText(text);
+        tv.setTextSize(18);
+        tv.setTextColor(ContextCompat.getColor(requireContext(), R.color.on_surface));
+        tv.setLineSpacing(8, 1);
+        tv.setGravity(android.view.Gravity.CENTER);
+        tv.setPadding(0, 4, 0, 4);
+        return tv;
     }
 
     private void setupListeners() {
-        btnBack.setOnClickListener(v -> {
-            if (getActivity() != null) {
-                getActivity().getSupportFragmentManager().popBackStack();
+        btnRead.setOnClickListener(v -> {
+            if (!ttsManager.isReady()) {
+                Toast.makeText(requireContext(),
+                    ttsErrorMsg != null ? ttsErrorMsg : "语音引擎尚未就绪，请稍后再试",
+                    Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (ttsManager.isSpeaking()) {
+                ttsManager.stop();
+                btnRead.setText(R.string.detail_read);
+            } else {
+                String fullText = poemTitle + "。" + String.join("，", poemLines != null ? poemLines : new String[0]);
+                ttsManager.speak(fullText, "detail_" + System.currentTimeMillis());
+                btnRead.setText(R.string.detail_pause);
             }
         });
 
-        btnVoice.setOnClickListener(v -> {
-            Poem p = currentPoem;
-            if (p != null) {
-                ttsManager.speakPoem(p.title, p.author, p.lines);
-            }
-        });
+        btnFavorite.setOnClickListener(v -> toggleFavorite());
+        btnShare.setOnClickListener(v -> sharePoem());
+        btnLearn.setOnClickListener(v -> markAsLearned());
 
-        btnPinyin.setOnClickListener(v -> viewModel.togglePinyin());
-
-        btnFavorite.setOnClickListener(v -> {
-            viewModel.toggleFavorite();
-            springView(tvFavText);
-        });
-
-        btnQuiz.setOnClickListener(v -> {
-            if (getActivity() != null) {
-                com.poetry.ui.quiz.QuizFragment qf = new com.poetry.ui.quiz.QuizFragment();
-                getActivity().getSupportFragmentManager().beginTransaction()
-                    .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left,
-                                         R.anim.slide_in_left, R.anim.slide_out_right)
-                    .replace(R.id.fragment_container, qf)
-                    .addToBackStack(null)
-                    .commit();
-            }
+        btnPinyin.setOnClickListener(v -> {
+            pinyinVisible = !pinyinVisible;
+            btnPinyin.setText(pinyinVisible ? "隐藏拼音" : "拼音");
+            renderPoemLines(pinyinVisible);
         });
     }
 
-    private void observeData() {
-        viewModel.getIsFavorite().observe(getViewLifecycleOwner(), fav -> {
-            if (fav != null && fav) {
-                tvFavText.setText("❤️");
-                tvFavText.setTextColor(getResources().getColor(R.color.coral));
-            } else {
-                tvFavText.setText("🤍");
-                tvFavText.setTextColor(getResources().getColor(R.color.text_secondary));
-            }
-        });
-
-        viewModel.getShowPinyin().observe(getViewLifecycleOwner(), show -> {
-            pinyinVisible = show != null && show;
-            if (currentPoem != null) {
-                rebuildAllViews(currentPoem, pinyinVisible);
-            }
-            if (pinyinVisible) {
-                tvPinyinBtn.setTextColor(getResources().getColor(R.color.coral));
-            } else {
-                tvPinyinBtn.setTextColor(getResources().getColor(R.color.text_secondary));
-            }
-        });
-
-        viewModel.getPoem().observe(getViewLifecycleOwner(), poem -> {
-            if (poem != null && currentPoem == null) {
-                currentPoem = poem;
-            }
-        });
+    private void checkStatus() {
+        LearningDatabase db = LearningDatabase.getInstance(requireContext());
+        new Thread(() -> {
+            boolean fav = db.poemDao().isFavorite(poemId);
+            boolean learned = db.poemDao().isLearned(poemId);
+            requireActivity().runOnUiThread(() -> {
+                isFavorite = fav;
+                isLearned = learned;
+                updateButtons();
+            });
+        }).start();
     }
 
-    private void renderPoem(Poem poem) {
-        currentPoem = poem;
-        rebuildAllViews(poem, pinyinVisible);
+    private void toggleFavorite() {
+        isFavorite = !isFavorite;
+        LearningDatabase db = LearningDatabase.getInstance(requireContext());
+        new Thread(() -> {
+            db.poemDao().ensureRecordExists(poemId);
+            if (isFavorite) {
+                db.poemDao().addFavorite(poemId);
+            } else {
+                db.poemDao().removeFavorite(poemId);
+            }
+            requireActivity().runOnUiThread(this::updateButtons);
+        }).start();
+    }
+
+    private void markAsLearned() {
+        if (isLearned) return;
+        isLearned = true;
+        LearningDatabase db = LearningDatabase.getInstance(requireContext());
+        new Thread(() -> {
+            db.poemDao().ensureRecordExists(poemId);
+            db.poemDao().markLearned(poemId, System.currentTimeMillis());
+            requireActivity().runOnUiThread(() -> {
+                updateButtons();
+                Toast.makeText(requireContext(), "已标记为已学 ✓", Toast.LENGTH_SHORT).show();
+            });
+        }).start();
+    }
+
+    private void sharePoem() {
+        new Thread(() -> {
+            try {
+                Bitmap card = generateShareCard();
+                if (card == null) {
+                    requireActivity().runOnUiThread(() ->
+                        Toast.makeText(requireContext(), "生成分享卡片失败", Toast.LENGTH_SHORT).show());
+                    return;
+                }
+
+                // 保存到缓存目录
+                File cacheDir = new File(requireContext().getCacheDir(), "images");
+                if (!cacheDir.exists()) cacheDir.mkdirs();
+                File file = new File(cacheDir, "poem_share_" + poemId + ".png");
+                try (FileOutputStream fos = new FileOutputStream(file)) {
+                    card.compress(Bitmap.CompressFormat.PNG, 95, fos);
+                }
+
+                Uri uri = FileProvider.getUriForFile(requireContext(),
+                    requireContext().getPackageName() + ".fileprovider", file);
+
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.setType("image/png");
+                shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                requireActivity().runOnUiThread(() -> {
+                    String text = "《" + poemTitle + "》—— " + poemAuthor;
+                    Intent chooser = Intent.createChooser(shareIntent, text);
+                    startActivity(chooser);
+                });
+            } catch (Exception e) {
+                requireActivity().runOnUiThread(() ->
+                    Toast.makeText(requireContext(), "分享失败：" + e.getMessage(), Toast.LENGTH_SHORT).show());
+            }
+        }).start();
     }
 
     /**
-     * 统一重建标题、作者朝代、诗句的视图（根据拼音开关状态）
+     * 生成古风诗词分享卡片
+     * 尺寸: 750xN px, 适配主流社交平台分享预览
      */
-    private void rebuildAllViews(Poem poem, boolean showPinyin) {
-        llTitleContainer.removeAllViews();
-        llAuthorContainer.removeAllViews();
-        llPoemContainer.removeAllViews();
+    private Bitmap generateShareCard() {
+        int width = 750;
+        int padding = 48;
+        int paddingSmall = 32;
+        int contentWidth = width - padding * 2;
 
-        if (poem == null) return;
+        // 颜色
+        int bgColor = 0xFFFAF7F0;       // 宣纸色
+        int inkColor = 0xFF5D4037;      // 墨色
+        int subColor = 0xFF795548;      // 赭石
+        int accentColor = 0xFFC62828;   // 朱红
+        int waterColor = 0xFF7A7570;    // 水印灰
+        int dividerColor = 0xFFD7CCC8;  // 分割线
 
-        int titleColor = ContextCompat.getColor(requireContext(), R.color.text_primary);
-        int authorColor = ContextCompat.getColor(requireContext(), R.color.text_secondary);
-        int poemColor = ContextCompat.getColor(requireContext(), R.color.text_primary);
-        int pinyinColor = ContextCompat.getColor(requireContext(), R.color.text_light);
+        // 文本画笔
+        Paint titlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        titlePaint.setColor(inkColor);
+        titlePaint.setTextSize(40f);
+        titlePaint.setFakeBoldText(true);
+        titlePaint.setTextAlign(Paint.Align.CENTER);
+
+        Paint authorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        authorPaint.setColor(subColor);
+        authorPaint.setTextSize(26f);
+        authorPaint.setTextAlign(Paint.Align.CENTER);
+
+        Paint linePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        linePaint.setColor(inkColor);
+        linePaint.setTextSize(32f);
+        linePaint.setTextAlign(Paint.Align.CENTER);
+
+        Paint footerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        footerPaint.setColor(waterColor);
+        footerPaint.setTextSize(22f);
+        footerPaint.setTextAlign(Paint.Align.CENTER);
+
+        Paint accentPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        accentPaint.setColor(accentColor);
+        accentPaint.setStrokeWidth(3f);
+        accentPaint.setStyle(Paint.Style.STROKE);
+
+        Paint dividerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        dividerPaint.setColor(dividerColor);
+        dividerPaint.setStrokeWidth(1.5f);
+        dividerPaint.setStyle(Paint.Style.STROKE);
+
+        // 计算尺子
+        Rect titleBounds = new Rect();
+        float titleY = 0;
+        if (poemTitle != null && !poemTitle.isEmpty()) {
+            titlePaint.getTextBounds(poemTitle, 0, poemTitle.length(), titleBounds);
+            titleY = 80 + titleBounds.height();
+        }
+
+        Rect authorBounds = new Rect();
+        String authorText = poemAuthor + " · " + poemDynasty;
+        authorPaint.getTextBounds(authorText, 0, authorText.length(), authorBounds);
+
+        // 计算诗句总高度
+        float linesHeight = 0;
+        float[] lineWidths = null;
+        if (poemLines != null && poemLines.length > 0) {
+            lineWidths = new float[poemLines.length];
+            for (int i = 0; i < poemLines.length; i++) {
+                lineWidths[i] = linePaint.measureText(poemLines[i]);
+                linesHeight += 46; // 行间距
+            }
+        }
+
+        float footerY = titleY + 40 + authorBounds.height() + 48 + linesHeight + 60;
+        float totalHeight = footerY + 60;
+
+        // 创建 Bitmap
+        Bitmap bitmap = Bitmap.createBitmap(width, (int) totalHeight, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        canvas.drawColor(bgColor);
+
+        // 顶部装饰线
+        float lineY = padding;
+        canvas.drawLine(padding, lineY, width - padding, lineY, accentPaint);
+
+        // Emoji
+        if (poemEmoji != null && !poemEmoji.isEmpty() && !poemEmoji.equals("📖")) {
+            Paint emojiPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            emojiPaint.setTextSize(36f);
+            emojiPaint.setTextAlign(Paint.Align.CENTER);
+            canvas.drawText(poemEmoji, width / 2f, lineY + 48, emojiPaint);
+            lineY += 56;
+        }
 
         // 标题
-        buildCharLine(llTitleContainer, poem.title, showPinyin,
-                dpToPx(3), 26, 14, titleColor, pinyinColor, true);
+        float curY = lineY + paddingSmall + titleBounds.height();
+        canvas.drawText(poemTitle, width / 2f, curY, titlePaint);
 
-        // 作者 · 朝代
-        String authorText = poem.author + " · " + poem.dynasty;
-        buildCharLine(llAuthorContainer, authorText, showPinyin,
-                dpToPx(2), 14, 11, authorColor, pinyinColor, false);
+        // 作者朝代
+        curY += paddingSmall + authorBounds.height();
+        canvas.drawText(authorText, width / 2f, curY, authorPaint);
 
-        // 空行间距
-        if (poem.lines != null && poem.lines.length > 0) {
-            TextView spacer = new TextView(getContext());
-            spacer.setHeight(dpToPx(8));
-            llPoemContainer.addView(spacer);
-        }
+        // 分割线
+        curY += paddingSmall;
+        canvas.drawLine(padding, curY, width - padding, curY, dividerPaint);
 
-        // 诗句逐行
-        int lineSpacing = dpToPx(6);
-        for (String line : poem.lines) {
-            LinearLayout lineWrap = new LinearLayout(getContext());
-            lineWrap.setOrientation(LinearLayout.HORIZONTAL);
-            lineWrap.setGravity(Gravity.CENTER);
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            lp.bottomMargin = lineSpacing;
-            lineWrap.setLayoutParams(lp);
-            buildCharLine(lineWrap, line, showPinyin,
-                    dpToPx(2), showPinyin ? 18 : 20, 12, poemColor, pinyinColor, false);
-            llPoemContainer.addView(lineWrap);
-        }
-    }
-
-    /**
-     * 构建一排逐字显示的区域（拼音在上，汉字在下）
-     * @param parent   父容器
-     * @param text     要显示的文本（含汉字、标点）
-     * @param showPinyin 是否显示拼音
-     * @param charSpacing 字符间距(px)
-     * @param charSize   汉字字号(sp)
-     * @param pinyinSize 拼音字号(sp)
-     * @param charColor  汉字颜色
-     * @param pinyinColor 拼音颜色
-     * @param bold       汉字是否加粗
-     */
-    private void buildCharLine(LinearLayout parent, String text, boolean showPinyin,
-                               int charSpacing, float charSize, float pinyinSize,
-                               int charColor, int pinyinColor, boolean bold) {
-        if (text == null || text.isEmpty()) return;
-
-        List<String> pinyins = showPinyin ? PinyinHelper.toPinyinList(text) : null;
-
-        for (int i = 0; i < text.length(); i++) {
-            char c = text.charAt(i);
-            boolean isPunct = isPunctuationChar(c) || c == ' ' || c == '·';
-
-            LinearLayout charBlock = new LinearLayout(getContext());
-            charBlock.setOrientation(LinearLayout.VERTICAL);
-            charBlock.setGravity(Gravity.CENTER_HORIZONTAL);
-            LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            if (!isPunct) {
-                bp.leftMargin = charSpacing;
-                bp.rightMargin = charSpacing;
+        // 诗句
+        curY += 40;
+        if (poemLines != null) {
+            // 计算合适的内容宽度（取最长行）
+            float maxLineWidth = contentWidth * 0.8f;
+            for (int i = 0; i < poemLines.length; i++) {
+                String line = poemLines[i];
+                // 如果一行太长，适当缩小字号绘制
+                Paint drawPaint = linePaint;
+                if (lineWidths != null && lineWidths[i] > contentWidth) {
+                    drawPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                    drawPaint.setColor(inkColor);
+                    drawPaint.setTextSize(28f);
+                    drawPaint.setTextAlign(Paint.Align.CENTER);
+                }
+                canvas.drawText(line, width / 2f, curY, drawPaint);
+                curY += 46;
             }
-            charBlock.setLayoutParams(bp);
-
-            if (showPinyin && !isPunct && pinyins != null && i < pinyins.size()) {
-                String py = pinyins.get(i);
-                TextView tvPy = new TextView(getContext());
-                tvPy.setText(py.isEmpty() ? " " : py);
-                tvPy.setTextSize(pinyinSize);
-                tvPy.setTextColor(pinyinColor);
-                tvPy.setGravity(Gravity.CENTER);
-                tvPy.setSingleLine(true);
-                charBlock.addView(tvPy);
-            } else if (showPinyin && isPunct) {
-                TextView tvSpacer = new TextView(getContext());
-                tvSpacer.setText(" ");
-                tvSpacer.setTextSize(pinyinSize);
-                tvSpacer.setSingleLine(true);
-                charBlock.addView(tvSpacer);
-            }
-
-            TextView tvChar = new TextView(getContext());
-            tvChar.setText(String.valueOf(c));
-            tvChar.setTextSize(charSize);
-            tvChar.setTextColor(charColor);
-            tvChar.setGravity(Gravity.CENTER);
-            tvChar.setSingleLine(true);
-            tvChar.setLineSpacing(0, 1f);
-            if (bold) {
-                tvChar.setTypeface(tvChar.getTypeface(), android.graphics.Typeface.BOLD);
-            }
-            charBlock.addView(tvChar);
-
-            parent.addView(charBlock);
         }
+
+        // 底部水印
+        curY += 12;
+        canvas.drawText("—— 来自「诗词乐园」", width / 2f, curY, footerPaint);
+
+        // 底部装饰线
+        canvas.drawLine(padding, totalHeight - padding, width - padding, totalHeight - padding, accentPaint);
+
+        return bitmap;
     }
 
-    private boolean isPunctuationChar(char c) {
-        return c == '，' || c == '。' || c == '、' || c == '；'
-                || c == '：' || c == '？' || c == '！' || c == '"'
-                || c == '"' || c == '\'' || c == '\''
-                || c == '(' || c == ')' || c == '（' || c == '）'
-                || c == ',' || c == '.' || c == '!' || c == '?'
-                || c == ';' || c == ':';
-    }
-
-    private int dpToPx(int dp) {
-        float density = getResources().getDisplayMetrics().density;
-        return Math.round(dp * density);
-    }
-
-    private void springView(View v) {
-        ObjectAnimator scaleX = ObjectAnimator.ofFloat(v, "scaleX", 1f, 1.3f, 1f);
-        scaleX.setDuration(400);
-        scaleX.setInterpolator(new OvershootInterpolator(2f));
-        ObjectAnimator scaleY = ObjectAnimator.ofFloat(v, "scaleY", 1f, 1.3f, 1f);
-        scaleY.setDuration(400);
-        scaleY.setInterpolator(new OvershootInterpolator(2f));
-        scaleX.start();
-        scaleY.start();
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (ttsManager != null) {
-            ttsManager.shutdown();
+    private void updateButtons() {
+        btnFavorite.setText(isFavorite ? R.string.detail_unfavorite : R.string.detail_favorite);
+        btnFavorite.setIconResource(isFavorite ? R.drawable.ic_favorite_filled : R.drawable.ic_favorite);
+        if (isFavorite) {
+            btnFavorite.setIconTintResource(R.color.favorite_active);
         }
+
+        btnLearn.setText(isLearned ? R.string.detail_learned : R.string.detail_learn);
+        btnLearn.setEnabled(!isLearned);
+        btnLearn.setAlpha(isLearned ? 0.6f : 1.0f);
     }
 }
