@@ -13,7 +13,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -47,7 +49,36 @@ public class PoemLoader {
                 }
             }
         }
+
+        // 2. 加载释义数据并匹配
+        try {
+            Map<String, String> explanations = loadExplanations(assets);
+            for (Poem poem : all) {
+                String key = poem.explanationKey();
+                String exp = explanations.get(key);
+                if (exp != null) {
+                    poem.explanation = exp;
+                }
+            }
+        } catch (Exception e) {
+            // 释义数据不存在或不完整，不影响主流程
+            e.printStackTrace();
+        }
+
         return all;
+    }
+
+    /** 加载释义映射表 */
+    private static Map<String, String> loadExplanations(AssetManager assets) throws Exception {
+        Map<String, String> map = new HashMap<>();
+        JSONArray arr = readJsonArray(assets, "poem_explanations.json");
+        for (int i = 0; i < arr.length(); i++) {
+            JSONObject obj = arr.getJSONObject(i);
+            String key = obj.getString("k");  // "title|author"
+            String explanation = obj.getString("e");
+            map.put(key, explanation);
+        }
+        return map;
     }
 
     /** 从 assets 读取 JSONArray。org.json.JSONTokener 不支持 InputStream 构造，先读为 String */

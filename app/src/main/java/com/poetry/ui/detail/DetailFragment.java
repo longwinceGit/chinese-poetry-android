@@ -42,8 +42,10 @@ public class DetailFragment extends Fragment {
     public static final String ARG_TAG = "poem_tag";
     public static final String ARG_EMOJI = "poem_emoji";
     public static final String ARG_LINES = "poem_lines";
+    public static final String ARG_EXPLANATION = "poem_explanation";
 
     private TextView tvTitle, tvAuthor, tvDynasty, tvEmoji;
+    private TextView tvExplanationTitle, tvExplanation;
     private Chip chipTag;
     private LinearLayout llPoemLines;
     private MaterialButton btnFavorite, btnRead, btnShare, btnLearn, btnPinyin;
@@ -56,6 +58,7 @@ public class DetailFragment extends Fragment {
 
     private String poemId, poemTitle, poemAuthor, poemDynasty, poemCategory, poemTag, poemEmoji;
     private String[] poemLines;
+    private String poemExplanation;
 
     @Nullable
     @Override
@@ -106,6 +109,7 @@ public class DetailFragment extends Fragment {
             poemTag = args.getString(ARG_TAG, "");
             poemEmoji = args.getString(ARG_EMOJI, "📖");
             poemLines = args.getStringArray(ARG_LINES);
+            poemExplanation = args.getString(ARG_EXPLANATION, "");
         }
     }
 
@@ -116,6 +120,8 @@ public class DetailFragment extends Fragment {
         tvEmoji = v.findViewById(R.id.tv_emoji);
         chipTag = v.findViewById(R.id.chip_tag);
         llPoemLines = v.findViewById(R.id.ll_poem_lines);
+        tvExplanationTitle = v.findViewById(R.id.tv_explanation_title);
+        tvExplanation = v.findViewById(R.id.tv_explanation);
         btnFavorite = v.findViewById(R.id.btn_favorite);
         btnRead = v.findViewById(R.id.btn_read);
         btnShare = v.findViewById(R.id.btn_share);
@@ -136,6 +142,9 @@ public class DetailFragment extends Fragment {
 
         // 渲染诗句
         renderPoemLines(false);
+
+        // 渲染释义
+        renderExplanation();
     }
 
     private int getTagColorRes(String tag) {
@@ -432,6 +441,20 @@ public class DetailFragment extends Fragment {
         canvas.drawLine(padding, totalHeight - padding, width - padding, totalHeight - padding, accentPaint);
 
         return bitmap;
+    }
+
+    private void renderExplanation() {
+        boolean hasExplanation = poemExplanation != null && !poemExplanation.isEmpty();
+        tvExplanationTitle.setVisibility(hasExplanation ? View.VISIBLE : View.GONE);
+        tvExplanation.setVisibility(hasExplanation ? View.VISIBLE : View.GONE);
+        // divider 也跟着隐藏
+        View divider = getView() != null ? getView().findViewById(R.id.divider_explanation) : null;
+        if (divider != null) {
+            divider.setVisibility(hasExplanation ? View.VISIBLE : View.GONE);
+        }
+        if (hasExplanation) {
+            tvExplanation.setText(poemExplanation);
+        }
     }
 
     private void updateButtons() {

@@ -60,6 +60,10 @@
         <argument
             android:name="poem_lines"
             app:argType="string[]" />
+        <argument
+            android:name="poem_explanation"
+            android:defaultValue=""
+            app:argType="string" />
     </fragment>
 
     <fragment

@@ -10,6 +10,7 @@ public class Poem {
     public String category;
     public String emoji;
     public String[] lines;
+    public String explanation;
 
     public Poem() {}
 
@@ -24,6 +25,7 @@ public class Poem {
         this.emoji = emoji;
         this.lines = lines;
         this.pinyin = "";
+        this.explanation = "";
     }
 
     public String getFirstLine() {
@@ -38,5 +40,15 @@ public class Poem {
             sb.append(l).append("\n");
         }
         return sb.toString().trim();
+    }
+
+    /** 是否有释义 */
+    public boolean hasExplanation() {
+        return explanation != null && !explanation.isEmpty();
+    }
+
+    /** 生成释义查找 key：title|author */
+    public String explanationKey() {
+        return (title != null ? title : "") + "|" + (author != null ? author : "");
     }
 }

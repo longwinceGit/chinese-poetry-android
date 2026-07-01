@@ -31,12 +31,15 @@ public class GameViewModel extends AndroidViewModel {
     private MutableLiveData<Boolean> coupletFinished = new MutableLiveData<>(false);
     private int coupletStreak = 0;
 
-    // 配对模式
-    private MutableLiveData<GameEngine.MatchGame> matchGame = new MutableLiveData<>();
+    // 消消乐模式
+    private MutableLiveData<List<GameEngine.MatchCard>> matchCards = new MutableLiveData<>();
     private MutableLiveData<Integer> matchedCount = new MutableLiveData<>(0);
     private MutableLiveData<Integer> matchAttempts = new MutableLiveData<>(0);
     private MutableLiveData<Boolean> matchFinished = new MutableLiveData<>(false);
+    private MutableLiveData<String> matchTip = new MutableLiveData<>();  // 配对成功提示（诗词名）
+    private GameEngine.MatchGame currentMatchGame;  // 内部持有完整游戏状态
 
+    private static final int MATCH_PAIRS = 6;
     private static final int TOTAL_ROUNDS = 10;
 
     public GameViewModel(Application app) {
@@ -75,10 +78,8 @@ public class GameViewModel extends AndroidViewModel {
         coupletScore.setValue((coupletScore.getValue() != null ? coupletScore.getValue() : 0) + points);
         roundResult.setValue(correct);
 
-        // 保存积分
         savePoints(points);
 
-        // 自动进入下一题（延迟）
         if (round + 1 < rounds.size()) {
             currentRound.setValue(round + 1);
         } else {
@@ -91,36 +92,71 @@ public class GameViewModel extends AndroidViewModel {
         roundResult.setValue(null);
     }
 
-    // ==================== 配对 ====================
+    // ==================== 消消乐 ====================
 
     public void startMatchGame() {
         List<Poem> pool = repo.getAllPoems();
-        GameEngine.MatchGame game = GameEngine.generateMatchGame(pool, 6);
-        matchGame.setValue(game);
+        currentMatchGame = GameEngine.generateMatchGame(pool, MATCH_PAIRS);
+        // LiveData 需要新 List 实例才能触发通知
+        matchCards.setValue(new ArrayList<>(currentMatchGame.cards));
         matchedCount.setValue(0);
         matchAttempts.setValue(0);
         matchFinished.setValue(false);
+        matchTip.setValue(null);
     }
 
-    public boolean tryMatch(GameEngine.MatchCard a, GameEngine.MatchCard b) {
-        GameEngine.MatchGame game = matchGame.getValue();
-        if (game == null) return false;
+    /**
+     * 尝试配对两张卡片。
+     * @return 0=配对成功, 1=配对失败, -1=无效操作
+     */
+    public int tryMatch(GameEngine.MatchCard a, GameEngine.MatchCard b) {
+        if (currentMatchGame == null || a == b) return -1;
+        if (a.matched || b.matched) return -1;
 
         matchAttempts.setValue((matchAttempts.getValue() != null ? matchAttempts.getValue() : 0) + 1);
-        boolean success = GameEngine.checkMatch(game, a, b);
+
+        boolean success = GameEngine.checkMatch(a, b);
 
         if (success) {
-            matchedCount.setValue((matchedCount.getValue() != null ? matchedCount.getValue() : 0) + 1);
-            matchGame.setValue(game);
+            a.matched = true;
+            b.matched = true;
+            a.selected = false;
+            b.selected = false;
 
-            if (GameEngine.isGameComplete(game)) {
-                int score = GameEngine.calcMatchScore(matchAttempts.getValue() != null ? matchAttempts.getValue() : 0);
+            int newCount = (matchedCount.getValue() != null ? matchedCount.getValue() : 0) + 1;
+            matchedCount.setValue(newCount);
+
+            // 提示诗词名
+            String info = currentMatchGame.poemInfo != null
+                    ? currentMatchGame.poemInfo.get(a.pairId) : null;
+            matchTip.setValue(info != null ? info : (a.poemTitle + " · " + a.poemAuthor));
+
+            // 通知 UI 更新（新 List 实例）
+            matchCards.setValue(new ArrayList<>(currentMatchGame.cards));
+
+            if (GameEngine.isGameComplete(currentMatchGame)) {
+                int score = GameEngine.calcMatchScore(
+                        matchAttempts.getValue() != null ? matchAttempts.getValue() : 0,
+                        MATCH_PAIRS);
                 savePoints(score);
                 recordGameActivity();
                 matchFinished.setValue(true);
             }
+            return 0;
+        } else {
+            // 配对失败，取消选中
+            a.selected = false;
+            b.selected = false;
+            matchCards.setValue(new ArrayList<>(currentMatchGame.cards));
+            return 1;
         }
-        return success;
+    }
+
+    /** 选中/取消选中卡片 */
+    public void toggleSelect(GameEngine.MatchCard card) {
+        if (card.matched) return;
+        card.selected = !card.selected;
+        matchCards.setValue(new ArrayList<>(currentMatchGame.cards));
     }
 
     // ==================== 通用 ====================
@@ -137,19 +173,18 @@ public class GameViewModel extends AndroidViewModel {
         }).start();
     }
 
-    /**
-     * 记录游戏活动：更新每日统计，让"玩游戏"任务可被检测
-     */
     private void recordGameActivity() {
         final String today = LocalDate.now().toString();
         new Thread(() -> {
-            com.poetry.data.DailyStats existing = db.poemDao().getDailyStatsSync(today);
+            DailyStats existing = db.poemDao().getDailyStatsSync(today);
             if (existing == null) {
-                db.poemDao().upsertDailyStats(new com.poetry.data.DailyStats(today));
+                db.poemDao().upsertDailyStats(new DailyStats(today));
             }
             db.poemDao().incrementGamesPlayed(today);
         }).start();
     }
+
+    // ==================== Getters ====================
 
     public LiveData<List<GameEngine.CoupletRound>> getCoupletRounds() { return coupletRounds; }
     public LiveData<Integer> getCurrentRound() { return currentRound; }
@@ -157,10 +192,12 @@ public class GameViewModel extends AndroidViewModel {
     public LiveData<Boolean> getRoundResult() { return roundResult; }
     public LiveData<Boolean> getCoupletFinished() { return coupletFinished; }
 
-    public LiveData<GameEngine.MatchGame> getMatchGame() { return matchGame; }
+    public LiveData<List<GameEngine.MatchCard>> getMatchCards() { return matchCards; }
     public LiveData<Integer> getMatchedCount() { return matchedCount; }
     public LiveData<Integer> getMatchAttempts() { return matchAttempts; }
     public LiveData<Boolean> getMatchFinished() { return matchFinished; }
+    public LiveData<String> getMatchTip() { return matchTip; }
 
     public int getTotalRounds() { return TOTAL_ROUNDS; }
+    public int getMatchPairs() { return MATCH_PAIRS; }
 }

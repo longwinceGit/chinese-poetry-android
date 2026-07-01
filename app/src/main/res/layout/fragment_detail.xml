@@ -134,6 +134,51 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
+        <!-- 释义分隔线 -->
+        <View
+            android:id="@+id/divider_explanation"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginEnd="32dp"
+            android:background="@color/divider"
+            app:layout_constraintTop_toBottomOf="@id/btn_pinyin"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- 释义标题 -->
+        <TextView
+            android:id="@+id/tv_explanation_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="16dp"
+            android:text="释义"
+            android:textSize="16sp"
+            android:textColor="@color/primary"
+            android:textStyle="bold"
+            android:fontFamily="serif"
+            app:layout_constraintTop_toBottomOf="@id/divider_explanation"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- 释义内容 -->
+        <TextView
+            android:id="@+id/tv_explanation"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="24dp"
+            android:textSize="15sp"
+            android:textColor="@color/on_surface"
+            android:lineSpacingExtra="6dp"
+            android:textAlignment="viewStart"
+            app:layout_constraintTop_toBottomOf="@id/tv_explanation_title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:text="此诗描写了……" />
+
         <!-- 底部操作栏 -->
         <LinearLayout
             android:id="@+id/ll_actions"
@@ -144,7 +189,7 @@
             android:layout_marginEnd="16dp"
             android:orientation="horizontal"
             android:gravity="center"
-            app:layout_constraintTop_toBottomOf="@id/btn_pinyin"
+            app:layout_constraintTop_toBottomOf="@id/tv_explanation"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 

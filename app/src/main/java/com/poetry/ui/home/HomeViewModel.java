@@ -108,9 +108,14 @@ public class HomeViewModel extends AndroidViewModel {
             List<Poem> more = filtered.subList(start, end);
             List<Poem> current = poems.getValue();
             if (current != null) {
-                current.addAll(more);
-                poems.setValue(current);
+                // 必须创建新 List —— LiveData 同引用不通知
+                List<Poem> updated = new java.util.ArrayList<>(current);
+                updated.addAll(more);
+                poems.setValue(updated);
             }
+        } else {
+            // 回退页码（数据不足一页）
+            currentPage--;
         }
     }
 

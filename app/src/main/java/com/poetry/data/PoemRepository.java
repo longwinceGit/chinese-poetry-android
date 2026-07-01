@@ -7,6 +7,8 @@ import com.poetry.PoemLoader;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,6 +41,17 @@ public class PoemRepository {
             @Override
             public List<Poem> call() throws Exception {
                 List<Poem> poems = PoemLoader.loadAll(assets);
+                // 著名诗词（有释义）排在前面
+                Collections.sort(poems, new Comparator<Poem>() {
+                    @Override
+                    public int compare(Poem a, Poem b) {
+                        boolean aFamous = a.explanation != null && !a.explanation.isEmpty();
+                        boolean bFamous = b.explanation != null && !b.explanation.isEmpty();
+                        if (aFamous && !bFamous) return -1;
+                        if (!aFamous && bFamous) return 1;
+                        return 0;
+                    }
+                });
                 allPoems = poems;
                 loaded = true;
                 buildCategories();

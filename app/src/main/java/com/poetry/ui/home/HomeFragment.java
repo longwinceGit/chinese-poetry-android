@@ -169,10 +169,8 @@ public class HomeFragment extends Fragment {
         btnLoadMore.setOnClickListener(v -> {
             progressLoad.setVisibility(View.VISIBLE);
             btnLoadMore.setVisibility(View.GONE);
-            recyclerPoems.postDelayed(() -> {
-                viewModel.loadMore();
-                progressLoad.setVisibility(View.GONE);
-            }, 300);
+            viewModel.loadMore();
+            // 观察者收到 poems 更新后会调用 updateLoadMoreUI() 恢复按钮状态
         });
     }
 
@@ -216,13 +214,20 @@ public class HomeFragment extends Fragment {
         args.putString("poem_tag", poem.tag != null ? poem.tag : "");
         args.putString("poem_emoji", poem.emoji != null ? poem.emoji : "");
         args.putStringArray("poem_lines", poem.lines);
+        args.putString("poem_explanation", poem.explanation != null ? poem.explanation : "");
         navController.navigate(R.id.nav_detail, args);
     }
 
     private void updateLoadMoreUI() {
         int total = viewModel.getTotalCountValue();
         int loaded = (viewModel.getCurrentPage() + 1) * HomeViewModel.getPageSize();
-        loadMoreArea.setVisibility(loaded < total ? View.VISIBLE : View.GONE);
+        boolean hasMore = loaded < total;
+        loadMoreArea.setVisibility(hasMore ? View.VISIBLE : View.GONE);
+        if (hasMore) {
+            // 恢复按钮状态
+            btnLoadMore.setVisibility(View.VISIBLE);
+            progressLoad.setVisibility(View.GONE);
+        }
         tvNoMore.setVisibility(loaded >= total && viewModel.isSearchMode() ? View.VISIBLE : View.GONE);
     }
 }

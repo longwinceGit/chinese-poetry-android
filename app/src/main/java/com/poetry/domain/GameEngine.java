@@ -4,8 +4,10 @@ import com.poetry.data.model.Poem;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -39,7 +41,6 @@ public class GameEngine {
             round.correctAnswer = poem.lines[pairIdx + 1];
             round.roundNumber = found + 1;
 
-            // 生成4个选项
             round.options = new ArrayList<>();
             round.options.add(round.correctAnswer);
             Set<Integer> used = new HashSet<>();
@@ -62,24 +63,34 @@ public class GameEngine {
         return game;
     }
 
-    // ==================== 配对模式 ====================
+    // ==================== 消消乐模式（诗词对句配对消除） ====================
 
     public static class MatchCard {
-        public String text;
-        public int pairId;
-        public boolean isLeft;
-        public boolean matched;
+        public String text;          // 诗句文本
+        public int pairId;           // 所属配对组（同一首诗）
+        public boolean isFirstHalf;  // true=上句, false=下句
+        public boolean matched;      // 已消除
+        public boolean selected;     // 当前被选中（高亮）
+        public String poemTitle;     // 所属诗词标题
+        public String poemAuthor;    // 所属诗词作者
     }
 
     public static class MatchGame {
         public List<MatchCard> cards;
         public int totalPairs;
+        /** pairId -> "标题 - 作者" 的映射，用于配对成功时展示 */
+        public Map<Integer, String> poemInfo;
     }
 
+    /**
+     * 生成消消乐游戏：选取 N 首诗词，每首取上句+下句共 2N 张卡片，全部打乱排列。
+     * 所有卡片正面可见，玩家需要找到上句和下句配对消除。
+     */
     public static MatchGame generateMatchGame(List<Poem> pool, int pairs) {
         MatchGame game = new MatchGame();
         game.cards = new ArrayList<>();
         game.totalPairs = pairs;
+        game.poemInfo = new HashMap<>();
 
         List<Poem> shuffled = new ArrayList<>(pool);
         Collections.shuffle(shuffled, RANDOM);
@@ -87,41 +98,53 @@ public class GameEngine {
         int count = 0;
         for (Poem poem : shuffled) {
             if (poem.lines == null || poem.lines.length < 2) continue;
-            if (poem.lines[0].length() < 3 || poem.lines[1].length() < 3) continue;
-            if (poem.lines[0].contains("……") || poem.lines[1].contains("……")) continue;
+            // 跳过太短或含省略号的行
+            if (poem.lines[0].length() < 2 || poem.lines[1].length() < 2) continue;
+            if (poem.lines[0].contains("…") || poem.lines[1].contains("…")) continue;
 
-            MatchCard left = new MatchCard();
-            left.text = poem.lines[0];
-            left.pairId = count;
-            left.isLeft = true;
-            left.matched = false;
+            // 上句卡片
+            MatchCard first = new MatchCard();
+            first.text = poem.lines[0];
+            first.pairId = count;
+            first.isFirstHalf = true;
+            first.matched = false;
+            first.selected = false;
+            first.poemTitle = poem.title;
+            first.poemAuthor = poem.author;
 
-            MatchCard right = new MatchCard();
-            right.text = poem.lines[1];
-            right.pairId = count;
-            right.isLeft = false;
-            right.matched = false;
+            // 下句卡片
+            MatchCard second = new MatchCard();
+            second.text = poem.lines[1];
+            second.pairId = count;
+            second.isFirstHalf = false;
+            second.matched = false;
+            second.selected = false;
+            second.poemTitle = poem.title;
+            second.poemAuthor = poem.author;
 
-            game.cards.add(left);
-            game.cards.add(right);
+            game.cards.add(first);
+            game.cards.add(second);
+            game.poemInfo.put(count, poem.title + " · " + poem.author);
             count++;
             if (count >= pairs) break;
         }
 
+        // 打乱所有卡片顺序
         Collections.shuffle(game.cards, RANDOM);
         return game;
     }
 
-    public static boolean checkMatch(MatchGame game, MatchCard a, MatchCard b) {
+    /**
+     * 检查两张卡片是否配对成功：同一 pairId 且分别为上句/下句
+     */
+    public static boolean checkMatch(MatchCard a, MatchCard b) {
         if (a == b) return false;
-        if (a.pairId == b.pairId && a.isLeft != b.isLeft) {
-            a.matched = true;
-            b.matched = true;
-            return true;
-        }
-        return false;
+        return a.pairId == b.pairId && a.isFirstHalf != b.isFirstHalf;
     }
 
+    /**
+     * 判断游戏是否完成（所有卡片均已消除）
+     */
     public static boolean isGameComplete(MatchGame game) {
         for (MatchCard c : game.cards) {
             if (!c.matched) return false;
@@ -137,7 +160,11 @@ public class GameEngine {
         return base + streak;
     }
 
-    public static int calcMatchScore(int attempts) {
-        return Math.max(5, 30 - attempts);
+    public static int calcMatchScore(int attempts, int totalPairs) {
+        // 理想次数 = totalPairs（每次都对），实际次数越多分越低
+        int ideal = totalPairs;
+        int base = 50;
+        int penalty = Math.max(0, attempts - ideal) * 3;
+        return Math.max(5, base - penalty);
     }
 }
