@@ -246,8 +246,19 @@ public class DetailFragment extends Fragment {
                 ttsManager.stop();
                 btnRead.setText(R.string.detail_read);
             } else {
-                String fullText = poemTitle + "。" + String.join("，", poemLines != null ? poemLines : new String[0]);
-                ttsManager.speak(fullText, "detail_" + System.currentTimeMillis());
+                String authorLine = poemDynasty != null && !poemDynasty.isEmpty()
+                        ? poemAuthor + "（" + poemDynasty + "）" : poemAuthor;
+                ttsManager.speakPoemStructured(poemTitle, authorLine,
+                        poemLines != null ? poemLines : new String[0],
+                        new TtsManager.LineReadListener() {
+                            @Override
+                            public void onLineComplete(int index, int total) {}
+
+                            @Override
+                            public void onAllComplete() {
+                                btnRead.post(() -> btnRead.setText(R.string.detail_read));
+                            }
+                        });
                 btnRead.setText(R.string.detail_pause);
             }
         });
