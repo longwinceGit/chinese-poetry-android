@@ -14,7 +14,9 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.Navigation;
 
+import com.google.android.material.card.MaterialCardView;
 import com.poetry.R;
 import com.poetry.data.UserProfile;
 import com.poetry.domain.AchievementEngine;
@@ -36,6 +38,7 @@ public class ProfileFragment extends Fragment {
     // 🔴 B5 修复：主题展示容器
     private LinearLayout llThemes;
     private TextView tvThemeCount;
+    private MaterialCardView cardFavorites;
     private ProfileViewModel viewModel;
 
     /**
@@ -61,6 +64,8 @@ public class ProfileFragment extends Fragment {
         viewModel.loadData();
 
         view.findViewById(R.id.btn_share_app).setOnClickListener(v -> shareApp());
+        cardFavorites.setOnClickListener(v ->
+            Navigation.findNavController(v).navigate(R.id.nav_favorites));
     }
 
     /**
@@ -77,6 +82,7 @@ public class ProfileFragment extends Fragment {
         llAchievements = v.findViewById(R.id.ll_achievements);
         llThemes = v.findViewById(R.id.ll_themes);
         tvThemeCount = v.findViewById(R.id.tv_theme_count);
+        cardFavorites = v.findViewById(R.id.card_favorites);
     }
 
     /**
@@ -186,6 +192,7 @@ public class ProfileFragment extends Fragment {
     /**
      * 🔴 B5 修复：构建主题展示列表。
      * 显示全部 9 套主题的图标和名称，已解锁的用彩色高亮，未解锁的用灰色锁定。
+     * 已解锁主题可点击切换，当前选中主题显示金色边框和选中标记。
      */
     private void buildThemes(UserProfile profile) {
         llThemes.removeAllViews();
@@ -199,6 +206,7 @@ public class ProfileFragment extends Fragment {
         for (int i = 0; i < showCount; i++) {
             ThemeManager.ThemeDef theme = all.get(i);
             boolean isUnlocked = unlocked.contains(theme.id);
+            boolean isSelected = theme.id.equals(profile.currentTheme);
 
             LinearLayout item = new LinearLayout(requireContext());
             item.setOrientation(LinearLayout.VERTICAL);
@@ -206,6 +214,12 @@ public class ProfileFragment extends Fragment {
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
             item.setLayoutParams(params);
+
+            // 当前选中主题高亮背景
+            if (isSelected) {
+                item.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.bg_checkin_today));
+                item.setPadding(4, 4, 4, 4);
+            }
 
             // 图标
             TextView icon = new TextView(requireContext());
@@ -225,6 +239,28 @@ public class ProfileFragment extends Fragment {
             name.setMaxLines(1);
             name.setEllipsize(android.text.TextUtils.TruncateAt.END);
             item.addView(name);
+
+            // 已解锁主题可点击切换
+            if (isUnlocked) {
+                item.setClickable(true);
+                item.setFocusable(true);
+                item.setOnClickListener(v -> {
+                    if (!theme.id.equals(profile.currentTheme)) {
+                        viewModel.setCurrentTheme(profile, theme.id);
+                        // 立即刷新列表视图
+                        buildThemes(profile);
+                    }
+                });
+            }
+
+            // 无障碍描述：名称 + 状态
+            String a11yDesc = theme.name;
+            if (!isUnlocked) {
+                a11yDesc += "，未解锁";
+            } else if (isSelected) {
+                a11yDesc += "，当前使用";
+            }
+            item.setContentDescription(a11yDesc);
 
             llThemes.addView(item);
         }

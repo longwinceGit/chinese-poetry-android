@@ -70,4 +70,29 @@ public class ProfileViewModel extends AndroidViewModel {
     public LiveData<Integer> getLearnedCount() {
         return learnedCount;
     }
+
+    /**
+     * 切换当前主题并持久化到数据库。
+     * 同时更新 LiveData 以刷新 UI。
+     *
+     * @param profile    当前用户档案
+     * @param newThemeId 新主题 ID
+     */
+    public void setCurrentTheme(UserProfile profile, String newThemeId) {
+        profile.currentTheme = newThemeId;
+        new Thread(() -> {
+            db.poemDao().insertUserProfile(profile);
+            userProfile.postValue(profile);
+        }).start();
+    }
+
+    /**
+     * 刷新用户档案数据（用于主题切换后立即刷新）。
+     */
+    public void refreshProfile() {
+        new Thread(() -> {
+            UserProfile profile = db.poemDao().getUserProfileSync();
+            userProfile.postValue(profile);
+        }).start();
+    }
 }

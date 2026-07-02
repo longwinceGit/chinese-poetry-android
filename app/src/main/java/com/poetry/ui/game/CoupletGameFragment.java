@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -157,6 +158,18 @@ public class CoupletGameFragment extends Fragment {
         viewModel.getCoupletFinished().observe(getViewLifecycleOwner(), finished -> {
             if (finished != null && finished) showResult();
         });
+
+        // 成就解锁：撒花 + Toast
+        viewModel.getNewAchievement().observe(getViewLifecycleOwner(), def -> {
+            if (def != null) {
+                Toast.makeText(requireContext(),
+                    "🎉 成就解锁：" + def.name, Toast.LENGTH_LONG).show();
+                if (getActivity() instanceof com.poetry.MainActivity) {
+                    ((com.poetry.MainActivity) getActivity()).celebrate();
+                }
+                viewModel.clearAchievement(); // 消费后清空，防止 LiveData 回放
+            }
+        });
     }
 
     /**
@@ -238,14 +251,15 @@ public class CoupletGameFragment extends Fragment {
     }
 
     /**
-     * Fragment 销毁时的回调。
+     * Fragment 视图销毁时的回调。
      * <p>
      * 清理 Handler 中的待执行消息和回调，防止内存泄漏。
+     * 使用 onDestroyView 而非 onDestroy，避免视图已被回收但 Handler 仍持有引用。
      * </p>
      */
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onDestroyView() {
+        super.onDestroyView();
         handler.removeCallbacksAndMessages(null);
     }
 }

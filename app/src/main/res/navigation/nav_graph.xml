@@ -30,6 +30,13 @@
         android:label="@string/nav_profile"
         tools:layout="@layout/fragment_profile" />
 
+    <!-- 收藏列表 - 二级页面 -->
+    <fragment
+        android:id="@+id/nav_favorites"
+        android:name="com.poetry.ui.favorites.FavoritesFragment"
+        android:label="@string/favorites_title"
+        tools:layout="@layout/fragment_favorites" />
+
     <!-- 详情/游戏/答题 - 二级页面 -->
     <fragment
         android:id="@+id/nav_detail"

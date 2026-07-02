@@ -37,7 +37,7 @@ public class ConfettiView extends View {
     private List<Particle> particles = new ArrayList<>();
     private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private Random random = new Random();
+    private static Random random = new Random();
     private Handler handler = new Handler(Looper.getMainLooper());
     private Runnable runnable;
     private boolean animating = false;
@@ -197,7 +197,7 @@ public class ConfettiView extends View {
      * 约 15% 的粒子为 Emoji 类型，其余为几何图形。
      * </p>
      */
-    private class Particle {
+    private static class Particle {
         float x, y;
         float vx, vy;
         float rotation, rotationSpeed;

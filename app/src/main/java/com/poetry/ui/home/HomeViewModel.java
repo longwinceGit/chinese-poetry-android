@@ -26,6 +26,7 @@ public class HomeViewModel extends AndroidViewModel {
     private MutableLiveData<List<Poem>> poems = new MutableLiveData<>();
     private MutableLiveData<String> loadingMessage = new MutableLiveData<>();
     private MutableLiveData<Boolean> isLoading = new MutableLiveData<>(true);
+    private MutableLiveData<String> errorMessage = new MutableLiveData<>();
     private MutableLiveData<Poem> dailyPoem = new MutableLiveData<>();
     private MutableLiveData<List<String>> categories = new MutableLiveData<>();
     private MutableLiveData<List<String>> categoryIcons = new MutableLiveData<>();
@@ -55,7 +56,7 @@ public class HomeViewModel extends AndroidViewModel {
      */
     public void loadPoems() {
         isLoading.setValue(true);
-        loadingMessage.setValue("正在加载诗词...");
+        loadingMessage.setValue("正在加载诗词数据...");
         new Thread(() -> {
             try {
                 List<Poem> result = repo.loadPoemsAsync(getApplication().getAssets()).get();
@@ -79,8 +80,11 @@ public class HomeViewModel extends AndroidViewModel {
                     }
                     poems.postValue(page);
                 }
+                // 后台构建搜索索引（不阻塞 UI）
+                repo.warmupIndices();
             } catch (Exception e) {
                 isLoading.postValue(false);
+                errorMessage.postValue("数据加载失败：" + e.getMessage());
             }
         }).start();
     }
@@ -186,6 +190,8 @@ public class HomeViewModel extends AndroidViewModel {
     public LiveData<String> getLoadingMessage() { return loadingMessage; }
     /** @return 是否正在加载 LiveData */
     public LiveData<Boolean> getIsLoading() { return isLoading; }
+    /** @return 错误信息 LiveData（非空时显示错误状态） */
+    public LiveData<String> getErrorMessage() { return errorMessage; }
     /** @return 每日推荐诗词 LiveData */
     public LiveData<Poem> getDailyPoem() { return dailyPoem; }
     /** @return 分类名称列表 LiveData */

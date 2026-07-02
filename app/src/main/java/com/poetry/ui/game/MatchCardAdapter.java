@@ -131,6 +131,10 @@ public class MatchCardAdapter extends RecyclerView.Adapter<MatchCardAdapter.Card
 
         tv.setBackground(bg);
 
+        // 为消消乐卡片设置无障碍描述
+        String cardLabel = card.isFirstHalf ? "上句：" : "下句：";
+        tv.setContentDescription(ctx.getString(R.string.a11y_match_card_format, cardLabel + card.text));
+
         // 清除旧监听器，重新设置
         tv.setOnClickListener(v -> {
             if (listener != null && !card.matched) {

@@ -162,6 +162,18 @@ public class QuizFragment extends Fragment {
                 requireActivity().onBackPressed();
             }
         });
+
+        // 成就解锁：撒花 + Toast
+        viewModel.getNewAchievement().observe(getViewLifecycleOwner(), def -> {
+            if (def != null) {
+                Toast.makeText(requireContext(),
+                    "🎉 成就解锁：" + def.name, Toast.LENGTH_LONG).show();
+                if (getActivity() instanceof com.poetry.MainActivity) {
+                    ((com.poetry.MainActivity) getActivity()).celebrate();
+                }
+                viewModel.clearAchievement(); // 消费后清空，防止 LiveData 回放
+            }
+        });
     }
 
     /**

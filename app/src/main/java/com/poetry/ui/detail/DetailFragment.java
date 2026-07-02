@@ -24,8 +24,6 @@ import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.poetry.R;
-import com.poetry.data.LearningDatabase;
-import com.poetry.data.model.Poem;
 import com.poetry.util.PinyinLineView;
 import com.poetry.util.TtsManager;
 
@@ -58,8 +56,6 @@ public class DetailFragment extends Fragment {
     private MaterialButton btnFavorite, btnRead, btnShare, btnLearn, btnPinyin;
     private DetailViewModel viewModel;
     private TtsManager ttsManager;
-    private boolean isFavorite = false;
-    private boolean isLearned = false;
     private boolean pinyinVisible = false;
     private String ttsErrorMsg = null;
 
@@ -87,7 +83,9 @@ public class DetailFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         readArgs();
         initViews(view);
-        viewModel = new ViewModelProvider(this).get(DetailViewModel.class);
+        viewModel = new ViewModelProvider(this,
+            ViewModelProvider.AndroidViewModelFactory.getInstance(
+                requireActivity().getApplication())).get(DetailViewModel.class);
         ttsManager = new TtsManager(requireContext(), new TtsManager.OnInitListener() {
             @Override
             public void onReady() {
@@ -101,7 +99,8 @@ public class DetailFragment extends Fragment {
         });
         setupData();
         setupListeners();
-        checkStatus();
+        observeViewModel();
+        viewModel.checkStatus(poemId);
     }
 
     /**
@@ -261,12 +260,12 @@ public class DetailFragment extends Fragment {
     }
 
     /**
-     * 为各操作按钮注册点击监听：
+     * 为各操作按钮注册点击监听（业务逻辑委托给 {@link DetailViewModel}）：
      * <ul>
-     *   <li>朗读按钮 → TTS 朗读/暂停，带引擎就绪检查和错误提示</li>
-     *   <li>收藏按钮 → {@link #toggleFavorite()}</li>
+     *   <li>朗读按钮 → TTS 朗读/暂停</li>
+     *   <li>收藏按钮 → viewModel.toggleFavorite()</li>
      *   <li>分享按钮 → {@link #sharePoem()}</li>
-     *   <li>已学按钮 → {@link #markAsLearned()}</li>
+     *   <li>已学按钮 → viewModel.markAsLearned()</li>
      *   <li>拼音按钮 → 切换拼音显示模式</li>
      * </ul>
      */
@@ -288,9 +287,15 @@ public class DetailFragment extends Fragment {
             }
         });
 
-        btnFavorite.setOnClickListener(v -> toggleFavorite());
+        btnFavorite.setOnClickListener(v -> viewModel.toggleFavorite());
         btnShare.setOnClickListener(v -> sharePoem());
-        btnLearn.setOnClickListener(v -> markAsLearned());
+        btnLearn.setOnClickListener(v -> {
+            Boolean learned = viewModel.getIsLearned().getValue();
+            if (learned == null || !learned) {
+                viewModel.markAsLearned();
+                Toast.makeText(requireContext(), "已标记为已学 ✓", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         btnPinyin.setOnClickListener(v -> {
             pinyinVisible = !pinyinVisible;
@@ -300,54 +305,23 @@ public class DetailFragment extends Fragment {
     }
 
     /**
-     * 查询数据库中的收藏和已学状态，在主线程更新按钮 UI。
+     * 观察 ViewModel 中的收藏和已学状态，自动更新按钮 UI。
      */
-    private void checkStatus() {
-        LearningDatabase db = LearningDatabase.getInstance(requireContext());
-        new Thread(() -> {
-            boolean fav = db.poemDao().isFavorite(poemId);
-            boolean learned = db.poemDao().isLearned(poemId);
-            requireActivity().runOnUiThread(() -> {
-                isFavorite = fav;
-                isLearned = learned;
-                updateButtons();
-            });
-        }).start();
-    }
-
-    /**
-     * 切换收藏状态：在子线程中写入/移除收藏记录，主线程刷新按钮 UI。
-     */
-    private void toggleFavorite() {
-        isFavorite = !isFavorite;
-        LearningDatabase db = LearningDatabase.getInstance(requireContext());
-        new Thread(() -> {
-            db.poemDao().ensureRecordExists(poemId);
-            if (isFavorite) {
-                db.poemDao().addFavorite(poemId);
-            } else {
-                db.poemDao().removeFavorite(poemId);
+    private void observeViewModel() {
+        viewModel.getIsFavorite().observe(getViewLifecycleOwner(), fav -> {
+            btnFavorite.setText(fav != null && fav ? R.string.detail_unfavorite : R.string.detail_favorite);
+            btnFavorite.setIconResource(fav != null && fav ? R.drawable.ic_favorite_filled : R.drawable.ic_favorite);
+            if (fav != null && fav) {
+                btnFavorite.setIconTintResource(R.color.favorite_active);
             }
-            requireActivity().runOnUiThread(this::updateButtons);
-        }).start();
-    }
+        });
 
-    /**
-     * 标记该诗词为"已学"：写入学习记录和时间戳，更新按钮为不可点击的已学状态，
-     * 并通过 Toast 提示用户。
-     */
-    private void markAsLearned() {
-        if (isLearned) return;
-        isLearned = true;
-        LearningDatabase db = LearningDatabase.getInstance(requireContext());
-        new Thread(() -> {
-            db.poemDao().ensureRecordExists(poemId);
-            db.poemDao().markLearned(poemId, System.currentTimeMillis());
-            requireActivity().runOnUiThread(() -> {
-                updateButtons();
-                Toast.makeText(requireContext(), "已标记为已学 ✓", Toast.LENGTH_SHORT).show();
-            });
-        }).start();
+        viewModel.getIsLearned().observe(getViewLifecycleOwner(), learned -> {
+            boolean isLearned = learned != null && learned;
+            btnLearn.setText(isLearned ? R.string.detail_learned : R.string.detail_learn);
+            btnLearn.setEnabled(!isLearned);
+            btnLearn.setAlpha(isLearned ? 0.6f : 1.0f);
+        });
     }
 
     /**
@@ -554,19 +528,4 @@ public class DetailFragment extends Fragment {
         }
     }
 
-    /**
-     * 根据当前收藏和已学状态刷新操作按钮的文字、图标及可用性。
-     * 已学状态下降低按钮透明度并禁用点击。
-     */
-    private void updateButtons() {
-        btnFavorite.setText(isFavorite ? R.string.detail_unfavorite : R.string.detail_favorite);
-        btnFavorite.setIconResource(isFavorite ? R.drawable.ic_favorite_filled : R.drawable.ic_favorite);
-        if (isFavorite) {
-            btnFavorite.setIconTintResource(R.color.favorite_active);
-        }
-
-        btnLearn.setText(isLearned ? R.string.detail_learned : R.string.detail_learn);
-        btnLearn.setEnabled(!isLearned);
-        btnLearn.setAlpha(isLearned ? 0.6f : 1.0f);
-    }
 }

@@ -46,6 +46,7 @@ public class PoemRepository {
     private List<String> categories = new ArrayList<>();
     private List<String> categoryIcons = new ArrayList<>();
     private boolean loaded = false;
+    private boolean indicesBuilt = false;
 
     // 🔴 B3 修复：搜索倒排索引（字符级）
     private final Map<Character, Set<Integer>> titleCharIndex = new HashMap<>();
@@ -69,7 +70,8 @@ public class PoemRepository {
      * 异步加载所有诗词数据。
      *
      * <p>从 assets 中加载诗词资源，加载完成后自动按"著名诗词优先"排序
-     * （有释义的诗词排在前面），并同步构建搜索倒排索引与分类列表。
+     * （有释义的诗词排在前面），并构建分类列表。
+     * 搜索倒排索引在后台延迟构建，通过 {@link #warmupIndices()} 触发。
      *
      * @param assets 安卓 AssetManager，用于读取内置诗词资源文件
      * @return 返回一个 {@link Future}，可通过 {@code get()} 获取加载完成后的全部诗词列表
@@ -92,11 +94,35 @@ public class PoemRepository {
                 });
                 allPoems = poems;
                 loaded = true;
-                buildIndices();
                 buildCategories();
                 return poems;
             }
         });
+    }
+
+    /**
+     * 在后台构建搜索倒排索引（耗时操作，应在 UI 展示后异步调用）。
+     * <p>
+     * 索引构建完成后，后续搜索将使用倒排索引加速；
+     * 构建完成前搜索自动降级为线性扫描。
+     */
+    public void warmupIndices() {
+        executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                buildIndices();
+                indicesBuilt = true;
+            }
+        });
+    }
+
+    /**
+     * 判断搜索倒排索引是否已构建完成。
+     *
+     * @return {@code true} 表示索引已就绪，搜索将使用加速路径
+     */
+    public boolean isIndicesBuilt() {
+        return indicesBuilt;
     }
 
     /**

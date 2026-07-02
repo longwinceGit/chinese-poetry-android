@@ -98,6 +98,13 @@ public class AchievementAdapter extends RecyclerView.Adapter<AchievementAdapter.
             holder.tvStatus.setTextColor(holder.itemView.getContext().getColor(R.color.on_surface_variant));
             holder.itemView.setAlpha(0.5f);
         }
+
+        // 为成就条目设置无障碍描述：名称 + 状态
+        String status = entry.unlocked ? "已达成" : "未达成";
+        holder.itemView.setContentDescription(
+            holder.itemView.getContext().getString(
+                R.string.a11y_achievement_format,
+                entry.def.name, status));
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

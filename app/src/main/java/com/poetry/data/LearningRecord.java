@@ -3,6 +3,7 @@ package com.poetry.data;
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.Ignore;
+import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
 /**
@@ -11,7 +12,13 @@ import androidx.room.PrimaryKey;
  * 每首被标记"已学""收藏""已答题""已游戏"的诗词在此表中占一行。
  * 空行由 {@code ensureRecordExists()} 幂等插入。
  */
-@Entity(tableName = "learning_records")
+@Entity(tableName = "learning_records",
+    indices = {
+        @Index("learnedAt"),
+        @Index("favorite"),
+        @Index("quizScore"),
+        @Index("gamePlayed")
+    })
 public class LearningRecord {
 
     /** 诗词 ID（主键），格式 "d{index}" */

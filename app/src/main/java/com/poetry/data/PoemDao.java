@@ -181,6 +181,10 @@ public interface PoemDao {
     @Query("UPDATE daily_stats SET quizCompleted = quizCompleted + 1 WHERE date = :date")
     void incrementQuizCompleted(String date);
 
+    /** 原子递增当日已学诗词数 */
+    @Query("UPDATE daily_stats SET poemsLearned = poemsLearned + 1 WHERE date = :date")
+    void incrementPoemsLearned(String date);
+
     /** 原子递增当日游戏完成数 */
     @Query("UPDATE daily_stats SET gamesPlayed = gamesPlayed + 1 WHERE date = :date")
     void incrementGamesPlayed(String date);

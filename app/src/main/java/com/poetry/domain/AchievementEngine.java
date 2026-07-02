@@ -128,7 +128,10 @@ public class AchievementEngine {
         try {
             JSONArray arr = new JSONArray(json);
             for (int i = 0; i < arr.length(); i++) ids.add(arr.getString(i));
-        } catch (JSONException ignored) {}
+        } catch (JSONException e) {
+            // JSON 数据损坏或版本不兼容，降级返回空列表
+            android.util.Log.w("AchievementEngine", "Failed to parse achievement JSON", e);
+        }
         return ids;
     }
 

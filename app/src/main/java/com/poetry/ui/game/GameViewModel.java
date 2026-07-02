@@ -353,6 +353,9 @@ public class GameViewModel extends AndroidViewModel {
     /** 🔴 B4 修复：成就解锁事件 */
     public LiveData<AchievementEngine.AchievementDef> getNewAchievement() { return newAchievement; }
 
+    /** 消费成就事件后清空，防止 LiveData 回放导致重复庆祝 */
+    public void clearAchievement() { newAchievement.setValue(null); }
+
     /**
      * @return 接龙游戏的总回合数
      */

@@ -31,6 +31,7 @@
                 android:layout_width="64dp"
                 android:layout_height="64dp"
                 android:text="📚"
+                android:contentDescription="@string/a11y_avatar_emoji"
                 android:textSize="32sp"
                 android:gravity="center"
                 android:background="@drawable/bg_checkin_future" />
@@ -52,6 +53,7 @@
 
                 <ProgressBar
                     android:id="@+id/progress_exp"
+                    android:contentDescription="@string/a11y_progress_exp"
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="6dp"

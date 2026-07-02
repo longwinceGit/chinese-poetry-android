@@ -38,6 +38,10 @@ public class UserProfile {
     @NonNull
     public String achievements;
 
+    /** 当前选中的主题 ID，默认 "default" */
+    @NonNull
+    public String currentTheme;
+
     /** 新用户默认初始状态 */
     public UserProfile() {
         this.id = 1;
@@ -47,5 +51,6 @@ public class UserProfile {
         this.lastActiveDate = "";
         this.unlockedThemes = "[]";
         this.achievements = "[]";
+        this.currentTheme = "default";
     }
 }

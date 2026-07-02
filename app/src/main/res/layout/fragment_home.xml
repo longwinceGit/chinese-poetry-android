@@ -41,7 +41,7 @@
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:src="@drawable/ic_search"
-                    android:contentDescription="搜索"
+                    android:contentDescription="@string/a11y_search_icon"
                     android:alpha="0.5"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
@@ -71,7 +71,7 @@
                     android:layout_height="36dp"
                     android:src="@drawable/ic_close"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="清除搜索"
+                    android:contentDescription="@string/a11y_clear_search"
                     android:visibility="gone"
                     android:alpha="0.5"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -256,6 +256,51 @@
                 android:text="@string/home_loading"
                 android:textSize="13sp"
                 android:textColor="@color/on_surface_variant" />
+        </LinearLayout>
+
+        <!-- ========== 错误状态 ========== -->
+        <LinearLayout
+            android:id="@+id/error_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="48dp"
+            android:layout_marginEnd="32dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/tv_section_title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <TextView
+                android:id="@+id/tv_error_icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="😿"
+                android:textSize="48sp" />
+
+            <TextView
+                android:id="@+id/tv_error_message"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="数据加载失败，请检查存储空间后重试"
+                android:textSize="14sp"
+                android:textColor="@color/on_surface_variant"
+                android:gravity="center"
+                android:lineSpacingExtra="4dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_retry"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginTop="20dp"
+                android:text="重新加载"
+                android:textSize="13sp"
+                style="@style/Widget.Poetry.Button.Outlined" />
         </LinearLayout>
 
         <!-- ========== 空状态 ========== -->

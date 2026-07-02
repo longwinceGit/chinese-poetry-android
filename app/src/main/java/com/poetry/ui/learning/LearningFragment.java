@@ -17,6 +17,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.card.MaterialCardView;
 import com.poetry.R;
 import com.poetry.data.UserProfile;
+import com.poetry.ui.widget.StatsBarChart;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -31,6 +32,7 @@ public class LearningFragment extends Fragment {
 
     private TextView tvStreakCount, tvStreakSub, tvLearnedCount, tvLevel;
     private LinearLayout llCalendar, llTasks;
+    private StatsBarChart chartStats;
     private LearningViewModel viewModel;
     private boolean[] todayTasks = new boolean[]{false, false, false};
 
@@ -70,6 +72,7 @@ public class LearningFragment extends Fragment {
         tvLevel = v.findViewById(R.id.tv_level);
         llCalendar = v.findViewById(R.id.ll_calendar);
         llTasks = v.findViewById(R.id.ll_tasks);
+        chartStats = v.findViewById(R.id.chart_stats);
     }
 
     /**
@@ -91,6 +94,23 @@ public class LearningFragment extends Fragment {
                 todayTasks = tasks;
                 buildTasks();
             }
+        });
+
+        // 成就解锁：撒花 + Toast
+        viewModel.getNewAchievement().observe(getViewLifecycleOwner(), def -> {
+            if (def != null) {
+                Toast.makeText(requireContext(),
+                    "🎉 成就解锁：" + def.name, Toast.LENGTH_LONG).show();
+                if (getActivity() instanceof com.poetry.MainActivity) {
+                    ((com.poetry.MainActivity) getActivity()).celebrate();
+                }
+                viewModel.clearAchievement(); // 消费后清空，防止 LiveData 回放
+            }
+        });
+
+        // 学习趋势柱状图
+        viewModel.getChartData().observe(getViewLifecycleOwner(), data -> {
+            if (data != null) chartStats.setData(data);
         });
     }
 

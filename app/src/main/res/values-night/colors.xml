@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 主色调：暖金（暗色背景下金色比棕色更醒目） -->
+    <color name="primary">#D4A745</color>
+    <color name="on_primary">#1C1B1A</color>
+    <color name="primary_container">#3E2723</color>
+    <color name="on_primary_container">#EFEBE9</color>
+
+    <!-- 辅色：暖灰铜 -->
+    <color name="secondary">#BCAAA4</color>
+    <color name="on_secondary">#2C1810</color>
+    <color name="secondary_container">#3E2723</color>
+    <color name="on_secondary_container">#D7CCC8</color>
+
+    <!-- 强调色：朱红（暗色下调亮） -->
+    <color name="tertiary">#FF8A80</color>
+    <color name="on_tertiary">#3E0000</color>
+    <color name="tertiary_container">#5C0000</color>
+    <color name="on_tertiary_container">#FFCDD2</color>
+
+    <!-- 表面/背景：墨色底 -->
+    <color name="surface">#1E1E1E</color>
+    <color name="on_surface">#E8E0D5</color>
+    <color name="surface_variant">#2C2C2C</color>
+    <color name="on_surface_variant">#C8C3BE</color>
+
+    <color name="background">#121212</color>
+    <color name="on_background">#E8E0D5</color>
+
+    <color name="error">#FF6B6B</color>
+    <color name="on_error">#1C1B1A</color>
+
+    <color name="outline">#8D8D8D</color>
+    <color name="outline_variant">#4A4540</color>
+
+    <!-- 功能色 -->
+    <color name="favorite_active">#FF5252</color>
+    <color name="favorite_inactive">#616161</color>
+    <color name="score_gold">#FFD54F</color>
+    <color name="divider">#2C2C2C</color>
+    <color name="card_shadow">#33000000</color>
+
+    <!-- 朝代标签色（保持色相，提高亮度适配深色背景） -->
+    <color name="tag_tang">#FF5252</color>
+    <color name="tag_song">#66BB6A</color>
+    <color name="tag_qin">#A1887F</color>
+    <color name="tag_wei">#FFB74D</color>
+    <color name="tag_yuan">#64B5F6</color>
+    <color name="tag_qing">#CE93D8</color>
+    <color name="tag_wu">#4DD0E1</color>
+
+    <!-- 游戏色 -->
+    <color name="answer_correct">#66BB6A</color>
+    <color name="answer_wrong">#FF5252</color>
+    <color name="answer_normal">#D4A745</color>
+    <color name="answer_selected">#3E2723</color>
+    <color name="answer_disabled">#424242</color>
+
+    <!-- 成就色 -->
+    <color name="achievement_unlocked">#FFD54F</color>
+    <color name="achievement_locked">#616161</color>
+
+    <!-- 游戏交互色 -->
+    <color name="match_card_success_bg">#1B5E20</color>
+
+    <!-- 通用色 -->
+    <color name="green_500">#66BB6A</color>
+    <color name="white">#FFFFFF</color>
+</resources>

@@ -12,6 +12,8 @@
         android:label="@string/app_name"
         android:theme="@style/Theme.Poetry"
         android:supportsRtl="true"
+        android:largeHeap="true"
+        android:hardwareAccelerated="true"
         tools:targetApi="34">
 
         <activity

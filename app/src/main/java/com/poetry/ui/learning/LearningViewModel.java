@@ -11,8 +11,11 @@ import com.poetry.data.LearningDatabase;
 import com.poetry.data.UserProfile;
 import com.poetry.domain.AchievementEngine;
 import com.poetry.domain.ThemeManager;
+import com.poetry.ui.widget.StatsBarChart;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -34,6 +37,9 @@ public class LearningViewModel extends AndroidViewModel {
 
     // 🔴 B4 修复：成就解锁通知
     private final MutableLiveData<AchievementEngine.AchievementDef> newAchievement = new MutableLiveData<>();
+
+    // 最近 7 天学习统计柱状图数据
+    private final MutableLiveData<List<StatsBarChart.BarData>> chartData = new MutableLiveData<>();
 
     public LearningViewModel(Application app) {
         super(app);
@@ -74,7 +80,43 @@ public class LearningViewModel extends AndroidViewModel {
             });
             // 🔴 B5 修复：签到/等级提升后同步主题解锁
             ThemeManager.syncUnlockedThemes(db);
+
+            // 加载最近 7 天学习统计柱状图数据
+            loadChartData();
         }).start();
+    }
+
+    /**
+     * 查询最近 7 天的每日统计数据，构建柱状图数据。
+     */
+    private void loadChartData() {
+        LocalDate today = LocalDate.now();
+        LocalDate sevenDaysAgo = today.minusDays(6);
+        String startDate = sevenDaysAgo.toString();
+
+        List<DailyStats> statsList = db.poemDao().getRecentStats(startDate);
+        String[] weekLabels = {"一", "二", "三", "四", "五", "六", "日"};
+
+        List<StatsBarChart.BarData> bars = new ArrayList<>();
+        for (int i = 0; i < 7; i++) {
+            LocalDate day = sevenDaysAgo.plusDays(i);
+            String dateStr = day.toString();
+
+            // 查找该日期的统计数据
+            DailyStats found = null;
+            for (DailyStats s : statsList) {
+                if (s.date.equals(dateStr)) {
+                    found = s;
+                    break;
+                }
+            }
+
+            float value = found != null ? found.poemsLearned : 0;
+            String label = weekLabels[day.getDayOfWeek().getValue() - 1];
+            bars.add(new StatsBarChart.BarData(label, value));
+        }
+
+        chartData.postValue(bars);
     }
 
     /**
@@ -170,5 +212,19 @@ public class LearningViewModel extends AndroidViewModel {
      */
     public LiveData<AchievementEngine.AchievementDef> getNewAchievement() {
         return newAchievement;
+    }
+
+    /** 消费成就事件后清空，防止 LiveData 回放导致重复庆祝 */
+    public void clearAchievement() {
+        newAchievement.setValue(null);
+    }
+
+    /**
+     * 获取最近 7 天学习统计柱状图数据的 LiveData。
+     *
+     * @return 柱状图数据
+     */
+    public LiveData<List<StatsBarChart.BarData>> getChartData() {
+        return chartData;
     }
 }

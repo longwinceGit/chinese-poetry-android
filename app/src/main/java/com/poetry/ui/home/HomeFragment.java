@@ -43,8 +43,9 @@ import java.util.List;
 public class HomeFragment extends Fragment {
 
     // Views
-    private View dailyCard, loadingContainer, loadMoreArea, btnLoadMore;
-    private View progressLoad, btnSearchClear, tvEmpty, tvNoMore;
+    private View dailyCard, loadingContainer, errorContainer, loadMoreArea, btnLoadMore;
+    private View progressLoad, btnSearchClear, tvEmpty, tvNoMore, btnRetry;
+    private TextView tvErrorIcon, tvErrorMessage;
     private TextView tvDailyEmoji, tvDailyTitle, tvDailyAuthor, tvDailyExcerpt;
     private TextView tvSectionTitle, tvPoemCount, tvLoadingMessage;
     private EditText etSearch;
@@ -119,6 +120,11 @@ public class HomeFragment extends Fragment {
         btnLoadMore = v.findViewById(R.id.btn_load_more);
         progressLoad = v.findViewById(R.id.progress_load_more);
 
+        errorContainer = v.findViewById(R.id.error_container);
+        tvErrorIcon = v.findViewById(R.id.tv_error_icon);
+        tvErrorMessage = v.findViewById(R.id.tv_error_message);
+        btnRetry = v.findViewById(R.id.btn_retry);
+
         etSearch = v.findViewById(R.id.et_search);
         btnSearchClear = v.findViewById(R.id.btn_search_clear);
 
@@ -161,6 +167,18 @@ public class HomeFragment extends Fragment {
         viewModel.getTotalCount().observe(getViewLifecycleOwner(), count -> {
             if (count != null) {
                 tvPoemCount.setText(getString(R.string.home_poems_count, count));
+            }
+        });
+
+        // 错误状态观察
+        viewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> {
+            if (error != null) {
+                errorContainer.setVisibility(View.VISIBLE);
+                recyclerPoems.setVisibility(View.GONE);
+                tvEmpty.setVisibility(View.GONE);
+                tvErrorMessage.setText(error);
+            } else {
+                errorContainer.setVisibility(View.GONE);
             }
         });
     }
@@ -207,6 +225,12 @@ public class HomeFragment extends Fragment {
             btnLoadMore.setVisibility(View.GONE);
             viewModel.loadMore();
             // 观察者收到 poems 更新后会调用 updateLoadMoreUI() 恢复按钮状态
+        });
+
+        // 重试按钮
+        btnRetry.setOnClickListener(v -> {
+            errorContainer.setVisibility(View.GONE);
+            viewModel.loadPoems();
         });
     }
 

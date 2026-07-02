@@ -106,6 +106,12 @@ public class PoemAdapter extends RecyclerView.Adapter<PoemAdapter.ViewHolder> {
         holder.tvTitle.setText(p.title);
         holder.tvAuthor.setText(p.author + " · " + p.dynasty);
 
+        // 为诗词卡片设置无障碍描述
+        holder.itemView.setContentDescription(
+            holder.itemView.getContext().getString(
+                com.poetry.R.string.a11y_poem_card_format,
+                p.title, p.author, p.dynasty));
+
         holder.itemView.setOnClickListener(v -> {
             v.animate()
                 .scaleX(0.92f).scaleY(0.92f).setDuration(80)

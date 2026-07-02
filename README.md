@@ -62,11 +62,11 @@ com.poetry/
 │
 ├── data/                                ← 数据层
 │   ├── PoemRepository.java              ← 诗词数据仓库（单例，线程池异步加载）
-│   ├── LearningDatabase.java            ← Room 数据库定义 (v2, 3 表 + Migration)
-│   ├── PoemDao.java                     ← Room DAO（148 行，30+ 查询方法）
-│   ├── UserProfile.java                 ← 用户档案实体（积分/等级/连续天数/成就/主题）
+│   ├── LearningDatabase.java            ← Room 数据库定义 (v4, 3 表 + 3 迁移)
+│   ├── PoemDao.java                     ← Room DAO（160+ 行，30+ 查询方法）
+│   ├── UserProfile.java                 ← 用户档案实体（积分/等级/连续天数/成就/主题/currentTheme）
 │   ├── LearningRecord.java              ← 学习记录实体（收藏/已学/答题/游戏）
-│   ├── DailyStats.java                  ← 每日统计实体（打卡日历数据源）
+│   ├── DailyStats.java                  ← 每日统计实体（打卡日历数据源 + 图表数据查询）
 │   └── model/
 │       └── Poem.java                    ← 诗词数据模型（11 个字段）
 │
@@ -77,12 +77,13 @@ com.poetry/
 │   ├── AchievementEngine.java           ← 12 项成就自动检测 + 解锁回调
 │   └── ThemeManager.java                ← 9 个主题按等级/连续天数解锁
 │
-├── ui/                                  ← 表现层（8 Fragment + 2 Adapter）
+├── ui/                                  ← 表现层（10 Fragment + 4 Adapter）
 │   ├── home/ HomeFragment + HomeViewModel           ← 首页 Tab
 │   ├── detail/ DetailFragment + DetailViewModel     ← 诗词详情页
-│   ├── learning/ LearningFragment        ← 学习成就 Tab
-│   ├── profile/ ProfileFragment          ← 个人档案 Tab
-│   ├── quiz/ QuizFragment                ← 填空挑战（二级页面）
+│   ├── learning/ LearningFragment + LearningViewModel ← 学习成就 Tab
+│   ├── profile/ ProfileFragment + ProfileViewModel  ← 个人档案 Tab
+│   ├── quiz/ QuizFragment + QuizViewModel           ← 填空挑战（二级页面）
+│   ├── favorites/ FavoritesFragment + FavoritesViewModel ← 收藏列表（二级页面）
 │   ├── game/
 │   │   ├── GameHubFragment               ← 游戏大厅 Tab
 │   │   ├── CoupletGameFragment           ← 诗词接龙（二级页面）
@@ -90,13 +91,16 @@ com.poetry/
 │   │   └── GameViewModel                 ← 游戏共用 ViewModel
 │   ├── adapter/
 │   │   ├── PoemAdapter.java              ← 首页网格适配器（弹簧动画）
+│   │   ├── FavoriteAdapter.java          ← 收藏列表适配器（滑动删除）
+│   │   ├── AchievementAdapter.java       ← 成就网格适配器
 │   │   └── MatchCardAdapter.java         ← 消消乐卡片适配器（3 种状态）
 │   └── widget/
-│       └── ConfettiView.java             ← 庆祝动画（60 粒子，180 帧）
+│       ├── ConfettiView.java             ← 庆祝动画（60 粒子，180 帧）
+│       ├── StatsBarChart.java            ← 学习趋势柱状图（Canvas 自绘）
+│       └── PinyinLineView.java           ← 逐字拼音视图（自定义 LinearLayout）
 │
 └── util/                                ← 工具层
     ├── PinyinHelper.java                 ← pinyin4j 封装（带声调标注）
-    ├── PinyinLineView.java               ← 逐字拼音视图（自定义 LinearLayout）
     └── TtsManager.java                   ← TTS 朗读封装
 ```
 
@@ -123,16 +127,23 @@ DetailFragment ←→ DetailViewModel
 GameHubFragment
   ├─→ navigate(CoupletGameFragment) [对诗]
   └─→ navigate(MatchGameFragment) [消消乐]
+
+QuizFragment ←→ QuizViewModel
+  └─→ QuizGenerator (智能挖空出题)
        │
 MatchGameFragment ←→ GameViewModel ←→ GameEngine
   └─→ MatchCardAdapter (选中/配对/消除/抖动 动画)
 
 LearningFragment / ProfileFragment
-  └─→ LearningDatabase (LiveData 实时查询)
-       ↓
+  ├─→ LearningDatabase (LiveData 实时查询)
+  ├─→ StatsBarChart (Canvas 自绘 7 日趋势)  [LearningFragment]
+  ├─→ navigate(FavoritesFragment) [ProfileFragment → 收藏入口]
+  │    └─→ FavoritesFragment ←→ FavoritesViewModel ←→ PoemDao.getFavorites()
+  │         └─→ 点击诗词项 → PoemRepository.findPoemById() → navigate(DetailFragment)
+  ↓
 AchievementEngine (成就检测 → 回调触发庆祝)
 LearningEngine   (积分/等级/连续学习算法)
-ThemeManager     (9 主题按等级/天数解锁)
+ThemeManager     (9 主题按等级/天数解锁, ProfileFragment 切换)
 ```
 
 ---
@@ -274,8 +285,8 @@ HomeFragment.navigateToDetail(poem)
               └─ 操作按钮:
                   ├─ 拼音: 切换 showPinyin → 重建 PinyinLineView 或 TextView
                   ├─ 朗读: TtsManager.speak(标题+作者+诗句) / stop()
-                  ├─ 收藏: Room 异步 addFavorite/removeFavorite
-                  ├─ 已学: Room 异步 markLearned
+                  ├─ 收藏: DetailViewModel.toggleFavorite() → Room + LiveData 驱动 UI
+                  ├─ 已学: DetailViewModel.markAsLearned() → Room 异步写入
                   └─ 分享: Canvas 手绘 750×N px 古风卡片 → FileProvider → Intent.ACTION_SEND
 ```
 
@@ -334,6 +345,33 @@ CoupletGameFragment.onViewCreated()
 得分公式: base(10) + streakBonus(streak×2)
 ```
 
+### 3.7 收藏功能运行逻辑
+
+```
+入口: ProfileFragment → 点击 "我的收藏" ❤️ 卡片
+  └─→ NavController.navigate(R.id.nav_favorites)
+      └─→ FavoritesFragment.onViewCreated()
+          └─→ FavoritesViewModel (AndroidViewModel)
+              └─→ PoemDao.getFavorites()  ← Room @Query("SELECT * FROM learning_records WHERE favorite = 1")
+
+LiveData 驱动:
+  favorites LiveData<List<LearningRecord>>
+    └─→ observer → FavoriteAdapter.submitList()
+        └─→ 空列表 → tv_empty VISIBLE (引导文案)
+        └─→ 有数据 → RecyclerView 渲染
+
+列表操作:
+  ├─ 点击诗词项 → PoemRepository.findPoemById(poemId) → Bundle 打包 9 参数 → navigate(DetailFragment)
+  └─ 点击 ❤️ 按钮 → FavoritesViewModel.toggleFavorite(record)
+      └─→ PoemDao.removeFavorite(poemId)
+      └─→ Room LiveData 自动触发 → RecyclerView 刷新（动画移除）
+
+设计要点:
+  - 复用 existing PoemDao.getFavorites() (无需新建 DAO 方法)
+  - PoemRepository.findPoemById() 按 poemId 在 91K 全量中查找完整 Poem 对象
+  - 取消收藏后 LiveData 自动刷新列表，无需手动 notify
+```
+
 ---
 
 ## 四、数据流全景
@@ -358,8 +396,9 @@ CoupletGameFragment.onViewCreated()
 
 ┌─ user_profile ───────────────────────────────────────┐
 │ id=1 (PK) │ totalPoints │ level │ streak              │
-│ lastActiveDate │ unlockedThemes │ achievements        │
-│ 用途: 等级/积分/连续学习/主题解锁/成就解锁 (JSON 列)    │
+│ lastActiveDate │ unlockedThemes │ currentTheme         │
+│ achievements                                           │
+│ 用途: 等级/积分/连续学习/主题解锁/当前主题/成就 (JSON)  │
 └──────────────────────────────────────────────────────┘
 
 ┌─ daily_stats ────────────────────────────────────────┐
@@ -397,9 +436,9 @@ LearningDatabase (Room)
 | Tab | Fragment | 功能 |
 |-----|----------|------|
 | 📖 诗词 | HomeFragment | 每日推荐 + 朝代分类 + 网格浏览 + 搜索 |
-| 🎯 学习 | LearningFragment | 成就展示 + 我的收藏 |
+| 🎯 学习 | LearningFragment | 学习统计 + 打卡日历 + 7日趋势图 + 每日任务 |
 | 🎮 游戏 | GameHubFragment | 游戏大厅 → 对诗 / 消消乐 |
-| 👤 我的 | ProfileFragment | 等级进度 + 连续学习 + 周统计 |
+| 👤 我的 | ProfileFragment | 等级进度 + 成就展示 + 主题切换 + 我的收藏入口 |
 
 ### 5.2 二级页面（导航栈）
 
@@ -409,21 +448,25 @@ LearningDatabase (Room)
 | 填空挑战 | nav_quiz | 全局 repo 取数据 |
 | 对诗 | nav_game_couplet | 全局 repo 取数据 |
 | 消消乐 | nav_game_match | 全局 repo 取数据 |
+| 收藏列表 | nav_favorites | 无传参（Room DAO 查询） |
 
-### 5.3 布局文件 (11 文件)
+### 5.3 布局文件 (14 文件)
 
 ```
 fragment_home.xml          ← 首页（每日卡片 + 分类 ChipGroup + RecyclerView）
-fragment_detail.xml        ← 诗词详情（ConstraintLayout, 逐字拼音/释义 动态渲染）
-fragment_learning.xml      ← 学习成就
-fragment_profile.xml       ← 个人档案（等级进度条 + 周统计柱状图）
+fragment_detail.xml        ← 诗词详情（ConstraintLayout, 逐字拼音/释义 动态渲染 + 无障碍）
+fragment_learning.xml      ← 学习成就（统计卡片 + 趋势图表 + 打卡日历 + 每日任务）
+fragment_profile.xml       ← 个人档案（等级进度条 + 成就 + 主题切换 + 收藏入口 + 无障碍）
+fragment_favorites.xml     ← 收藏列表（RecyclerView + 空状态引导）
+item_favorite.xml          ← 收藏列表项卡片（ConstraintLayout + 删除按钮）
 fragment_quiz.xml          ← 填空挑战
-fragment_game_hub.xml      ← 游戏大厅
+fragment_game_hub.xml      ← 游戏大厅（无障碍）
 fragment_game_match.xml    ← 消消乐（3 列网格 + 完成弹层）
 fragment_game_couplet.xml  ← 诗词接龙
 activity_main.xml          ← 根布局（NavHost + BottomNav + ConfettiView）
-item_poem_card.xml         ← 首页网格卡片（ConstraintLayout）
+item_poem_card.xml         ← 首页网格卡片（ConstraintLayout + 无障碍）
 item_match_card.xml        ← 消消乐卡片
+item_achievement.xml       ← 成就卡片
 ```
 
 ---
@@ -455,6 +498,10 @@ item_match_card.xml        ← 消消乐卡片
 ```
 
 ### 6.2 AchievementEngine — 成就系统 (12 项)
+
+检测时机: 学习/答题/签到/收藏/游戏完成后调用 `AchievementEngine.checkAndUnlock(db, callback)`。
+
+庆祝链路: `callback → newAchievement LiveData → Toast("🎉 成就解锁: XX") → MainActivity.celebrate()` (ConfettiView 粒子动画)
 
 | ID | 名称 | 条件 |
 |----|------|------|
@@ -563,7 +610,12 @@ TtsManager:
 | 游戏输入锁 | boolean lockInput + 动画回调 | 防止动画期间的重复点击 |
 | LiveData 通知 | 每次创建新 ArrayList 副本 | 解决 LiveData.setValue(sameRef) 不通知 Bug |
 | JSON 解析 | JSONTokener (非流式,但复用 SB) | org.json 简单可靠，54 MB 可在 3-5s 内完成 |
-| 数据库版本 | v2 + MIGRATION_1_2 | daily_stats 表非破坏性迁移 |
+| 数据库版本 | v4 + MIGRATION_1_2 + MIGRATION_2_3 + MIGRATION_3_4 | daily_stats 表 / 搜索索引 / currentTheme 非破坏性迁移 |
+| 暗色主题 | values-night/ 69 色中国风暗色调色板 | Material 3 DayNight + 系统跟随 |
+| 收藏功能 | Room DAO getFavorites() + Fragment | 实时 LiveData 自动刷新，支持滑动取消收藏 |
+| 统计图表 | Canvas 自绘 StatsBarChart | 零额外依赖，7 日柱状图 |
+| 成就庆祝 | AchievementEngine → Toast + ConfettiView | 4 Fragment 接入成就观察者 |
+| 无障碍 | 18 个 a11y_* 字符串 + contentDescription | TextView/按钮/适配器全覆盖 |
 
 ---
 
@@ -580,13 +632,24 @@ TtsManager:
 
 ---
 
-## 十一、待优化项 (P0)
+## 十一、已完成的优化 (E1–E8)
+
+| 编号 | 模块 | 完成内容 |
+|------|------|---------|
+| E1 | 暗色主题 | values-night/colors.xml 69 色中国风暗色调色板 + DayNight 主题 |
+| E2 | 主题切换 UI | ProfileFragment 9 主题卡片点击切换 + Room v4 currentTheme 字段 |
+| E3 | 成就庆祝链路 | 4 Fragment 接入 AchievementEngine, Toast + ConfettiView 粒子庆祝 |
+| E4 | 无障碍适配 | 18 a11y_* 字符串 + 7 布局文件 + 3 适配器 contentDescription |
+| E5 | DetailViewModel | 14 行空壳 → 完整 AndroidViewModel (收藏/已学 LiveData 驱动) |
+| E6 | 收藏功能 | FavoritesFragment + FavoritesViewModel + FavoriteAdapter + 导航集成 |
+| E7 | 学习统计图表 | Canvas 自绘 StatsBarChart, 7 日学习走势柱状图 |
+| E8 | strings.xml | 无严重硬编码警告 |
+
+### 后续优化方向
 
 1. **启动性能**: 首屏只加载 500 首著名诗词，其余延迟加载
-2. **暗色主题**: 新建 `values-night/` 适配暗色模式
-3. **主题切换**: ProfileFragment 加 9 主题入口
-4. **成就庆祝**: 触发 ConfettiView + Snackbar 通知
-5. **无障碍**: 所有 View 添加 contentDescription
+2. **搜索索引**: 进一步优化倒排索引 + fullText 缓存（代码已有骨架）
+3. **APK 瘦身**: 评估诗词数据压缩/精简方案
 
 ---
 

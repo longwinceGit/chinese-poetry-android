@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- 基础主题：中国风水墨淡彩 -->
-    <style name="Theme.Poetry" parent="Theme.Material3.Light.NoActionBar">
+    <style name="Theme.Poetry" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorOnPrimary">@color/on_primary</item>
         <item name="colorPrimaryContainer">@color/primary_container</item>

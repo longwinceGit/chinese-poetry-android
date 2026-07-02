@@ -64,6 +64,7 @@
                         android:layout_height="wrap_content"
                         android:textSize="36sp"
                         android:textColor="@color/tertiary"
+                        android:contentDescription="@string/a11y_streak_count"
                         android:textStyle="bold"
                         tools:text="7" />
                     <TextView
@@ -98,6 +99,7 @@
                         android:id="@+id/tv_learned_count"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:contentDescription="@string/a11y_learned_count"
                         android:textSize="36sp"
                         android:textColor="@color/primary"
                         android:textStyle="bold"
@@ -127,6 +129,7 @@
                         android:id="@+id/tv_level"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:contentDescription="@string/a11y_user_level"
                         android:textSize="36sp"
                         android:textColor="@color/score_gold"
                         android:textStyle="bold"
@@ -141,6 +144,55 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- ===== 学习趋势图表 ===== -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_chart"
+            style="@style/Widget.Poetry.Card"
+            android:layout_width="0dp"
+            android:layout_height="180dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            app:cardElevation="2dp"
+            app:cardCornerRadius="16dp"
+            app:layout_constraintTop_toBottomOf="@id/card_stats"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="学习趋势"
+                    android:textSize="15sp"
+                    android:textColor="@color/primary"
+                    android:textStyle="bold"
+                    android:fontFamily="serif" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/learn_chart_subtitle"
+                    android:textSize="12sp"
+                    android:textColor="@color/on_surface_variant" />
+
+                <com.poetry.ui.widget.StatsBarChart
+                    android:id="@+id/chart_stats"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:layout_marginTop="8dp"
+                    android:paddingStart="4dp"
+                    android:paddingEnd="4dp"
+                    android:paddingTop="4dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- ===== 打卡日历 ===== -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_checkin"
@@ -152,7 +204,7 @@
             android:layout_marginEnd="16dp"
             app:cardElevation="2dp"
             app:cardCornerRadius="16dp"
-            app:layout_constraintTop_toBottomOf="@id/card_stats"
+            app:layout_constraintTop_toBottomOf="@id/card_chart"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 

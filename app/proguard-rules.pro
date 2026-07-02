@@ -20,10 +20,6 @@
 -keep class net.sourceforge.pinyin4j.** { *; }
 -keep class com.belerweb.pinyin4j.** { *; }
 
-# Lottie
--keep class com.airbnb.lottie.** { *; }
--dontwarn com.airbnb.lottie.**
-
 # General Android
 -keepattributes Signature
 -keepattributes Exceptions

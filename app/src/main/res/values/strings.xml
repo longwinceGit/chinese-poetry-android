@@ -36,6 +36,7 @@
     <string name="learn_task_quiz">做一套题</string>
     <string name="learn_task_game">玩一局游戏</string>
     <string name="learn_task_done">已完成</string>
+    <string name="learn_chart_subtitle">最近 7 天已学诗词数</string>
     <string name="learn_weekly_calendar">本周记录</string>
     <string name="learn_stats_title">学习统计</string>
 
@@ -82,10 +83,36 @@
     <string name="profile_about">关于</string>
     <string name="profile_unlocked_count">%d / %d</string>
     <string name="profile_share_app">分享给好友</string>
+    <!-- 收藏 -->
+    <string name="nav_favorites">收藏</string>
+    <string name="favorites_title">我的收藏</string>
+    <string name="favorites_empty">还没有收藏任何诗词</string>
+    <string name="favorites_empty_hint">在诗词详情页点击❤️即可收藏</string>
 
     <!-- 成就 -->
     <string name="achievement_unlocked_title">🎉 成就解锁！</string>
     <string name="achievement_all">全部成就</string>
+
+    <!-- 无障碍 -->
+    <string name="a11y_search_icon">搜索</string>
+    <string name="a11y_clear_search">清除搜索</string>
+    <string name="a11y_favorite_btn">收藏诗词</string>
+    <string name="a11y_read_btn">朗读诗词</string>
+    <string name="a11y_share_btn">分享诗词</string>
+    <string name="a11y_learn_btn">标记已学</string>
+    <string name="a11y_pinyin_btn">切换拼音模式</string>
+    <string name="a11y_progress_exp">经验值进度</string>
+    <string name="a11y_avatar_emoji">用户头像</string>
+    <string name="a11y_game_couplet_card">对诗游戏，给出上句对下句</string>
+    <string name="a11y_game_match_card">消消乐游戏，配对诗句与作者</string>
+    <string name="a11y_game_quiz_card">填空游戏，补全缺失的字词</string>
+    <string name="a11y_streak_count">连续签到天数</string>
+    <string name="a11y_learned_count">已学诗词数量</string>
+    <string name="a11y_user_level">用户等级</string>
+    <string name="a11y_poem_card_format">《%1$s》，%2$s，%3$s</string>
+    <string name="a11y_achievement_format">%1$s，%2$s</string>
+    <string name="a11y_match_card_format">诗句卡片：%1$s</string>
+    <string name="a11y_fav_count">收藏数量</string>
 
     <!-- 通用 -->
     <string name="btn_back">返回</string>

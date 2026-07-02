@@ -208,6 +208,8 @@ public class QuizViewModel extends AndroidViewModel {
      * @see com.poetry.domain.AchievementEngine
      */
     public LiveData<AchievementEngine.AchievementDef> getNewAchievement() { return newAchievement; }
+    /** 消费成就事件后清空，防止 LiveData 回放导致重复庆祝 */
+    public void clearAchievement() { newAchievement.setValue(null); }
     /** @return 本轮总题数 */
     public int getTotalQuestions() { return TOTAL_QUESTIONS; }
 }
