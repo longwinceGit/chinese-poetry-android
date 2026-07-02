@@ -9,6 +9,10 @@ import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombi
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 拼音工具类（基于 pinyin4j），提供汉字到拼音的转换功能。
+ * 支持带声调的拼音输出，标点符号返回空字符串。
+ */
 public class PinyinHelper {
 
     private static final HanyuPinyinOutputFormat FORMAT;
@@ -21,7 +25,10 @@ public class PinyinHelper {
     }
 
     /**
-     * 获取单个汉字的带音调拼音（小写），如 '床' → "chuáng"
+     * 获取单个汉字的带音调拼音（小写），如 '床' → "chuáng"。
+     *
+     * @param c 待转换的汉字字符
+     * @return 带声调的拼音字符串；若字符非汉字则返回字符本身
      */
     public static String toTonePinyin(char c) {
         try {
@@ -35,7 +42,10 @@ public class PinyinHelper {
     }
 
     /**
-     * 获取字符串中每个字符的拼音列表（标点返回空串）
+     * 获取字符串中每个字符的拼音列表（标点返回空串，非汉字返回字符本身）。
+     *
+     * @param chinese 待转换的中文字符串
+     * @return 每个字符对应的拼音列表，索引与原字符串一一对应
      */
     public static List<String> toPinyinList(String chinese) {
         List<String> list = new ArrayList<>();
@@ -61,7 +71,10 @@ public class PinyinHelper {
     }
 
     /**
-     * 获取句子中每个字符的拼音，空格分隔，如 "床前明" → "chuáng qián míng"
+     * 获取句子中每个字符的拼音，空格分隔，如 "床前明" → "chuáng qián míng"。
+     *
+     * @param chinese 待转换的中文字符串
+     * @return 空格分隔的拼音字符串
      */
     public static String toPinyin(String chinese) {
         List<String> list = toPinyinList(chinese);
@@ -73,6 +86,12 @@ public class PinyinHelper {
         return sb.toString();
     }
 
+    /**
+     * 判断字符是否为标点符号（包含中英文标点）。
+     *
+     * @param c 待判断的字符
+     * @return true 表示该字符是标点符号
+     */
     private static boolean isPunctuation(char c) {
         // 中文标点
         if (c == '，' || c == '。' || c == '、' || c == '；' || c == '：'

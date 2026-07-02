@@ -22,6 +22,11 @@ import com.poetry.domain.ThemeManager;
 
 import java.util.List;
 
+/**
+ * 个人中心 Fragment，展示用户等级、经验值、收藏数、已学数、成就和主题。
+ * 核心功能：经验条计算（等级×100 满）、成就网格展示（已解锁/未解锁）、
+ * 主题网格展示、分享应用功能。
+ */
 public class ProfileFragment extends Fragment {
 
     private TextView tvAvatar, tvLevelLabel, tvExp, tvFavoritesCount, tvLearnedCount;
@@ -33,6 +38,9 @@ public class ProfileFragment extends Fragment {
     private TextView tvThemeCount;
     private ProfileViewModel viewModel;
 
+    /**
+     * 创建 Fragment 视图，加载 fragment_profile 布局。
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -41,6 +49,9 @@ public class ProfileFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_profile, container, false);
     }
 
+    /**
+     * 初始化视图和 ViewModel，设置分享按钮点击事件。
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -52,6 +63,9 @@ public class ProfileFragment extends Fragment {
         view.findViewById(R.id.btn_share_app).setOnClickListener(v -> shareApp());
     }
 
+    /**
+     * 初始化所有视图控件引用。
+     */
     private void initViews(View v) {
         tvAvatar = v.findViewById(R.id.tv_avatar);
         tvLevelLabel = v.findViewById(R.id.tv_level_label);
@@ -65,6 +79,9 @@ public class ProfileFragment extends Fragment {
         tvThemeCount = v.findViewById(R.id.tv_theme_count);
     }
 
+    /**
+     * 观察 ViewModel 的数据变化，自动更新用户信息、收藏数和已学数量。
+     */
     private void observeData() {
         viewModel.getUserProfile().observe(getViewLifecycleOwner(), profile -> {
             if (profile != null) updateProfile(profile);
@@ -79,6 +96,11 @@ public class ProfileFragment extends Fragment {
         });
     }
 
+    /**
+     * 更新用户信息展示：等级、经验条、头像、成就和主题。
+     *
+     * @param profile 用户信息
+     */
     private void updateProfile(UserProfile profile) {
         // 等级
         tvLevelLabel.setText(getString(R.string.profile_level, profile.level));
@@ -100,12 +122,22 @@ public class ProfileFragment extends Fragment {
         buildThemes(profile);
     }
 
+    /**
+     * 根据等级更新头像 emoji 图标。
+     *
+     * @param level 用户等级
+     */
     private void updateAvatar(int level) {
         String[] avatars = {"🌱", "📚", "📖", "✒️", "🎋", "🏯", "🧠", "🏆", "👑"};
         int idx = Math.min(level - 1, avatars.length - 1);
         if (idx >= 0) tvAvatar.setText(avatars[idx]);
     }
 
+    /**
+     * 构建成就展示网格，最多显示 6 个，已解锁用原图标，未解锁用锁图标并降低透明度。
+     *
+     * @param profile 用户信息
+     */
     private void buildAchievements(UserProfile profile) {
         llAchievements.removeAllViews();
         List<AchievementEngine.AchievementDef> all = AchievementEngine.ALL_ACHIEVEMENTS;
@@ -198,6 +230,9 @@ public class ProfileFragment extends Fragment {
         }
     }
 
+    /**
+     * 分享应用，打开系统分享面板分享文本信息。
+     */
     private void shareApp() {
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("text/plain");

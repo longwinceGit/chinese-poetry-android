@@ -10,18 +10,32 @@ import org.json.JSONException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 成就引擎 —— 检测并解锁用户成就。
+ *
+ * 定义了 12 种成就，通过 {@link #checkAndUnlock(LearningDatabase, AchievementListener)}
+ * 在积分/学习/游戏等关键节点被调用，检测条件满足后自动解锁。
+ *
+ * 用户档案中的成就以 JSON 数组（["first_poem","poem_10"]）存储。
+ */
 public class AchievementEngine {
 
+    /** 成就定义（静态常量，全部 12 种） */
     public static class AchievementDef {
+        /** 唯一标识 */
         public String id;
+        /** 名称 */
         public String name;
+        /** 描述 */
         public String desc;
+        /** 图标 emoji */
         public String icon;
         public AchievementDef(String id, String name, String desc, String icon) {
             this.id = id; this.name = name; this.desc = desc; this.icon = icon;
         }
     }
 
+    /** 全部 12 种成就定义 */
     public static final List<AchievementDef> ALL_ACHIEVEMENTS = new ArrayList<>();
     static {
         ALL_ACHIEVEMENTS.add(new AchievementDef("first_poem", "初出茅庐", "学习第1首诗", "🌱"));
@@ -38,10 +52,19 @@ public class AchievementEngine {
         ALL_ACHIEVEMENTS.add(new AchievementDef("level_9", "千古诗圣", "达到满级9", "👑"));
     }
 
+    /** 成就解锁回调接口 */
     public interface AchievementListener {
+        /** 当一项成就被解锁时回调 */
         void onAchievementUnlocked(AchievementDef def);
     }
 
+    /**
+     * 检测并解锁成就（核心入口）。
+     * 在积分变更、答题完成、签到等关键节点调用。
+     *
+     * @param db       数据库实例
+     * @param listener 解锁回调（用于 UI 通知）
+     */
     public static void checkAndUnlock(LearningDatabase db, AchievementListener listener) {
         UserProfile profile = db.poemDao().getUserProfileSync();
         if (profile == null) return;
@@ -69,6 +92,7 @@ public class AchievementEngine {
         }
     }
 
+    /** 根据成就 ID 判断条件是否满足 */
     private static boolean matches(String id, int learned, int favCount,
                                    int perfectQuizCount, int gameCount, UserProfile profile) {
         switch (id) {
@@ -88,11 +112,17 @@ public class AchievementEngine {
         }
     }
 
+    /**
+     * 获取用户已解锁的成就 ID 列表。
+     * @param profile 用户档案
+     * @return 成就 ID 列表
+     */
     public static List<String> getUnlockedIds(UserProfile profile) {
         if (profile == null) return new ArrayList<>();
         return parseIds(profile.achievements);
     }
 
+    /** 从 JSON 数组字符串解析 ID 列表 */
     private static List<String> parseIds(String json) {
         List<String> ids = new ArrayList<>();
         try {
@@ -102,15 +132,18 @@ public class AchievementEngine {
         return ids;
     }
 
+    /** 将 ID 列表序列化为 JSON 数组字符串 */
     private static String toJson(List<String> ids) {
         JSONArray arr = new JSONArray(ids);
         return arr.toString();
     }
 
+    /** 查询已收藏诗词数量 */
     private static int getFavCount(LearningDatabase db) {
         return db.poemDao().getFavCountSync();
     }
 
+    /** 查询游戏总次数（所有诗词的 gamePlayed 累加） */
     private static int getGameCount(LearningDatabase db) {
         List<LearningRecord> records = db.poemDao().getGameRecords();
         int total = 0;

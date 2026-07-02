@@ -32,6 +32,8 @@ public class PinyinLineView extends LinearLayout {
     private final int maxCharsPerRow;
 
     /**
+     * 构建多行拼音视图。
+     *
      * @param context        上下文
      * @param line           整行诗句文本
      * @param maxCharsPerRow 每子行最大字符数（≤0 时自动取 10）
@@ -47,14 +49,18 @@ public class PinyinLineView extends LinearLayout {
         buildRows(line);
     }
 
-    // ---- 构建多行 ----
-
+    /**
+     * 按 {@link #maxCharsPerRow} 将文本拆分为多子行，每行水平排列若干拼音-汉字单元格。
+     *
+     * @param line 整行诗句文本
+     */
     private void buildRows(String line) {
         String text = line != null ? line : "";
         if (text.isEmpty()) return;
 
         int total = text.length();
-        int rowCount = (total + maxCharsPerRow - 1) / maxCharsPerRow; // ceil 除法
+        // ceil 除法：计算需要的行数
+        int rowCount = (total + maxCharsPerRow - 1) / maxCharsPerRow;
 
         int pinyinColor = getContext().getColor(R.color.on_surface_variant);
         int charColor   = getContext().getColor(R.color.on_surface);
@@ -80,6 +86,16 @@ public class PinyinLineView extends LinearLayout {
         }
     }
 
+    /**
+     * 构建单列单元格：上方显示拼音（若有），下方显示汉字，垂直居中排列。
+     *
+     * @param ch          当前汉字字符
+     * @param index       字符在原字符串中的位置，用于从 pinyinList 取对应拼音
+     * @param pinyinList  拼音列表
+     * @param pinyinColor 拼音文字颜色
+     * @param charColor   汉字文字颜色
+     * @return 拼音-汉字纵向排列的 LinearLayout 单元格
+     */
     private LinearLayout buildCell(char ch, int index, List<String> pinyinList,
                                    int pinyinColor, int charColor) {
         String py = (index < pinyinList.size()) ? pinyinList.get(index) : "";
@@ -88,6 +104,7 @@ public class PinyinLineView extends LinearLayout {
         LinearLayout cell = new LinearLayout(getContext());
         cell.setOrientation(LinearLayout.VERTICAL);
         cell.setGravity(Gravity.CENTER_HORIZONTAL);
+        // 使用 weight=1 使各列等分行宽，实现均匀分布
         cell.setLayoutParams(new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f));
 
@@ -100,7 +117,7 @@ public class PinyinLineView extends LinearLayout {
         topTv.setText(hasPinyin ? py : " ");
         if (hasPinyin) {
             topTv.setTextColor(pinyinColor);
-            topTv.setAlpha(0.75f);
+            topTv.setAlpha(0.75f); // 拼音半透明，避免抢汉字的视觉权重
         }
         cell.addView(topTv);
 

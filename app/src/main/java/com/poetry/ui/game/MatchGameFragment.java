@@ -21,6 +21,21 @@ import com.google.android.material.button.MaterialButton;
 import com.poetry.R;
 import com.poetry.domain.GameEngine;
 
+/**
+ * 消消乐 Fragment（3×4 网格，选中配对消除）
+ * <p>
+ * 实现诗词消消乐游戏界面，玩家需要在 3×4 的网格中
+ * 找到并配对属于同一首诗的上句和下句。
+ * </p>
+ * <p>
+ * 核心交互逻辑：
+ * 1. 点击第一张卡片选中高亮
+ * 2. 点击第二张卡片尝试配对
+ * 3. 配对成功：播放消除动画，卡片消失
+ * 4. 配对失败：播放抖动动画，取消选中
+ * 5. 动画播放期间锁定输入，防止误操作
+ * </p>
+ */
 public class MatchGameFragment extends Fragment {
 
     private GameViewModel viewModel;
@@ -37,6 +52,17 @@ public class MatchGameFragment extends Fragment {
     private int firstSelectedPosition = -1;          // 第一张卡片的位置
     private boolean lockInput = false;               // 动画播放期间锁定输入
 
+    /**
+     * 创建 Fragment 的视图。
+     * <p>
+     * 从 XML 布局文件 fragment_game_match.xml 加载界面布局。
+     * </p>
+     *
+     * @param inflater 布局填充器
+     * @param container 父容器
+     * @param savedInstanceState 之前保存的状态
+     * @return 填充后的视图，或 null
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -45,6 +71,19 @@ public class MatchGameFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_game_match, container, false);
     }
 
+    /**
+     * Fragment 视图创建完成后的回调。
+     * <p>
+     * 在此方法中执行以下初始化操作：
+     * 1. 初始化界面控件
+     * 2. 获取 GameViewModel 实例
+     * 3. 观察 ViewModel 中的数据变化
+     * 4. 开始新的消消乐游戏
+     * </p>
+     *
+     * @param view 已创建的 Fragment 视图
+     * @param savedInstanceState 之前保存的状态
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -54,6 +93,15 @@ public class MatchGameFragment extends Fragment {
         viewModel.startMatchGame();
     }
 
+    /**
+     * 初始化界面控件。
+     * <p>
+     * 绑定布局中的视图元素，设置 RecyclerView 的网格布局管理器和适配器，
+     * 配置重新开始按钮的点击事件。
+     * </p>
+     *
+     * @param v Fragment 的根视图
+     */
     private void initViews(View v) {
         recyclerCards = v.findViewById(R.id.recycler_cards);
         tvProgress = v.findViewById(R.id.tv_match_progress);
@@ -77,6 +125,16 @@ public class MatchGameFragment extends Fragment {
         });
     }
 
+    /**
+     * 观察 ViewModel 中的数据变化。
+     * <p>
+     * 注册以下 LiveData 观察者：
+     * 1. 卡片列表 - 更新 RecyclerView 显示
+     * 2. 已配对数量 - 更新进度文本
+     * 3. 配对成功提示 - 显示诗词信息（3秒后自动隐藏）
+     * 4. 游戏完成状态 - 显示完成界面和得分
+     * </p>
+     */
     private void observeData() {
         // 卡片列表更新
         viewModel.getMatchCards().observe(getViewLifecycleOwner(), cards -> {
@@ -121,10 +179,24 @@ public class MatchGameFragment extends Fragment {
     }
 
     /**
-     * 卡片点击处理：
-     * 1. 第一张：选中高亮
-     * 2. 第二张同张：取消选中
-     * 3. 第二张不同：尝试配对 → 成功消除/失败抖动
+     * 卡片点击处理。
+     * <p>
+     * 处理消消乐游戏中的卡片点击逻辑：
+     * 1. 如果尚未选中任何卡片，选中当前卡片并高亮
+     * 2. 如果点击已选中的卡片，取消选中
+     * 3. 如果已选中一张卡片，尝试与第二张卡片配对
+     * </p>
+     * <p>
+     * 配对结果处理：
+     * - 成功：播放消除动画，卡片标记为已匹配
+     * - 失败：播放抖动动画，取消两张卡片的选中状态
+     * </p>
+     * <p>
+     * 注意：动画播放期间会锁定输入（lockInput=true），防止用户误操作。
+     * </p>
+     *
+     * @param card 被点击的卡片
+     * @param position 卡片在列表中的位置
      */
     private void onCardClick(GameEngine.MatchCard card, int position) {
         if (card.matched || lockInput) return;
@@ -188,6 +260,12 @@ public class MatchGameFragment extends Fragment {
         }, 200);
     }
 
+    /**
+     * Fragment 视图销毁时的回调。
+     * <p>
+     * 清理 Handler 中的待执行消息和回调，防止内存泄漏。
+     * </p>
+     */
     @Override
     public void onDestroyView() {
         super.onDestroyView();

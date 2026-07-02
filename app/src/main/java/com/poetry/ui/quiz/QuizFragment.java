@@ -23,6 +23,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 填空答题 Fragment。
+ * <p>
+ * 动态渲染诗句行中的空白位（____）和候选词 Chip，支持用户逐个点击候选词填入空位。
+ * 核心交互：点击已填写的空位可撤销（恢复候选词），所有空位填满后自动提交答案。
+ * 通过 {@link QuizViewModel} 管理答题状态和计分逻辑。
+ * </p>
+ */
 public class QuizFragment extends Fragment {
 
     private QuizViewModel viewModel;
@@ -39,16 +47,36 @@ public class QuizFragment extends Fragment {
     /** 用于 View.setTag 的 key，标记候选词对应的空位索引 */
     private static final int TAG_KEY = 0x7f090001;
 
+    /**
+     * 创建 QuizFragment 实例的静态工厂方法。
+     *
+     * @return 新的 QuizFragment 实例
+     */
     public static QuizFragment newInstance() {
         return new QuizFragment();
     }
 
+    /**
+     * 使用 fragment_quiz 布局填充视图。
+     *
+     * @param inflater           布局填充器
+     * @param container          父容器
+     * @param savedInstanceState 保存的实例状态
+     * @return 填充后的根视图
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_quiz, container, false);
     }
 
+    /**
+     * 视图创建完成后的初始化入口：绑定视图控件、创建 ViewModel、
+     * 注册 LiveData 观察者和事件监听器，最后启动答题流程。
+     *
+     * @param view               根视图
+     * @param savedInstanceState 保存的实例状态
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -59,6 +87,11 @@ public class QuizFragment extends Fragment {
         viewModel.startQuiz();
     }
 
+    /**
+     * 初始化所有视图控件的引用，并设置"下一题"按钮默认为不可见。
+     *
+     * @param v 根视图
+     */
     private void initViews(View v) {
         tvPoemTitle = v.findViewById(R.id.tv_title);
         tvScore = v.findViewById(R.id.tv_score);
@@ -69,6 +102,13 @@ public class QuizFragment extends Fragment {
         btnNext.setVisibility(View.GONE);
     }
 
+    /**
+     * 设置按钮点击监听器：
+     * <ul>
+     *   <li><b>提交按钮</b>：校验所有空位已填写后调用 ViewModel 提交答案</li>
+     *   <li><b>下一题按钮</b>：调用 ViewModel 加载下一题</li>
+     * </ul>
+     */
     private void setupListeners() {
         btnSubmit.setOnClickListener(v -> {
             if (userAnswers.size() == blankViews.size()) {
@@ -85,6 +125,14 @@ public class QuizFragment extends Fragment {
         });
     }
 
+    /**
+     * 观察 ViewModel 的 LiveData：
+     * <ul>
+     *   <li>{@code currentQuestion} → 渲染题目</li>
+     *   <li>{@code isCorrect} → 显示结果 Toast 并显示"下一题"按钮</li>
+     *   <li>{@code isFinished} → 显示完成提示并返回上一页</li>
+     * </ul>
+     */
     private void observeData() {
         viewModel.getCurrentQuestion().observe(getViewLifecycleOwner(), q -> {
             if (q != null) renderQuestion(q);
@@ -116,6 +164,12 @@ public class QuizFragment extends Fragment {
         });
     }
 
+    /**
+     * 渲染整道题目：设置标题、逐行解析显示文本（普通字符 + 空白位）、
+     * 生成候选词 Chip 组。同时重置所有交互状态（清空空位回答、启用按钮等）。
+     *
+     * @param q 当前题目数据
+     */
     private void renderQuestion(QuizGenerator.QuizQuestion q) {
         Poem p = q.poem;
         tvPoemTitle.setText(p.title + " — " + p.author + " · " + p.dynasty);
@@ -172,6 +226,13 @@ public class QuizFragment extends Fragment {
         renderCandidates(q.candidates, q);
     }
 
+    /**
+     * 创建空白位 TextView，初始显示 "____"，使用 tertiary 色 + chip 背景。
+     * 点击已填写的空位会触发 {@link #undoBlank(int)} 撤销操作。
+     *
+     * @param index 空位索引
+     * @return 配置好的空白位视图
+     */
     private TextView createBlankView(int index) {
         TextView tv = new TextView(requireContext());
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
@@ -189,6 +250,12 @@ public class QuizFragment extends Fragment {
         return tv;
     }
 
+    /**
+     * 向指定行容器添加一个普通文本片段（非空白位），字号 20sp，行距 1.6 倍。
+     *
+     * @param parent 行容器 LinearLayout
+     * @param text   要显示的文本内容
+     */
     private void addTextSegment(LinearLayout parent, String text) {
         TextView tv = new TextView(requireContext());
         tv.setText(text);
@@ -198,6 +265,14 @@ public class QuizFragment extends Fragment {
         parent.addView(tv);
     }
 
+    /**
+     * 渲染候选词区域，按每行 3 个 Chip 的网格布局排列。
+     * 每个 Chip 点击后标记为已使用（变灰不可点击），填写到当前空位，
+     * 并在 Chip 上通过 Tag 记录对应的空位索引，供撤销时恢复。
+     *
+     * @param candidates 候选词列表
+     * @param q          题目数据（当前未直接使用，保留扩展）
+     */
     private void renderCandidates(List<String> candidates, QuizGenerator.QuizQuestion q) {
         layoutCandidates.removeAllViews();
         candidateChips.clear();
@@ -244,6 +319,18 @@ public class QuizFragment extends Fragment {
         }
     }
 
+    /**
+     * 将候选词填入指定空位。
+     * <ul>
+     *   <li>更新空白位显示文字和颜色（answer_correct 色）</li>
+     *   <li>记录用户答案到 {@code userAnswers} 列表</li>
+     *   <li>自动将焦点移到下一个空位</li>
+     *   <li>所有空位填满后自动提交答案并禁用候选词</li>
+     * </ul>
+     *
+     * @param index 空位索引
+     * @param word  要填入的候选词
+     */
     private void fillBlank(int index, String word) {
         if (index < blankViews.size()) {
             blankViews.get(index).setText(word);
@@ -267,7 +354,11 @@ public class QuizFragment extends Fragment {
         }
     }
 
-    /** 检查是否所有空位都已填写 */
+    /**
+     * 检查是否所有空白位都已被填写。
+     *
+     * @return true 表示所有空位都已填写非空答案
+     */
     private boolean allBlanksFilled() {
         if (userAnswers.size() < blankViews.size()) return false;
         for (String ans : userAnswers) {
@@ -276,7 +367,10 @@ public class QuizFragment extends Fragment {
         return true;
     }
 
-    /** 禁用所有候选词点击 */
+    /**
+     * 禁用所有候选词 Chip 的点击交互，通常在自动提交后调用。
+     * 遍历候选词容器的子行，逐一禁用行内的每个 Chip。
+     */
     private void disableAllCandidates() {
         layoutCandidates.setEnabled(false);
         for (int i = 0; i < layoutCandidates.getChildCount(); i++) {
@@ -291,7 +385,18 @@ public class QuizFragment extends Fragment {
         }
     }
 
-    /** 撤销指定空位的填写，恢复候选词 */
+    /**
+     * 撤销指定空位的填写，恢复对应的候选词 Chip。
+     * <ul>
+     *   <li>清空空位文本恢复为 "____"（tertiary 色）</li>
+     *   <li>清除 {@code userAnswers} 中对应答案</li>
+     *   <li>通过 Tag 查找并恢复对应的候选词 Chip（重新可点击）</li>
+     *   <li>回退当前空位索引到撤销位置</li>
+     *   <li>恢复提交按钮可用状态</li>
+     * </ul>
+     *
+     * @param index 要撤销的空位索引
+     */
     private void undoBlank(int index) {
         if (index < 0 || index >= blankViews.size()) return;
         String currentAnswer = userAnswers.size() > index ? userAnswers.get(index) : "";

@@ -21,6 +21,14 @@ import com.poetry.domain.GameEngine;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 消消乐卡片适配器（RecyclerView 适配器）。
+ * <p>
+ * 管理匹配卡片的列表渲染，根据卡片状态（正常/选中/已消除）动态设置不同的
+ * {@link GradientDrawable} 背景：正常态为 surface 色 + 分割线边框，选中态为
+ * tertiary 配色 + 微缩放效果，已消除态为绿色半透明。同时提供消除动画和错误抖动动画。
+ * </p>
+ */
 public class MatchCardAdapter extends RecyclerView.Adapter<MatchCardAdapter.CardViewHolder> {
 
     private List<GameEngine.MatchCard> cards = new ArrayList<>();
@@ -34,15 +42,27 @@ public class MatchCardAdapter extends RecyclerView.Adapter<MatchCardAdapter.Card
         this.listener = listener;
     }
 
+    /**
+     * 设置卡片数据列表并刷新 RecyclerView。
+     *
+     * @param newCards 新的卡片数据列表，为 null 时自动替换为空列表
+     */
     public void setCards(List<GameEngine.MatchCard> newCards) {
         this.cards = newCards != null ? newCards : new ArrayList<>();
         notifyDataSetChanged();
     }
 
+    /**
+     * 程序化创建卡片视图，使用 {@link TextView} 作为卡片容器，确保无布局依赖。
+     * 设置居中、内边距、字号等样式属性。
+     *
+     * @param parent   父 ViewGroup
+     * @param viewType 视图类型（未使用）
+     * @return 持有 TextView 的 CardViewHolder
+     */
     @NonNull
     @Override
     public CardViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // 用程序化创建 TextView 确保无布局依赖
         TextView tv = new TextView(parent.getContext());
         int dp8 = dp2px(parent.getContext(), 4);
         int dp12 = dp2px(parent.getContext(), 6);
@@ -58,6 +78,18 @@ public class MatchCardAdapter extends RecyclerView.Adapter<MatchCardAdapter.Card
         return new CardViewHolder(tv);
     }
 
+    /**
+     * 绑定卡片数据到视图，根据卡片的三态设置不同的 {@link GradientDrawable} 背景：
+     * <ul>
+     *   <li><b>已消除（matched）</b>：绿色半透明背景，不可点击</li>
+     *   <li><b>选中（selected）</b>：tertiary 配色边框 + 浅色背景 + 1.04 倍微缩放</li>
+     *   <li><b>正常</b>：surface 色背景 + divider 边框</li>
+     * </ul>
+     * 每次绑定时重新创建背景 drawable 并清除旧监听器后再设置点击事件。
+     *
+     * @param holder   CardViewHolder
+     * @param position 卡片在列表中的位置
+     */
     @Override
     public void onBindViewHolder(@NonNull CardViewHolder holder, int position) {
         GameEngine.MatchCard card = cards.get(position);
@@ -66,7 +98,6 @@ public class MatchCardAdapter extends RecyclerView.Adapter<MatchCardAdapter.Card
 
         GradientDrawable bg = new GradientDrawable();
         bg.setCornerRadius(dp2px(ctx, 6));
-
         // 状态决定外观
         if (card.matched) {
             // 已消除：半透明、绿色背景
@@ -108,6 +139,11 @@ public class MatchCardAdapter extends RecyclerView.Adapter<MatchCardAdapter.Card
         });
     }
 
+    /**
+     * 返回卡片列表总数。
+     *
+     * @return 当前卡片数量
+     */
     @Override
     public int getItemCount() {
         return cards.size();
@@ -115,7 +151,13 @@ public class MatchCardAdapter extends RecyclerView.Adapter<MatchCardAdapter.Card
 
     // ==================== 动画辅助 ====================
 
-    /** 消除动画：卡片缩小 + 淡出 */
+    /**
+     * 消除动画：卡片缩小至 30% + 淡出。
+     * 使用 {@link OvershootInterpolator} 产生回弹效果后消失，动画结束后执行回调。
+     *
+     * @param view  目标视图
+     * @param onEnd 动画结束回调
+     */
     public static void animateEliminate(View view, Runnable onEnd) {
         view.animate()
                 .scaleX(0.3f)
@@ -127,7 +169,12 @@ public class MatchCardAdapter extends RecyclerView.Adapter<MatchCardAdapter.Card
                 .start();
     }
 
-    /** 错误抖动动画 */
+    /**
+     * 错误抖动动画：依次执行右→左→右→原位的水平位移序列，
+     * 每步 50ms，产生类似手机振动反馈的效果。
+     *
+     * @param view 要执行抖动动画的视图
+     */
     public static void animateShake(View view) {
         view.animate()
                 .translationX(0f)
@@ -143,6 +190,13 @@ public class MatchCardAdapter extends RecyclerView.Adapter<MatchCardAdapter.Card
                 );
     }
 
+    /**
+     * 将 dp 单位转换为像素值。
+     *
+     * @param ctx 上下文，用于获取屏幕密度
+     * @param dp  dp 值
+     * @return 对应的像素值（四舍五入取整）
+     */
     private static int dp2px(Context ctx, float dp) {
         return (int) (dp * ctx.getResources().getDisplayMetrics().density + 0.5f);
     }

@@ -29,6 +29,17 @@ import com.poetry.ui.adapter.PoemAdapter;
 
 import java.util.List;
 
+/**
+ * 首页 Fragment，展示每日推荐卡片、分类筛选 Chip、诗词网格列表及搜索入口。
+ * <p>
+ * 核心交互：
+ * <ul>
+ *   <li>搜索输入 500ms 防抖处理</li>
+ *   <li>诗词网格 3 列布局</li>
+ *   <li>"加载更多" 按钮实现分页加载</li>
+ *   <li>每日卡片点击跳转详情页</li>
+ * </ul>
+ */
 public class HomeFragment extends Fragment {
 
     // Views
@@ -47,6 +58,9 @@ public class HomeFragment extends Fragment {
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
     private Runnable searchRunnable;
 
+    /**
+     * 创建 Fragment 视图，加载 fragment_home 布局。
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -55,6 +69,9 @@ public class HomeFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_home, container, false);
     }
 
+    /**
+     * 视图创建完成回调，初始化控件、ViewModel、数据观察和事件监听。
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -65,6 +82,9 @@ public class HomeFragment extends Fragment {
         setupListeners();
     }
 
+    /**
+     * 销毁视图时取消待执行的搜索延时任务，防止内存泄漏。
+     */
     @Override
     public void onDestroyView() {
         super.onDestroyView();
@@ -73,6 +93,9 @@ public class HomeFragment extends Fragment {
         }
     }
 
+    /**
+     * 初始化所有视图组件，包括 NavController、RecyclerView（3 列网格）、Adapter 等。
+     */
     private void initViews(View v) {
         navController = Navigation.findNavController(v);
 
@@ -105,6 +128,10 @@ public class HomeFragment extends Fragment {
         recyclerPoems.setAdapter(adapter);
     }
 
+    /**
+     * 观察 ViewModel 的 LiveData，包括加载状态、诗词列表、每日推荐、分类列表和总数，
+     * 并据此更新 UI 状态。
+     */
     private void observeData() {
         viewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {
             if (isLoading != null && isLoading) {
@@ -138,6 +165,15 @@ public class HomeFragment extends Fragment {
         });
     }
 
+    /**
+     * 设置事件监听器：
+     * <ul>
+     *   <li>每日卡片点击 → 跳转详情</li>
+     *   <li>搜索输入防抖：输入停止 500ms 后触发搜索</li>
+     *   <li>清除按钮：清空搜索框并退出搜索模式</li>
+     *   <li>加载更多按钮：触发分页加载，等待 LiveData 更新后恢复按钮状态</li>
+     * </ul>
+     */
     private void setupListeners() {
         // 每日卡片点击 → 详情
         dailyCard.setOnClickListener(v -> {
@@ -174,6 +210,12 @@ public class HomeFragment extends Fragment {
         });
     }
 
+    /**
+     * 更新每日推荐卡片视图，显示 emoji、标题、作者、朝代及首行摘录。
+     * 摘录超过 20 字时自动截断并添加省略号。
+     *
+     * @param poem 每日推荐诗词对象
+     */
     private void updateDailyCard(Poem poem) {
         if (poem == null) return;
         tvDailyEmoji.setText(poem.emoji != null ? poem.emoji : "📖");
@@ -187,6 +229,11 @@ public class HomeFragment extends Fragment {
         tvDailyExcerpt.setVisibility(excerpt != null ? View.VISIBLE : View.GONE);
     }
 
+    /**
+     * 动态创建分类 Chip 组，第一项默认选中，选中后触发 ViewModel 分类切换。
+     *
+     * @param categories 分类名称列表
+     */
     private void setupCategoryChips(List<String> categories) {
         if (categories == null || categories.isEmpty()) return;
         chipCategories.removeAllViews();
@@ -203,6 +250,11 @@ public class HomeFragment extends Fragment {
         }
     }
 
+    /**
+     * 跳转到诗词详情页，通过 Bundle 传递诗词的全部字段信息。
+     *
+     * @param poem 待查看详情的诗词对象
+     */
     private void navigateToDetail(Poem poem) {
         if (poem == null) return;
         Bundle args = new Bundle();
@@ -218,6 +270,14 @@ public class HomeFragment extends Fragment {
         navController.navigate(R.id.nav_detail, args);
     }
 
+    /**
+     * 更新"加载更多"区域 UI：
+     * <ul>
+     *   <li>计算已加载数量与总数，判断是否还有更多数据</li>
+     *   <li>有更多数据时显示按钮并隐藏进度条</li>
+     *   <li>搜索模式下结果全部展示后显示"没有更多"提示</li>
+     * </ul>
+     */
     private void updateLoadMoreUI() {
         int total = viewModel.getTotalCountValue();
         int loaded = (viewModel.getCurrentPage() + 1) * HomeViewModel.getPageSize();

@@ -32,6 +32,13 @@ import com.poetry.util.TtsManager;
 import java.io.File;
 import java.io.FileOutputStream;
 
+/**
+ * 诗词详情 Fragment。
+ * <p>
+ * 负责展示单首诗词的完整信息，包括标题、作者、朝代、标签、诗句（支持拼音切换）、
+ * 释义等。同时提供 TTS 语音朗读、收藏/取消收藏、标记已学、生成并分享古风诗词卡片等交互功能。
+ * </p>
+ */
 public class DetailFragment extends Fragment {
 
     public static final String ARG_ID = "poem_id";
@@ -60,6 +67,9 @@ public class DetailFragment extends Fragment {
     private String[] poemLines;
     private String poemExplanation;
 
+    /**
+     * 创建 Fragment 视图，inflate 详情页布局。
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -68,6 +78,10 @@ public class DetailFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_detail, container, false);
     }
 
+    /**
+     * 视图创建完成后，依次执行：读取 Bundle 参数、绑定控件、初始化 ViewModel 与 TTS 引擎、
+     * 填充数据、注册监听器、查询收藏/已学状态。
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -90,6 +104,9 @@ public class DetailFragment extends Fragment {
         checkStatus();
     }
 
+    /**
+     * 销毁视图时关闭 TTS 引擎，释放语音资源。
+     */
     @Override
     public void onDestroyView() {
         super.onDestroyView();
@@ -98,6 +115,10 @@ public class DetailFragment extends Fragment {
         }
     }
 
+    /**
+     * 从 Fragment arguments 中解析诗词基本数据（ID、标题、作者、朝代、分类、标签、
+     * Emoji、诗句数组、释义）。
+     */
     private void readArgs() {
         Bundle args = getArguments();
         if (args != null) {
@@ -113,6 +134,12 @@ public class DetailFragment extends Fragment {
         }
     }
 
+    /**
+     * 绑定布局中的各控件引用（标题、作者、朝代、Emoji、标签 Chip、诗句容器、
+     * 释义区域、操作按钮）。
+     *
+     * @param v 根视图
+     */
     private void initViews(View v) {
         tvTitle = v.findViewById(R.id.tv_title);
         tvAuthor = v.findViewById(R.id.tv_author);
@@ -129,6 +156,10 @@ public class DetailFragment extends Fragment {
         btnPinyin = v.findViewById(R.id.btn_pinyin);
     }
 
+    /**
+     * 向界面控件填充诗词数据：标题、Emoji、作者、朝代、标签 Chip、
+     * 诗句（默认无拼音模式）及释义。
+     */
     private void setupData() {
         tvTitle.setText(poemTitle);
         tvEmoji.setText(poemEmoji);
@@ -147,6 +178,12 @@ public class DetailFragment extends Fragment {
         renderExplanation();
     }
 
+    /**
+     * 根据朝代标签返回对应的颜色资源 ID。
+     *
+     * @param tag 朝代标签（如 "tang"、"song"、"yuan" 等）
+     * @return 对应的颜色资源 ID，未知标签默认返回唐代颜色
+     */
     private int getTagColorRes(String tag) {
         if (tag == null) return R.color.tag_tang;
         switch (tag) {
@@ -160,9 +197,19 @@ public class DetailFragment extends Fragment {
         }
     }
 
-    /** 拼音逐字模式下每列最小宽度（dp），用于计算每行最大字符数 */
+    /** 拼音逐字模式下每列最小宽度（dp），用于计算每行最多可容纳的字符数 */
     private static final int MIN_CELL_DP = 22;
 
+    /**
+     * 渲染诗句行。
+     * <p>
+     * 根据 {@code showPinyin} 决定使用普通 {@link TextView} 还是带逐字拼音的
+     * {@link PinyinLineView}。同时依据屏幕宽度自动计算每行最大字符数，
+     * 以保证列宽不低于 {@link #MIN_CELL_DP}。
+     * </p>
+     *
+     * @param showPinyin 是否显示拼音逐字模式
+     */
     private void renderPoemLines(boolean showPinyin) {
         llPoemLines.removeAllViews();
         if (poemLines == null) return;
@@ -186,10 +233,22 @@ public class DetailFragment extends Fragment {
         }
     }
 
+    /**
+     * dp 转 px 工具方法。
+     *
+     * @param dp 设计尺寸（dp）
+     * @return 对应的像素值
+     */
     private int dp2px(int dp) {
         return (int) (dp * getResources().getDisplayMetrics().density);
     }
 
+    /**
+     * 创建普通诗句 {@link TextView}（无拼音模式），设置居中、字号、颜色等样式。
+     *
+     * @param text 诗句文本
+     * @return 已配置样式的 TextView
+     */
     private TextView createLineTextView(String text) {
         TextView tv = new TextView(requireContext());
         tv.setText(text);
@@ -201,6 +260,16 @@ public class DetailFragment extends Fragment {
         return tv;
     }
 
+    /**
+     * 为各操作按钮注册点击监听：
+     * <ul>
+     *   <li>朗读按钮 → TTS 朗读/暂停，带引擎就绪检查和错误提示</li>
+     *   <li>收藏按钮 → {@link #toggleFavorite()}</li>
+     *   <li>分享按钮 → {@link #sharePoem()}</li>
+     *   <li>已学按钮 → {@link #markAsLearned()}</li>
+     *   <li>拼音按钮 → 切换拼音显示模式</li>
+     * </ul>
+     */
     private void setupListeners() {
         btnRead.setOnClickListener(v -> {
             if (!ttsManager.isReady()) {
@@ -230,6 +299,9 @@ public class DetailFragment extends Fragment {
         });
     }
 
+    /**
+     * 查询数据库中的收藏和已学状态，在主线程更新按钮 UI。
+     */
     private void checkStatus() {
         LearningDatabase db = LearningDatabase.getInstance(requireContext());
         new Thread(() -> {
@@ -243,6 +315,9 @@ public class DetailFragment extends Fragment {
         }).start();
     }
 
+    /**
+     * 切换收藏状态：在子线程中写入/移除收藏记录，主线程刷新按钮 UI。
+     */
     private void toggleFavorite() {
         isFavorite = !isFavorite;
         LearningDatabase db = LearningDatabase.getInstance(requireContext());
@@ -257,6 +332,10 @@ public class DetailFragment extends Fragment {
         }).start();
     }
 
+    /**
+     * 标记该诗词为"已学"：写入学习记录和时间戳，更新按钮为不可点击的已学状态，
+     * 并通过 Toast 提示用户。
+     */
     private void markAsLearned() {
         if (isLearned) return;
         isLearned = true;
@@ -271,6 +350,13 @@ public class DetailFragment extends Fragment {
         }).start();
     }
 
+    /**
+     * 生成古风分享卡片，保存为 PNG 文件到缓存目录，然后通过系统分享 Intent 发送。
+     * <p>
+     * 整个过程在子线程中执行，分享前将图片通过 FileProvider 转为 URI。
+     * 失败时在主线程弹出 Toast 提示。
+     * </p>
+     */
     private void sharePoem() {
         new Thread(() -> {
             try {
@@ -310,8 +396,14 @@ public class DetailFragment extends Fragment {
     }
 
     /**
-     * 生成古风诗词分享卡片
-     * 尺寸: 750xN px, 适配主流社交平台分享预览
+     * 使用 Canvas 绘制古风诗词分享卡片 Bitmap。
+     * <p>
+     * 卡片宽 750px、高度自适应内容，使用宣纸色背景、墨色文字、朱红装饰线的
+     * 传统风格配色。包含顶部装饰线、Emoji、标题、作者･朝代、分割线、诗句正文、
+     * 底部水印及装饰线等元素。
+     * </p>
+     *
+     * @return 生成好的分享卡片 Bitmap，失败返回 null
      */
     private Bitmap generateShareCard() {
         int width = 750;
@@ -445,6 +537,9 @@ public class DetailFragment extends Fragment {
         return bitmap;
     }
 
+    /**
+     * 渲染诗词释义区域：有释义时显示内容并同步显示分隔线，无释义时整个区域隐藏。
+     */
     private void renderExplanation() {
         boolean hasExplanation = poemExplanation != null && !poemExplanation.isEmpty();
         tvExplanationTitle.setVisibility(hasExplanation ? View.VISIBLE : View.GONE);
@@ -459,6 +554,10 @@ public class DetailFragment extends Fragment {
         }
     }
 
+    /**
+     * 根据当前收藏和已学状态刷新操作按钮的文字、图标及可用性。
+     * 已学状态下降低按钮透明度并禁用点击。
+     */
     private void updateButtons() {
         btnFavorite.setText(isFavorite ? R.string.detail_unfavorite : R.string.detail_favorite);
         btnFavorite.setIconResource(isFavorite ? R.drawable.ic_favorite_filled : R.drawable.ic_favorite);

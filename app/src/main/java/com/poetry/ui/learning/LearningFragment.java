@@ -22,6 +22,11 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Set;
 
+/**
+ * 学习页 Fragment，展示签到日历和每日任务。
+ * 核心功能包括：以周一为起点的 7 天日历视图（今天/已签到/过往未签/未来）、
+ * 每日任务状态展示（学诗词、答题、玩游戏）。
+ */
 public class LearningFragment extends Fragment {
 
     private TextView tvStreakCount, tvStreakSub, tvLearnedCount, tvLevel;
@@ -32,6 +37,9 @@ public class LearningFragment extends Fragment {
     private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("dd");
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+    /**
+     * 创建 Fragment 视图，加载 fragment_learning 布局。
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -40,6 +48,9 @@ public class LearningFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_learning, container, false);
     }
 
+    /**
+     * 初始化视图和 ViewModel，设置数据观察并加载数据。
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -49,6 +60,9 @@ public class LearningFragment extends Fragment {
         viewModel.loadData();
     }
 
+    /**
+     * 初始化所有视图控件引用。
+     */
     private void initViews(View v) {
         tvStreakCount = v.findViewById(R.id.tv_streak_count);
         tvStreakSub = v.findViewById(R.id.tv_streak_sub);
@@ -58,6 +72,9 @@ public class LearningFragment extends Fragment {
         llTasks = v.findViewById(R.id.ll_tasks);
     }
 
+    /**
+     * 观察 ViewModel 的数据变化，自动更新用户信息、已学数量、签到日历和每日任务。
+     */
     private void observeData() {
         viewModel.getUserProfile().observe(getViewLifecycleOwner(), profile -> {
             if (profile != null) updateStats(profile);
@@ -77,6 +94,11 @@ public class LearningFragment extends Fragment {
         });
     }
 
+    /**
+     * 更新用户统计数据展示：连续签到天数、等级。
+     *
+     * @param profile 用户信息
+     */
     private void updateStats(UserProfile profile) {
         tvStreakCount.setText(String.valueOf(profile.streak));
         tvStreakSub.setText("连续" + profile.streak + "天");
@@ -225,6 +247,12 @@ public class LearningFragment extends Fragment {
         }
     }
 
+    /**
+     * 根据任务序号返回对应 emoji 图标。
+     *
+     * @param index 任务序号 0=学诗词 1=答题 2=玩游戏
+     * @return 对应的 emoji 字符串
+     */
     private String getTaskEmoji(int index) {
         switch (index) {
             case 0: return "📖";

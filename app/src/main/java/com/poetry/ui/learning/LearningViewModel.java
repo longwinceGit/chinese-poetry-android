@@ -17,6 +17,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * 学习页面 ViewModel，管理学习页的状态和数据。
+ * 核心逻辑：页面打开时自动签到、连续签到计算（基于昨日签到状态判断是否断签）、
+ * 每 7 天升级（最高 20 级）、成就检测与主题解锁同步。
+ */
 public class LearningViewModel extends AndroidViewModel {
 
     private final LearningDatabase db;
@@ -35,6 +40,10 @@ public class LearningViewModel extends AndroidViewModel {
         db = LearningDatabase.getInstance(app);
     }
 
+    /**
+     * 加载学习页所有数据：自动签到、用户信息、已学数量、本周签到日历、当日任务状态、
+     * 成就检测和主题解锁。
+     */
     public void loadData() {
         new Thread(() -> {
             // 自动签到当日
@@ -118,23 +127,47 @@ public class LearningViewModel extends AndroidViewModel {
         return new HashSet<>(dates);
     }
 
+    /**
+     * 获取用户信息的 LiveData。
+     *
+     * @return 用户信息 LiveData
+     */
     public LiveData<UserProfile> getUserProfile() {
         return userProfile;
     }
 
+    /**
+     * 获取已学诗词数量的 LiveData。
+     *
+     * @return 已学数量 LiveData
+     */
     public LiveData<Integer> getLearnedCount() {
         return learnedCount;
     }
 
+    /**
+     * 获取本周已签到日期集合的 LiveData。
+     *
+     * @return 签到日期集合 LiveData（格式 yyyy-MM-dd）
+     */
     public LiveData<Set<String>> getCheckinDates() {
         return checkinDates;
     }
 
+    /**
+     * 获取当日任务完成状态的 LiveData。
+     *
+     * @return 任务状态数组 [学诗词, 答题, 玩游戏]，true=已完成
+     */
     public LiveData<boolean[]> getTodayTasks() {
         return todayTasks;
     }
 
-    /** 🔴 B4 修复：成就解锁事件 */
+    /**
+     * 获取新成就解锁事件的 LiveData。
+     *
+     * @return 新成就 LiveData
+     */
     public LiveData<AchievementEngine.AchievementDef> getNewAchievement() {
         return newAchievement;
     }

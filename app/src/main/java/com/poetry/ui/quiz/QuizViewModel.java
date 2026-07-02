@@ -19,6 +19,14 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 答题 ViewModel（AndroidViewModel）。
+ * <p>
+ * 管理填空答题的完整生命周期：随机选题 → 显示题目 → 提交答案 → 下一题 → 完成结算。
+ * 负责计分、等级升级、每日统计更新、成就检测和主题解锁等后端逻辑。
+ * 通过 LiveData 向 Fragment 暴露题目、分数、正确性等 UI 状态。
+ * </p>
+ */
 public class QuizViewModel extends AndroidViewModel {
 
     private PoemRepository repo = PoemRepository.getInstance();
@@ -42,6 +50,10 @@ public class QuizViewModel extends AndroidViewModel {
         db = LearningDatabase.getInstance(app);
     }
 
+    /**
+     * 启动一轮新的答题：从诗词库中随机选取 {@value #TOTAL_QUESTIONS} 首诗词生成填空题，
+     * 重置所有分数和状态，然后显示第一题。
+     */
     public void startQuiz() {
         questions.clear();
         List<Poem> all = repo.getAllPoems();
@@ -68,6 +80,11 @@ public class QuizViewModel extends AndroidViewModel {
         showQuestion(0);
     }
 
+    /**
+     * 显示指定索引的题目。若索引超出范围（所有题目已完成），则调用 {@link #finishQuiz()}。
+     *
+     * @param index 题目在 questions 列表中的索引
+     */
     public void showQuestion(int index) {
         if (index < questions.size()) {
             currentQuestion.setValue(questions.get(index));
@@ -78,6 +95,16 @@ public class QuizViewModel extends AndroidViewModel {
         }
     }
 
+    /**
+     * 提交用户答案，逐个比对标准答案。
+     * <p>
+     * 若全对则增加正确计数；随后在后台线程中执行：
+     * 计算积分（原子增量）、更新等级、持久化答题分数、
+     * 检测成就解锁、同步主题解锁。
+     * </p>
+     *
+     * @param userAnswers 用户填写的答案列表
+     */
     public void submitAnswer(List<String> userAnswers) {
         QuizGenerator.QuizQuestion q = currentQuestion.getValue();
         if (q == null) return;
@@ -127,6 +154,9 @@ public class QuizViewModel extends AndroidViewModel {
         }).start();
     }
 
+    /**
+     * 加载下一道题目，使用当前 questionIndex（即下一题的索引）。
+     */
     public void nextQuestion() {
         Integer idx = questionIndex.getValue();
         if (idx != null) {
@@ -134,6 +164,9 @@ public class QuizViewModel extends AndroidViewModel {
         }
     }
 
+    /**
+     * 完成本轮答题：增量更新当日统计中的答题完成次数，并标记 isFinished 为 true。
+     */
     private void finishQuiz() {
         // 更新每日统计：答题完成
         final String today = LocalDate.now().toString();
@@ -149,17 +182,32 @@ public class QuizViewModel extends AndroidViewModel {
         isFinished.setValue(true);
     }
 
+    /**
+     * 重新开始答题，等同于再次调用 {@link #startQuiz()}。
+     */
     public void restartQuiz() {
         startQuiz();
     }
 
+    // ==================== LiveData Getters ====================
+
+    /** @return 当前显示的题目 LiveData */
     public LiveData<QuizGenerator.QuizQuestion> getCurrentQuestion() { return currentQuestion; }
+    /** @return 当前总积分 LiveData */
     public LiveData<Integer> getScore() { return score; }
+    /** @return 当前题目序号（1-based）LiveData */
     public LiveData<Integer> getQuestionIndex() { return questionIndex; }
+    /** @return 最近一次提交是否正确 LiveData（null = 尚未提交） */
     public LiveData<Boolean> getIsCorrect() { return isCorrect; }
+    /** @return 本轮答题是否已完成 LiveData */
     public LiveData<Boolean> getIsFinished() { return isFinished; }
+    /** @return 本轮累计正确数 LiveData */
     public LiveData<Integer> getTotalCorrect() { return totalCorrect; }
-    /** 🔴 B4 修复：成就解锁事件 */
+    /**
+     * @return 成就解锁事件 LiveData
+     * @see com.poetry.domain.AchievementEngine
+     */
     public LiveData<AchievementEngine.AchievementDef> getNewAchievement() { return newAchievement; }
+    /** @return 本轮总题数 */
     public int getTotalQuestions() { return TOTAL_QUESTIONS; }
 }

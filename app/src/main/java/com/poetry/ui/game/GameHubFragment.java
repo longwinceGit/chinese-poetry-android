@@ -14,6 +14,10 @@ import androidx.navigation.Navigation;
 import com.google.android.material.card.MaterialCardView;
 import com.poetry.R;
 
+/**
+ * 游戏大厅 Fragment，提供三个游戏入口卡片：
+ * 对联游戏、连连看、诗词答题。每个卡片导航到对应的游戏页面。
+ */
 public class GameHubFragment extends Fragment {
 
     @Nullable
@@ -24,6 +28,9 @@ public class GameHubFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_game_hub, container, false);
     }
 
+    /**
+     * 设置三个游戏入口卡片的点击导航事件：对联游戏、连连看、诗词答题。
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
