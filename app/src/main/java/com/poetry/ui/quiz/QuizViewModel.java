@@ -10,8 +10,10 @@ import com.poetry.data.LearningDatabase;
 import com.poetry.data.PoemRepository;
 import com.poetry.data.UserProfile;
 import com.poetry.data.model.Poem;
+import com.poetry.domain.AchievementEngine;
 import com.poetry.domain.LearningEngine;
 import com.poetry.domain.QuizGenerator;
+import com.poetry.domain.ThemeManager;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -28,6 +30,9 @@ public class QuizViewModel extends AndroidViewModel {
     private MutableLiveData<Boolean> isCorrect = new MutableLiveData<>(null);
     private MutableLiveData<Boolean> isFinished = new MutableLiveData<>(false);
     private MutableLiveData<Integer> totalCorrect = new MutableLiveData<>(0);
+
+    // 🔴 B4 修复：成就解锁通知
+    private MutableLiveData<AchievementEngine.AchievementDef> newAchievement = new MutableLiveData<>();
 
     private List<QuizGenerator.QuizQuestion> questions = new ArrayList<>();
     private static final int TOTAL_QUESTIONS = 5;
@@ -96,20 +101,29 @@ public class QuizViewModel extends AndroidViewModel {
         final int blanksCount = q.blanks.size();
         final String poemId = q.poem.id;
         new Thread(() -> {
-            UserProfile profile = db.poemDao().getUserProfileSync();
-            if (profile == null) {
-                profile = new UserProfile();
-            }
+            // 🔴 B2 修复：原子增量代替读-改-写
             int points = LearningEngine.calcPointsForQuiz(finalCorrect ? blanksCount : 0, blanksCount);
-            profile.totalPoints += points;
-            profile.level = LearningEngine.calcLevel(profile.totalPoints);
-            db.poemDao().insertUserProfile(profile);
-            score.postValue(profile.totalPoints);
+            db.poemDao().addTotalPoints(points);
+            UserProfile profile = db.poemDao().getUserProfileSync();
+            if (profile != null) {
+                int newLevel = LearningEngine.calcLevel(profile.totalPoints);
+                if (newLevel != profile.level) {
+                    db.poemDao().updateLevel(newLevel);
+                }
+                score.postValue(profile.totalPoints);
+            }
 
             // 持久化 quizScore 到 learning_records，供每日任务检测
             db.poemDao().ensureRecordExists(poemId);
             int newScore = (finalCorrect ? blanksCount : 0);
             db.poemDao().updateQuizScore(poemId, newScore);
+
+            // 🔴 B4 修复：每次答题后检测成就
+            AchievementEngine.checkAndUnlock(db, def -> {
+                newAchievement.postValue(def);
+            });
+            // 🔴 B5 修复：等级提升后同步主题解锁
+            ThemeManager.syncUnlockedThemes(db);
         }).start();
     }
 
@@ -145,5 +159,7 @@ public class QuizViewModel extends AndroidViewModel {
     public LiveData<Boolean> getIsCorrect() { return isCorrect; }
     public LiveData<Boolean> getIsFinished() { return isFinished; }
     public LiveData<Integer> getTotalCorrect() { return totalCorrect; }
+    /** 🔴 B4 修复：成就解锁事件 */
+    public LiveData<AchievementEngine.AchievementDef> getNewAchievement() { return newAchievement; }
     public int getTotalQuestions() { return TOTAL_QUESTIONS; }
 }

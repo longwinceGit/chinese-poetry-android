@@ -18,6 +18,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.poetry.R;
 import com.poetry.data.UserProfile;
 import com.poetry.domain.AchievementEngine;
+import com.poetry.domain.ThemeManager;
 
 import java.util.List;
 
@@ -27,6 +28,9 @@ public class ProfileFragment extends Fragment {
     private TextView tvAchievementCount;
     private ProgressBar progressExp;
     private LinearLayout llAchievements;
+    // 🔴 B5 修复：主题展示容器
+    private LinearLayout llThemes;
+    private TextView tvThemeCount;
     private ProfileViewModel viewModel;
 
     @Nullable
@@ -57,6 +61,8 @@ public class ProfileFragment extends Fragment {
         tvAchievementCount = v.findViewById(R.id.tv_achievement_count);
         progressExp = v.findViewById(R.id.progress_exp);
         llAchievements = v.findViewById(R.id.ll_achievements);
+        llThemes = v.findViewById(R.id.ll_themes);
+        tvThemeCount = v.findViewById(R.id.tv_theme_count);
     }
 
     private void observeData() {
@@ -89,6 +95,9 @@ public class ProfileFragment extends Fragment {
 
         // 成就
         buildAchievements(profile);
+
+        // 🔴 B5 修复：主题展示
+        buildThemes(profile);
     }
 
     private void updateAvatar(int level) {
@@ -139,6 +148,53 @@ public class ProfileFragment extends Fragment {
             item.addView(name);
 
             llAchievements.addView(item);
+        }
+    }
+
+    /**
+     * 🔴 B5 修复：构建主题展示列表。
+     * 显示全部 9 套主题的图标和名称，已解锁的用彩色高亮，未解锁的用灰色锁定。
+     */
+    private void buildThemes(UserProfile profile) {
+        llThemes.removeAllViews();
+        List<ThemeManager.ThemeDef> all = ThemeManager.ALL_THEMES;
+        List<String> unlocked = ThemeManager.getCurrentUnlockedIds(profile);
+
+        int unlockedCount = unlocked.size();
+        tvThemeCount.setText(getString(R.string.profile_unlocked_count, unlockedCount, all.size()));
+
+        int showCount = Math.min(6, all.size());
+        for (int i = 0; i < showCount; i++) {
+            ThemeManager.ThemeDef theme = all.get(i);
+            boolean isUnlocked = unlocked.contains(theme.id);
+
+            LinearLayout item = new LinearLayout(requireContext());
+            item.setOrientation(LinearLayout.VERTICAL);
+            item.setGravity(android.view.Gravity.CENTER);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+            item.setLayoutParams(params);
+
+            // 图标
+            TextView icon = new TextView(requireContext());
+            icon.setText(isUnlocked ? theme.icon : "🔒");
+            icon.setTextSize(24);
+            icon.setAlpha(isUnlocked ? 1.0f : 0.4f);
+            icon.setGravity(android.view.Gravity.CENTER);
+            item.addView(icon);
+
+            // 名称
+            TextView name = new TextView(requireContext());
+            name.setText(theme.name);
+            name.setTextSize(10);
+            name.setTextColor(ContextCompat.getColor(requireContext(),
+                isUnlocked ? R.color.on_surface : R.color.outline));
+            name.setGravity(android.view.Gravity.CENTER);
+            name.setMaxLines(1);
+            name.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            item.addView(name);
+
+            llThemes.addView(item);
         }
     }
 

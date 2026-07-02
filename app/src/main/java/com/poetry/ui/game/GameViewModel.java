@@ -11,8 +11,10 @@ import com.poetry.data.LearningDatabase;
 import com.poetry.data.PoemRepository;
 import com.poetry.data.UserProfile;
 import com.poetry.data.model.Poem;
+import com.poetry.domain.AchievementEngine;
 import com.poetry.domain.GameEngine;
 import com.poetry.domain.LearningEngine;
+import com.poetry.domain.ThemeManager;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -38,6 +40,9 @@ public class GameViewModel extends AndroidViewModel {
     private MutableLiveData<Boolean> matchFinished = new MutableLiveData<>(false);
     private MutableLiveData<String> matchTip = new MutableLiveData<>();  // 配对成功提示（诗词名）
     private GameEngine.MatchGame currentMatchGame;  // 内部持有完整游戏状态
+
+    // 🔴 B4 修复：成就解锁通知
+    private MutableLiveData<AchievementEngine.AchievementDef> newAchievement = new MutableLiveData<>();
 
     private static final int MATCH_PAIRS = 6;
     private static final int TOTAL_ROUNDS = 10;
@@ -163,13 +168,22 @@ public class GameViewModel extends AndroidViewModel {
 
     private void savePoints(int points) {
         new Thread(() -> {
+            // 🔴 B2 修复：使用原子 SQL 增量，避免读-改-写竞态
+            db.poemDao().addTotalPoints(points);
+            // 重新读取最新积分以计算等级
             UserProfile profile = db.poemDao().getUserProfileSync();
-            if (profile == null) {
-                profile = new UserProfile();
+            if (profile != null) {
+                int newLevel = LearningEngine.calcLevel(profile.totalPoints);
+                if (newLevel != profile.level) {
+                    db.poemDao().updateLevel(newLevel);
+                }
             }
-            profile.totalPoints += points;
-            profile.level = LearningEngine.calcLevel(profile.totalPoints);
-            db.poemDao().insertUserProfile(profile);
+            // 🔴 B4 修复：每次积分变更后检测成就
+            AchievementEngine.checkAndUnlock(db, def -> {
+                newAchievement.postValue(def);
+            });
+            // 🔴 B5 修复：等级提升后同步主题解锁
+            ThemeManager.syncUnlockedThemes(db);
         }).start();
     }
 
@@ -197,6 +211,9 @@ public class GameViewModel extends AndroidViewModel {
     public LiveData<Integer> getMatchAttempts() { return matchAttempts; }
     public LiveData<Boolean> getMatchFinished() { return matchFinished; }
     public LiveData<String> getMatchTip() { return matchTip; }
+
+    /** 🔴 B4 修复：成就解锁事件 */
+    public LiveData<AchievementEngine.AchievementDef> getNewAchievement() { return newAchievement; }
 
     public int getTotalRounds() { return TOTAL_ROUNDS; }
     public int getMatchPairs() { return MATCH_PAIRS; }

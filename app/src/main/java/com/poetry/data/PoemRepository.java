@@ -9,8 +9,11 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -26,6 +29,10 @@ public class PoemRepository {
     private List<String> categories = new ArrayList<>();
     private List<String> categoryIcons = new ArrayList<>();
     private boolean loaded = false;
+
+    // 🔴 B3 修复：搜索倒排索引（字符级）
+    private final Map<Character, Set<Integer>> titleCharIndex = new HashMap<>();
+    private final Map<Character, Set<Integer>> authorCharIndex = new HashMap<>();
 
     private PoemRepository() {}
 
@@ -54,6 +61,7 @@ public class PoemRepository {
                 });
                 allPoems = poems;
                 loaded = true;
+                buildIndices();
                 buildCategories();
                 return poems;
             }
@@ -77,21 +85,53 @@ public class PoemRepository {
         return result;
     }
 
+    /**
+     * 搜索诗词（B3 修复：倒排索引 + 缓存 fullText）。
+     * 1. 字符级倒排索引缩小候选集
+     * 2. 全文缓存避免重复 StringBuilder 拼接
+     * 3. contains 精确验证
+     */
     public List<Poem> search(String query) {
         if (query == null || query.trim().isEmpty()) {
             return new ArrayList<>();
         }
-        String lower = query.trim().toLowerCase();
-        List<Poem> results = new ArrayList<>();
-        for (Poem p : allPoems) {
-            if (p.title.contains(query) || p.title.toLowerCase().contains(lower)
-                || p.author.contains(query) || p.author.toLowerCase().contains(lower)
-                || p.getFullText().contains(query)) {
-                results.add(p);
+        String q = query.trim();
+        char[] chars = q.toCharArray();
+
+        Set<Integer> candidates = new HashSet<>();
+
+        // 第一步：用标题字符索引做交集，缩小候选范围
+        for (int i = 0; i < chars.length; i++) {
+            Set<Integer> charMatches = titleCharIndex.get(chars[i]);
+            if (charMatches != null) {
+                if (i == 0 && candidates.isEmpty()) {
+                    candidates = new HashSet<>(charMatches);
+                } else {
+                    candidates.retainAll(charMatches);
+                }
             }
         }
-        if (results.size() > 500) {
-            results = new ArrayList<>(results.subList(0, 500));
+
+        // 第二步：并上作者字符索引的匹配
+        for (char c : chars) {
+            Set<Integer> m = authorCharIndex.get(c);
+            if (m != null) candidates.addAll(m);
+        }
+
+        // 第三步：如果没有候选（如全符号查询），退化为全量扫描
+        if (candidates.isEmpty()) {
+            for (int i = 0; i < allPoems.size(); i++) candidates.add(i);
+        }
+
+        // 第四步：在候选集中精确匹配（fullTextCached 无需拼接）
+        List<Poem> results = new ArrayList<>();
+        for (int idx : candidates) {
+            Poem p = allPoems.get(idx);
+            if (p.title.contains(q) || p.author.contains(q)
+                || p.fullTextCached.contains(q)) {
+                results.add(p);
+                if (results.size() >= 500) break;
+            }
         }
         return results;
     }
@@ -131,6 +171,34 @@ public class PoemRepository {
 
     public boolean isLoaded() {
         return loaded;
+    }
+
+    /**
+     * 构建搜索倒排索引 + 缓存 fullText（B3 修复）。
+     * 字符级索引：键=单个汉字，值=包含该字的诗词 index 集合。
+     */
+    private void buildIndices() {
+        titleCharIndex.clear();
+        authorCharIndex.clear();
+
+        for (int i = 0; i < allPoems.size(); i++) {
+            Poem p = allPoems.get(i);
+            // 缓存全文（避免每次搜索 StringBuilder 拼接）
+            p.fullTextCached = p.getFullText();
+
+            // 标题字符索引
+            for (char c : p.title.toCharArray()) {
+                titleCharIndex
+                    .computeIfAbsent(c, k -> new HashSet<>())
+                    .add(i);
+            }
+            // 作者字符索引
+            for (char c : p.author.toCharArray()) {
+                authorCharIndex
+                    .computeIfAbsent(c, k -> new HashSet<>())
+                    .add(i);
+            }
+        }
     }
 
     private void buildCategories() {

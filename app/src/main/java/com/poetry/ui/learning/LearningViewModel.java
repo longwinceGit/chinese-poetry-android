@@ -9,6 +9,8 @@ import androidx.lifecycle.MutableLiveData;
 import com.poetry.data.DailyStats;
 import com.poetry.data.LearningDatabase;
 import com.poetry.data.UserProfile;
+import com.poetry.domain.AchievementEngine;
+import com.poetry.domain.ThemeManager;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -24,6 +26,9 @@ public class LearningViewModel extends AndroidViewModel {
     private final MutableLiveData<Set<String>> checkinDates = new MutableLiveData<>(new HashSet<>());
     /** 当日任务完成状态 [学诗词, 答题, 玩游戏]，true=已完成 */
     private final MutableLiveData<boolean[]> todayTasks = new MutableLiveData<>(new boolean[]{false, false, false});
+
+    // 🔴 B4 修复：成就解锁通知
+    private final MutableLiveData<AchievementEngine.AchievementDef> newAchievement = new MutableLiveData<>();
 
     public LearningViewModel(Application app) {
         super(app);
@@ -53,6 +58,13 @@ public class LearningViewModel extends AndroidViewModel {
             learnedCount.postValue(count);
             checkinDates.postValue(dates);
             todayTasks.postValue(tasks);
+
+            // 🔴 B4 修复：加载学习页时检测成就（签到触发连续天数成就）
+            AchievementEngine.checkAndUnlock(db, def -> {
+                newAchievement.postValue(def);
+            });
+            // 🔴 B5 修复：签到/等级提升后同步主题解锁
+            ThemeManager.syncUnlockedThemes(db);
         }).start();
     }
 
@@ -120,5 +132,10 @@ public class LearningViewModel extends AndroidViewModel {
 
     public LiveData<boolean[]> getTodayTasks() {
         return todayTasks;
+    }
+
+    /** 🔴 B4 修复：成就解锁事件 */
+    public LiveData<AchievementEngine.AchievementDef> getNewAchievement() {
+        return newAchievement;
     }
 }

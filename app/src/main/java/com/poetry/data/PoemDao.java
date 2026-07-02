@@ -51,6 +51,10 @@ public interface PoemDao {
     @Query("UPDATE user_profile SET totalPoints = :points WHERE id = 1")
     void updatePoints(int points);
 
+    /** 原子增量：避免读-改-写竞态导致积分丢失 */
+    @Query("UPDATE user_profile SET totalPoints = totalPoints + :points WHERE id = 1")
+    void addTotalPoints(int points);
+
     @Query("UPDATE user_profile SET level = :level WHERE id = 1")
     void updateLevel(int level);
 

@@ -12,6 +12,9 @@ public class Poem {
     public String[] lines;
     public String explanation;
 
+    /** 缓存全文字符串，避免每次搜索重复拼接（B3 修复） */
+    public String fullTextCached;
+
     public Poem() {}
 
     public Poem(String id, String title, String author, String dynasty,

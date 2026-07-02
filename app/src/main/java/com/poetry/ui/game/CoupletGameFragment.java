@@ -45,7 +45,7 @@ public class CoupletGameFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         initViews(view);
-        viewModel = new ViewModelProvider(requireActivity()).get(GameViewModel.class);
+        viewModel = new ViewModelProvider(this).get(GameViewModel.class);
         observeData();
         viewModel.startCoupletGame();
     }
