@@ -1,14 +1,10 @@
 package com.poetry.ui.game;
 
-import android.animation.ArgbEvaluator;
-import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.OvershootInterpolator;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -100,14 +96,15 @@ public class MatchCardAdapter extends RecyclerView.Adapter<MatchCardAdapter.Card
         bg.setCornerRadius(dp2px(ctx, 6));
         // 状态决定外观
         if (card.matched) {
-            // 已消除：半透明、绿色背景
-            bg.setColor(ContextCompat.getColor(ctx, R.color.match_card_success_bg));
-            bg.setStroke(1, ContextCompat.getColor(ctx, R.color.answer_correct));
-            tv.setText(card.text);
-            tv.setTextColor(ContextCompat.getColor(ctx, R.color.answer_correct));
-            tv.setAlpha(0.45f);
+            // 已消除：隐藏卡片，不占视觉空间
+            tv.setVisibility(View.INVISIBLE);
+            tv.setScaleX(1.0f);
+            tv.setScaleY(1.0f);
+            tv.setAlpha(1.0f);
             tv.setClickable(false);
         } else if (card.selected) {
+            // 选中状态前先确保可见
+            tv.setVisibility(View.VISIBLE);
             // 选中状态：赭石色边框 + 浅色背景 + 微缩放
             bg.setColor(ContextCompat.getColor(ctx, R.color.tertiary_container));
             bg.setStroke(dp2px(ctx, 1.5f), ContextCompat.getColor(ctx, R.color.tertiary));
@@ -119,6 +116,7 @@ public class MatchCardAdapter extends RecyclerView.Adapter<MatchCardAdapter.Card
             tv.setScaleY(1.04f);
         } else {
             // 正常状态
+            tv.setVisibility(View.VISIBLE);
             bg.setColor(ContextCompat.getColor(ctx, R.color.surface));
             bg.setStroke(1, ContextCompat.getColor(ctx, R.color.divider));
             tv.setText(card.isFirstHalf ? "📜 " + card.text : "🎋 " + card.text);
@@ -154,24 +152,6 @@ public class MatchCardAdapter extends RecyclerView.Adapter<MatchCardAdapter.Card
     }
 
     // ==================== 动画辅助 ====================
-
-    /**
-     * 消除动画：卡片缩小至 30% + 淡出。
-     * 使用 {@link OvershootInterpolator} 产生回弹效果后消失，动画结束后执行回调。
-     *
-     * @param view  目标视图
-     * @param onEnd 动画结束回调
-     */
-    public static void animateEliminate(View view, Runnable onEnd) {
-        view.animate()
-                .scaleX(0.3f)
-                .scaleY(0.3f)
-                .alpha(0f)
-                .setDuration(300)
-                .setInterpolator(new OvershootInterpolator(1.5f))
-                .withEndAction(onEnd)
-                .start();
-    }
 
     /**
      * 错误抖动动画：依次执行右→左→右→原位的水平位移序列，

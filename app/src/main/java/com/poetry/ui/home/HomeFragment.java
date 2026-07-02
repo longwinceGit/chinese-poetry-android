@@ -286,9 +286,6 @@ public class HomeFragment extends Fragment {
         args.putString("poem_title", poem.title);
         args.putString("poem_author", poem.author);
         args.putString("poem_dynasty", poem.dynasty);
-        args.putString("poem_category", poem.category != null ? poem.category : "");
-        args.putString("poem_tag", poem.tag != null ? poem.tag : "");
-        args.putString("poem_emoji", poem.emoji != null ? poem.emoji : "");
         args.putStringArray("poem_lines", poem.lines);
         args.putString("poem_explanation", poem.explanation != null ? poem.explanation : "");
         navController.navigate(R.id.nav_detail, args);

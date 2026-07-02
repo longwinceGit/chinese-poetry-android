@@ -22,7 +22,6 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.chip.Chip;
 import com.poetry.R;
 import com.poetry.util.PinyinLineView;
 import com.poetry.util.TtsManager;
@@ -33,7 +32,7 @@ import java.io.FileOutputStream;
 /**
  * 诗词详情 Fragment。
  * <p>
- * 负责展示单首诗词的完整信息，包括标题、作者、朝代、标签、诗句（支持拼音切换）、
+ * 负责展示单首诗词的完整信息，包括标题、作者、朝代、诗句（支持拼音切换）、
  * 释义等。同时提供 TTS 语音朗读、收藏/取消收藏、标记已学、生成并分享古风诗词卡片等交互功能。
  * </p>
  */
@@ -43,15 +42,11 @@ public class DetailFragment extends Fragment {
     public static final String ARG_TITLE = "poem_title";
     public static final String ARG_AUTHOR = "poem_author";
     public static final String ARG_DYNASTY = "poem_dynasty";
-    public static final String ARG_CATEGORY = "poem_category";
-    public static final String ARG_TAG = "poem_tag";
-    public static final String ARG_EMOJI = "poem_emoji";
     public static final String ARG_LINES = "poem_lines";
     public static final String ARG_EXPLANATION = "poem_explanation";
 
-    private TextView tvTitle, tvAuthor, tvDynasty, tvEmoji;
+    private TextView tvTitle, tvAuthor, tvDynasty;
     private TextView tvExplanationTitle, tvExplanation;
-    private Chip chipTag;
     private LinearLayout llPoemLines;
     private MaterialButton btnFavorite, btnRead, btnShare, btnLearn, btnPinyin;
     private DetailViewModel viewModel;
@@ -59,7 +54,7 @@ public class DetailFragment extends Fragment {
     private boolean pinyinVisible = false;
     private String ttsErrorMsg = null;
 
-    private String poemId, poemTitle, poemAuthor, poemDynasty, poemCategory, poemTag, poemEmoji;
+    private String poemId, poemTitle, poemAuthor, poemDynasty;
     private String[] poemLines;
     private String poemExplanation;
 
@@ -115,8 +110,8 @@ public class DetailFragment extends Fragment {
     }
 
     /**
-     * 从 Fragment arguments 中解析诗词基本数据（ID、标题、作者、朝代、分类、标签、
-     * Emoji、诗句数组、释义）。
+     * 从 Fragment arguments 中解析诗词基本数据（ID、标题、作者、朝代、
+     * 诗句数组、释义）。
      */
     private void readArgs() {
         Bundle args = getArguments();
@@ -125,16 +120,13 @@ public class DetailFragment extends Fragment {
             poemTitle = args.getString(ARG_TITLE, "");
             poemAuthor = args.getString(ARG_AUTHOR, "");
             poemDynasty = args.getString(ARG_DYNASTY, "");
-            poemCategory = args.getString(ARG_CATEGORY, "");
-            poemTag = args.getString(ARG_TAG, "");
-            poemEmoji = args.getString(ARG_EMOJI, "📖");
             poemLines = args.getStringArray(ARG_LINES);
             poemExplanation = args.getString(ARG_EXPLANATION, "");
         }
     }
 
     /**
-     * 绑定布局中的各控件引用（标题、作者、朝代、Emoji、标签 Chip、诗句容器、
+     * 绑定布局中的各控件引用（标题、作者、朝代、诗句容器、
      * 释义区域、操作按钮）。
      *
      * @param v 根视图
@@ -143,8 +135,6 @@ public class DetailFragment extends Fragment {
         tvTitle = v.findViewById(R.id.tv_title);
         tvAuthor = v.findViewById(R.id.tv_author);
         tvDynasty = v.findViewById(R.id.tv_dynasty);
-        tvEmoji = v.findViewById(R.id.tv_emoji);
-        chipTag = v.findViewById(R.id.chip_tag);
         llPoemLines = v.findViewById(R.id.ll_poem_lines);
         tvExplanationTitle = v.findViewById(R.id.tv_explanation_title);
         tvExplanation = v.findViewById(R.id.tv_explanation);
@@ -156,47 +146,19 @@ public class DetailFragment extends Fragment {
     }
 
     /**
-     * 向界面控件填充诗词数据：标题、Emoji、作者、朝代、标签 Chip、
+     * 向界面控件填充诗词数据：标题、作者、朝代、
      * 诗句（默认无拼音模式）及释义。
      */
     private void setupData() {
         tvTitle.setText(poemTitle);
-        tvEmoji.setText(poemEmoji);
         tvAuthor.setText(poemAuthor);
         tvDynasty.setText(poemDynasty);
-
-        // 设置标签
-        String tagText = !poemCategory.isEmpty() ? poemCategory : poemDynasty;
-        chipTag.setText(tagText);
-        chipTag.setChipBackgroundColorResource(getTagColorRes(poemTag));
 
         // 渲染诗句
         renderPoemLines(false);
 
         // 渲染释义
         renderExplanation();
-    }
-
-    /**
-     * 根据朝代标签返回对应的颜色资源 ID。
-     *
-     * @param tag 朝代标签（如 "tang"、"song"、"yuan"、"ming"、"modern" 等）
-     * @return 对应的颜色资源 ID，未知标签默认返回中性灰色
-     */
-    private int getTagColorRes(String tag) {
-        if (tag == null) return R.color.tag_other;
-        switch (tag) {
-            case "tang": return R.color.tag_tang;
-            case "song": return R.color.tag_song;
-            case "qin": return R.color.tag_qin;
-            case "wei": return R.color.tag_wei;
-            case "yuan": return R.color.tag_yuan;
-            case "qing": return R.color.tag_qing;
-            case "wu": return R.color.tag_wu;
-            case "ming": return R.color.tag_ming;
-            case "modern": return R.color.tag_modern;
-            default: return R.color.tag_other;
-        }
     }
 
     /** 拼音逐字模式下每列最小宽度（dp），用于计算每行最多可容纳的字符数 */
@@ -376,7 +338,7 @@ public class DetailFragment extends Fragment {
      * 使用 Canvas 绘制古风诗词分享卡片 Bitmap。
      * <p>
      * 卡片宽 750px、高度自适应内容，使用宣纸色背景、墨色文字、朱红装饰线的
-     * 传统风格配色。包含顶部装饰线、Emoji、标题、作者･朝代、分割线、诗句正文、
+     * 传统风格配色。包含顶部装饰线、标题、作者･朝代、分割线、诗句正文、
      * 底部水印及装饰线等元素。
      * </p>
      *
@@ -462,15 +424,6 @@ public class DetailFragment extends Fragment {
         // 顶部装饰线
         float lineY = padding;
         canvas.drawLine(padding, lineY, width - padding, lineY, accentPaint);
-
-        // Emoji
-        if (poemEmoji != null && !poemEmoji.isEmpty() && !poemEmoji.equals("📖")) {
-            Paint emojiPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            emojiPaint.setTextSize(36f);
-            emojiPaint.setTextAlign(Paint.Align.CENTER);
-            canvas.drawText(poemEmoji, width / 2f, lineY + 48, emojiPaint);
-            lineY += 56;
-        }
 
         // 标题
         float curY = lineY + paddingSmall + titleBounds.height();

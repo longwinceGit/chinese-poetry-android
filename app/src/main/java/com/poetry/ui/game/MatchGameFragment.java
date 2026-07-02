@@ -235,36 +235,51 @@ public class MatchGameFragment extends Fragment {
 
         // 短暂延迟让用户看到选中状态，然后判断结果
         handler.postDelayed(() -> {
-            int result = viewModel.tryMatch(firstSelected, card);
+            // 🔴 捕获局部 final 引用，防止后续 firstSelected 置 null 导致 NPE
+            final GameEngine.MatchCard card1 = firstSelected;
+            final int pos1 = firstSelectedPosition;
+            final GameEngine.MatchCard card2 = card;
+            final int pos2 = position;
 
-            if (result == 0) {
-                // 配对成功 → 消除动画
-                View v1 = recyclerCards.getLayoutManager() != null
-                        ? recyclerCards.getLayoutManager().findViewByPosition(firstSelectedPosition) : null;
-                View v2 = recyclerCards.getLayoutManager() != null
-                        ? recyclerCards.getLayoutManager().findViewByPosition(position) : null;
+            // 先用 GameEngine 预判配对结果，不修改数据
+            boolean matchSuccess = GameEngine.checkMatch(card1, card2);
 
+            // 在 tryMatch 触发 Rebind 之前抓取视图引用（否则 Rebind 后视图被替换）
+            View v1 = recyclerCards.getLayoutManager() != null
+                    ? recyclerCards.getLayoutManager().findViewByPosition(pos1) : null;
+            View v2 = recyclerCards.getLayoutManager() != null
+                    ? recyclerCards.getLayoutManager().findViewByPosition(pos2) : null;
+
+            if (matchSuccess) {
+                // === 配对成功 ===
+                // 先播放消除动画，动画结束后用 handler.post() 推迟数据更新
+                // 避免在 ViewPropertyAnimator 生命周期内触发 notifyDataSetChanged() 导致闪退
                 if (v1 != null && v2 != null) {
-                    MatchCardAdapter.animateEliminate(v1, null);
-                    MatchCardAdapter.animateEliminate(v2, () -> {
+                    v1.animate().scaleX(0f).scaleY(0f).alpha(0f)
+                            .setDuration(250).start();
+                    v2.animate().scaleX(0f).scaleY(0f).alpha(0f)
+                            .setDuration(250).withEndAction(() -> {
+                                handler.post(() -> {
+                                    viewModel.tryMatch(card1, card2);
+                                    lockInput = false;
+                                });
+                            }).start();
+                } else {
+                    // 视图不可用时直接走数据更新
+                    handler.post(() -> {
+                        viewModel.tryMatch(card1, card2);
                         lockInput = false;
                     });
-                } else {
-                    lockInput = false;
                 }
-            } else if (result == 1) {
-                // 配对失败 → 抖动动画
-                View v1 = recyclerCards.getLayoutManager() != null
-                        ? recyclerCards.getLayoutManager().findViewByPosition(firstSelectedPosition) : null;
-                View v2 = recyclerCards.getLayoutManager() != null
-                        ? recyclerCards.getLayoutManager().findViewByPosition(position) : null;
+            } else {
+                // === 配对失败 ===
+                // 走原有逻辑：取消选中 + 抖动 + 更新尝试次数
+                viewModel.tryMatch(card1, card2);
 
                 if (v1 != null) MatchCardAdapter.animateShake(v1);
                 if (v2 != null) MatchCardAdapter.animateShake(v2);
 
                 handler.postDelayed(() -> lockInput = false, 300);
-            } else {
-                lockInput = false;
             }
 
             firstSelected = null;

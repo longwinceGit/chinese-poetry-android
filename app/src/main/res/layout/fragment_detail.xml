@@ -56,18 +56,9 @@
             app:layout_constraintEnd_toEndOf="parent">
 
             <TextView
-                android:id="@+id/tv_emoji"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-            android:textSize="20sp"
-            android:importantForAccessibility="no"
-            tools:text="🌸" />
-
-            <TextView
                 android:id="@+id/tv_author"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
                 android:textSize="16sp"
                 android:textColor="@color/on_surface"
                 android:textStyle="bold"
@@ -83,30 +74,17 @@
                 tools:text="唐代" />
         </LinearLayout>
 
-        <!-- 分类标签 -->
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_tag"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:textSize="11sp"
-            android:clickable="false"
-            app:layout_constraintTop_toBottomOf="@id/ll_author"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            tools:text="唐代" />
-
         <!-- 分隔线 -->
         <View
             android:id="@+id/divider_poem"
             android:layout_width="0dp"
             android:layout_height="1dp"
             android:layout_marginStart="32dp"
-            android:layout_marginTop="28dp"
+            android:layout_marginTop="20dp"
             android:layout_marginEnd="32dp"
             android:background="@color/divider"
             android:importantForAccessibility="no"
-            app:layout_constraintTop_toBottomOf="@id/chip_tag"
+            app:layout_constraintTop_toBottomOf="@id/ll_author"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
