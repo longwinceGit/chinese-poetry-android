@@ -190,8 +190,10 @@ public class PoemLoader {
      *   <tr><td>魏晋</td><td>wei</td></tr>
      *   <tr><td>五代</td><td>wu</td></tr>
      *   <tr><td>元代</td><td>yuan</td></tr>
+     *   <tr><td>明代</td><td>ming</td></tr>
      *   <tr><td>清代</td><td>qing</td></tr>
-     *   <tr><td>其他（如唐代）</td><td>tang</td></tr>
+     *   <tr><td>近现代</td><td>modern</td></tr>
+     *   <tr><td>其他（未识别朝代）</td><td>other</td></tr>
      * </table>
      *
      * <p>Emoji 分配规则：根据诗词在列表中的索引，按顺序循环分配预设的 emoji 数组。
@@ -223,6 +225,9 @@ public class PoemLoader {
         // 根据朝代映射到对应的标签（用于 UI 分类筛选）
         String tag;
         switch (dynasty) {
+            case "唐代":
+                tag = "tang";
+                break;
             case "宋代":
                 tag = "song";
                 break;
@@ -240,11 +245,17 @@ public class PoemLoader {
             case "元代":
                 tag = "yuan";
                 break;
+            case "明代":
+                tag = "ming";
+                break;
             case "清代":
                 tag = "qing";
                 break;
+            case "近现代":
+                tag = "modern";
+                break;
             default:
-                tag = "tang";  // 默认归为唐代标签
+                tag = "other";  // 未识别朝代使用中性标签，不归属唐代
                 break;
         }
 

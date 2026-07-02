@@ -180,19 +180,22 @@ public class DetailFragment extends Fragment {
     /**
      * 根据朝代标签返回对应的颜色资源 ID。
      *
-     * @param tag 朝代标签（如 "tang"、"song"、"yuan" 等）
-     * @return 对应的颜色资源 ID，未知标签默认返回唐代颜色
+     * @param tag 朝代标签（如 "tang"、"song"、"yuan"、"ming"、"modern" 等）
+     * @return 对应的颜色资源 ID，未知标签默认返回中性灰色
      */
     private int getTagColorRes(String tag) {
-        if (tag == null) return R.color.tag_tang;
+        if (tag == null) return R.color.tag_other;
         switch (tag) {
+            case "tang": return R.color.tag_tang;
             case "song": return R.color.tag_song;
             case "qin": return R.color.tag_qin;
             case "wei": return R.color.tag_wei;
             case "yuan": return R.color.tag_yuan;
             case "qing": return R.color.tag_qing;
             case "wu": return R.color.tag_wu;
-            default: return R.color.tag_tang;
+            case "ming": return R.color.tag_ming;
+            case "modern": return R.color.tag_modern;
+            default: return R.color.tag_other;
         }
     }
 

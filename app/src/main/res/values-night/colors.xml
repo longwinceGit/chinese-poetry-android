@@ -48,6 +48,9 @@
     <color name="tag_yuan">#64B5F6</color>
     <color name="tag_qing">#CE93D8</color>
     <color name="tag_wu">#4DD0E1</color>
+    <color name="tag_ming">#F48FB1</color>
+    <color name="tag_modern">#90A4AE</color>
+    <color name="tag_other">#78909C</color>
 
     <!-- 游戏色 -->
     <color name="answer_correct">#66BB6A</color>

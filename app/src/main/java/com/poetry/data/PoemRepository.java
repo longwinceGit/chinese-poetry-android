@@ -43,6 +43,8 @@ public class PoemRepository {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     private List<Poem> allPoems = new ArrayList<>();
+    /** 著名诗词列表（有释义的），用于每日推荐优先选取 */
+    private List<Poem> famousPoems = new ArrayList<>();
     private List<String> categories = new ArrayList<>();
     private List<String> categoryIcons = new ArrayList<>();
     private boolean loaded = false;
@@ -93,6 +95,13 @@ public class PoemRepository {
                     }
                 });
                 allPoems = poems;
+                // 构建著名诗词列表（有释义的诗词，用于每日推荐）
+                famousPoems = new ArrayList<>();
+                for (Poem p : poems) {
+                    if (p.explanation != null && !p.explanation.isEmpty()) {
+                        famousPoems.add(p);
+                    }
+                }
                 loaded = true;
                 buildCategories();
                 return poems;
@@ -137,10 +146,14 @@ public class PoemRepository {
     /**
      * 按分类获取诗词列表。
      *
-     * <p>若分类为"全部"，则返回所有诗词的副本；
-     * 否则遍历全量数据，筛选出分类匹配的诗词。
+     * <p>分类筛选规则：
+     * <ul>
+     *   <li>"全部" → 返回所有诗词的副本</li>
+     *   <li>"其他" → 返回不属于任何已知朝代（先秦~近现代）的诗词</li>
+     *   <li>其他 → 返回朝代与分类名称精确匹配的诗词</li>
+     * </ul>
      *
-     * @param category 分类名称，如"唐代"、"宋代"、"全部"等
+     * @param category 分类名称，如"唐代"、"宋代"、"全部"、"其他"等
      * @return 匹配该分类的诗词列表
      */
     public List<Poem> getPoemsByCategory(String category) {
@@ -148,6 +161,20 @@ public class PoemRepository {
             return new ArrayList<>(allPoems);
         }
         List<Poem> result = new ArrayList<>();
+        if ("其他".equals(category)) {
+            // "其他"分类：收录不属于任何已知朝代的诗词
+            Set<String> knownDynasties = new HashSet<>(java.util.Arrays.asList(
+                "先秦", "春秋", "春秋战国", "魏晋", "唐代", "五代",
+                "宋代", "元代", "明代", "清代", "近现代"
+            ));
+            for (Poem p : allPoems) {
+                if (p.dynasty == null || p.dynasty.isEmpty()
+                    || !knownDynasties.contains(p.dynasty)) {
+                    result.add(p);
+                }
+            }
+            return result;
+        }
         for (Poem p : allPoems) {
             if (category.equals(p.category)) {
                 result.add(p);
@@ -238,16 +265,19 @@ public class PoemRepository {
      * 基于日期 Hash 固定每日推荐 —— 同一天始终返回同一首诗。
      * 保证"每日推荐"概念名副其实。
      *
-     * <p>通过将当日日期字符串的 hashCode 取模诗词总数来确定索引，
+     * <p>优先从著名诗词（有释义）中选取：将当日日期字符串的 hashCode
+     * 取模著名诗词总数来确定索引。若著名诗词列表为空，则降级为全量选取。
      * 确保同一天内多次调用返回相同诗词。
      *
      * @return 当日推荐的诗词，若诗词库为空则返回 {@code null}
      */
     public Poem getDailyPoem() {
-        if (allPoems.isEmpty()) return null;
+        // 优先从著名诗词中选取
+        List<Poem> pool = famousPoems.isEmpty() ? allPoems : famousPoems;
+        if (pool.isEmpty()) return null;
         String dateKey = LocalDate.now().toString();
-        int idx = Math.abs(dateKey.hashCode()) % allPoems.size();
-        return allPoems.get(idx);
+        int idx = Math.abs(dateKey.hashCode()) % pool.size();
+        return pool.get(idx);
     }
 
     /**
@@ -337,7 +367,8 @@ public class PoemRepository {
      * 构建分类列表与对应图标。
      *
      * <p>基于诗词数据中的朝代信息，按照预设的朝代展示顺序构建分类。
-     * 分类列表首项固定为"全部"，后续按历史顺序排列各朝代。
+     * 分类列表首项固定为"全部"，后续按历史顺序排列各朝代，
+     * 末尾固定添加"其他"分类（收录不属于任何已知朝代的诗词）。
      * 同时为每个分类分配对应的 emoji 图标。
      *
      * @see #getDynastyIcon(String)
@@ -352,7 +383,8 @@ public class PoemRepository {
                 dynastyCounts.put(p.dynasty, cnt == null ? 1 : cnt + 1);
             }
         }
-        String[] navOrder = {"先秦", "春秋", "春秋战国", "魏晋", "唐代", "五代", "宋代", "元代", "清代"};
+        String[] navOrder = {"先秦", "春秋", "春秋战国", "魏晋", "唐代", "五代", "宋代", "元代", "明代", "清代", "近现代"};
+
         List<String> ordered = new ArrayList<>();
         for (String d : navOrder) {
             if (dynasties.contains(d)) ordered.add(d);
@@ -366,6 +398,9 @@ public class PoemRepository {
             categories.add(d);
             categoryIcons.add(getDynastyIcon(d));
         }
+        // 末尾固定添加"其他"分类
+        categories.add("其他");
+        categoryIcons.add("\uD83D\uDCD6");
     }
 
     /**
@@ -379,7 +414,9 @@ public class PoemRepository {
      *   <li>五代 → 🌊（波浪）</li>
      *   <li>宋代 → 🎋（竹）</li>
      *   <li>元代 → 🐎（马）</li>
+     *   <li>明代 → 🎭（戏剧面具，明代戏曲繁荣）</li>
      *   <li>清代 → 🏮（灯笼）</li>
+     *   <li>近现代 → 🌅（日出，新时代）</li>
      *   <li>其他 → 📖（书本，默认）</li>
      * </ul>
      *
@@ -394,7 +431,9 @@ public class PoemRepository {
             case "五代": return "\uD83C\uDF0A";
             case "宋代": return "\uD83C\uDF8B";
             case "元代": return "\uD83D\uDC0E";
+            case "明代": return "\uD83C\uDFAD";
             case "清代": return "\uD83C\uDFEE";
+            case "近现代": return "\uD83C\uDF05";
             default: return "\uD83D\uDCD6";
         }
     }

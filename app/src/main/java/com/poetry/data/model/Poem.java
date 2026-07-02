@@ -19,13 +19,13 @@ public class Poem {
     /** 作者 */
     public String author;
 
-    /** 朝代（唐代/宋代/先秦/魏晋/五代/元代/清代） */
+    /** 朝代（唐代/宋代/先秦/魏晋/五代/元代/明代/清代/近现代） */
     public String dynasty;
 
     /** 拼音字符串（预留，暂未使用） */
     public String pinyin;
 
-    /** 标签（英文简称，用于颜色映射：tang/song/qin/wei/yuan/qing/wu） */
+    /** 标签（英文简称，用于颜色映射：tang/song/qin/wei/yuan/ming/qing/modern/wu/other） */
     public String tag;
 
     /** 分类（= dynasty，兼容旧字段） */
