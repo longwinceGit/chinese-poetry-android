@@ -7,6 +7,7 @@ import android.view.animation.OvershootInterpolator;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.poetry.data.model.Poem;
@@ -42,16 +43,37 @@ public class PoemAdapter extends RecyclerView.Adapter<PoemAdapter.ViewHolder> {
     }
 
     /**
-     * 替换当前诗词列表并刷新全部数据。
+     * 替换当前诗词列表，使用 DiffUtil 计算差异后增量更新。
      * <p>
-     * 若传入列表为 null，则清空为空列表。
+     * DiffUtil 在后台线程计算差异，主线程分发变更通知，
+     * 相比 {@code notifyDataSetChanged()} 减少不必要的 rebind 和动画闪烁。
      * </p>
      *
-     * @param poems 新的诗词列表
+     * @param newPoems 新的诗词列表，若为 null 则清空为空列表
      */
-    public void setPoems(List<Poem> poems) {
-        this.poems = poems != null ? poems : new ArrayList<>();
-        notifyDataSetChanged();
+    public void setPoems(List<Poem> newPoems) {
+        final List<Poem> oldList = this.poems;
+        final List<Poem> newList = newPoems != null ? newPoems : new ArrayList<>();
+        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new DiffUtil.Callback() {
+            @Override
+            public int getOldListSize() { return oldList.size(); }
+            @Override
+            public int getNewListSize() { return newList.size(); }
+            @Override
+            public boolean areItemsTheSame(int o, int n) {
+                return oldList.get(o).id.equals(newList.get(n).id);
+            }
+            @Override
+            public boolean areContentsTheSame(int o, int n) {
+                Poem a = oldList.get(o), b = newList.get(n);
+                return a.id.equals(b.id)
+                    && (a.title == null ? b.title == null : a.title.equals(b.title))
+                    && (a.author == null ? b.author == null : a.author.equals(b.author))
+                    && (a.dynasty == null ? b.dynasty == null : a.dynasty.equals(b.dynasty));
+            }
+        });
+        this.poems = newList;
+        diff.dispatchUpdatesTo(this);
     }
 
     /**

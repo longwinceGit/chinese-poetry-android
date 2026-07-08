@@ -12,11 +12,15 @@ import com.poetry.data.UserProfile;
 import com.poetry.data.model.Poem;
 import com.poetry.domain.LearningEngine;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * 首页 ViewModel，负责诗词数据加载、分类筛选、搜索、分页等核心逻辑。
  * 维护诗词列表、每日推荐、分类列表等 LiveData 供 Fragment 观察。
+ *
+ * <p>搜索优化：搜索在后台线程执行，通过 {@code volatile} 标志取消旧搜索；
+ * 搜索结果支持分页加载（首页 {@link #PAGE_SIZE} 条，滚动加载更多）。
  */
 public class HomeViewModel extends AndroidViewModel {
 
@@ -30,6 +34,8 @@ public class HomeViewModel extends AndroidViewModel {
     private MutableLiveData<Poem> dailyPoem = new MutableLiveData<>();
     private MutableLiveData<List<String>> categories = new MutableLiveData<>();
     private MutableLiveData<List<String>> categoryIcons = new MutableLiveData<>();
+    /** 搜索进行中状态，用于驱动 UI 加载指示器 */
+    private MutableLiveData<Boolean> isSearching = new MutableLiveData<>(false);
 
     private MutableLiveData<Integer> totalCount = new MutableLiveData<>(0);
 
@@ -38,6 +44,13 @@ public class HomeViewModel extends AndroidViewModel {
     private boolean searchMode = false;
     private int currentPage = 0;
     private static final int PAGE_SIZE = 30;
+
+    /** 搜索完整结果缓存，用于搜索模式下的分页加载 */
+    private volatile List<Poem> searchResults = new ArrayList<>();
+    /** 搜索取消标志：新搜索发起时置 true，旧搜索线程检测后自行退出 */
+    private volatile boolean searchCancelled = false;
+    /** 当前搜索线程引用，用于中断 */
+    private Thread searchThread;
 
     /**
      * 构造函数，初始化数据库实例。
@@ -116,30 +129,73 @@ public class HomeViewModel extends AndroidViewModel {
     /**
      * 搜索诗词，自动判断搜索模式切换。
      * <p>
-     * 当查询非空时进入搜索模式，直接展示搜索结果；
+     * 当查询非空时进入搜索模式，在后台线程执行搜索，
+     * 首页仅展示前 {@link #PAGE_SIZE} 条结果，滚动时通过 {@link #loadMore()} 追加。
      * 当查询为空时退出搜索模式，回到当前分类的第一页。
+     * <p>
+     * 如果上一次搜索仍在进行，通过 {@code searchCancelled} 标志通知其退出，
+     * 避免旧搜索结果覆盖新搜索结果。
      *
      * @param query 搜索关键词
      */
     public void search(String query) {
         searchQuery = query.trim();
         searchMode = !searchQuery.isEmpty();
-        if (searchMode) {
-            List<Poem> results = repo.search(searchQuery);
-            poems.setValue(results);
-        } else {
+        if (!searchMode) {
             showPage(0);
+            return;
         }
+        // 取消正在进行的旧搜索
+        searchCancelled = true;
+        // 显示搜索中状态
+        isSearching.setValue(true);
+        // 启动新搜索线程
+        final String q = searchQuery;
+        searchThread = new Thread(() -> {
+            searchCancelled = false;
+            List<Poem> results = repo.search(q);
+            // 检查是否已被新搜索取消
+            if (searchCancelled) return;
+            searchResults = results;
+            // 取首页数据
+            int end = Math.min(PAGE_SIZE, results.size());
+            List<Poem> page = end > 0
+                ? new ArrayList<>(results.subList(0, end))
+                : new ArrayList<>();
+            totalCount.postValue(results.size());
+            currentPage = 0;
+            poems.postValue(page);
+            isSearching.postValue(false);
+        }, "poetry-search");
+        searchThread.start();
     }
 
     /**
-     * 加载更多（翻页），仅在非搜索模式下有效。
+     * 加载更多（翻页），支持分类模式和搜索模式。
      * <p>
      * 追加下一页数据到当前列表，创建新的 List 实例以触发 LiveData 通知。
      * 若数据不足一页则回退页码。
      */
     public void loadMore() {
-        if (searchMode) return;
+        if (searchMode) {
+            // 搜索模式：从 searchResults 分页
+            currentPage++;
+            int start = currentPage * PAGE_SIZE;
+            int total = searchResults.size();
+            int end = Math.min(start + PAGE_SIZE, total);
+            if (start < total) {
+                List<Poem> more = new ArrayList<>(searchResults.subList(start, end));
+                List<Poem> current = poems.getValue();
+                if (current != null) {
+                    List<Poem> updated = new ArrayList<>(current);
+                    updated.addAll(more);
+                    poems.setValue(updated);
+                }
+            } else {
+                currentPage--;
+            }
+            return;
+        }
         currentPage++;
         int start = currentPage * PAGE_SIZE;
         List<Poem> filtered = repo.getPoemsByCategory(currentCategory);
@@ -149,7 +205,7 @@ public class HomeViewModel extends AndroidViewModel {
             List<Poem> current = poems.getValue();
             if (current != null) {
                 // 必须创建新 List —— LiveData 同引用不通知
-                List<Poem> updated = new java.util.ArrayList<>(current);
+                List<Poem> updated = new ArrayList<>(current);
                 updated.addAll(more);
                 poems.setValue(updated);
             }
@@ -198,6 +254,8 @@ public class HomeViewModel extends AndroidViewModel {
     public LiveData<List<String>> getCategories() { return categories; }
     /** @return 分类图标列表 LiveData */
     public LiveData<List<String>> getCategoryIcons() { return categoryIcons; }
+    /** @return 搜索进行中状态 LiveData（true 时显示搜索加载指示器） */
+    public LiveData<Boolean> getIsSearching() { return isSearching; }
 
     /** @return 用户学习档案 LiveData */
     public LiveData<UserProfile> getUserProfile() {

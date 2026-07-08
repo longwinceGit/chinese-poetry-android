@@ -45,6 +45,7 @@ public class HomeFragment extends Fragment {
     // Views
     private View dailyCard, loadingContainer, errorContainer, loadMoreArea, btnLoadMore;
     private View progressLoad, btnSearchClear, tvEmpty, tvNoMore, btnRetry;
+    private View progressSearch;
     private TextView tvErrorIcon, tvErrorMessage;
     private TextView tvDailyEmoji, tvDailyTitle, tvDailyAuthor, tvDailyExcerpt;
     private TextView tvSectionTitle, tvPoemCount, tvLoadingMessage;
@@ -127,6 +128,7 @@ public class HomeFragment extends Fragment {
 
         etSearch = v.findViewById(R.id.et_search);
         btnSearchClear = v.findViewById(R.id.btn_search_clear);
+        progressSearch = v.findViewById(R.id.progress_search);
 
         recyclerPoems = v.findViewById(R.id.recycler_poems);
         recyclerPoems.setLayoutManager(new GridLayoutManager(requireContext(), 3));
@@ -155,6 +157,9 @@ public class HomeFragment extends Fragment {
         viewModel.getPoems().observe(getViewLifecycleOwner(), poems -> {
             if (poems == null) return;
             recyclerPoems.setVisibility(poems.isEmpty() ? View.GONE : View.VISIBLE);
+            // 搜索模式下无结果显示空状态提示
+            tvEmpty.setVisibility(
+                poems.isEmpty() && viewModel.isSearchMode() ? View.VISIBLE : View.GONE);
             adapter.setPoems(poems);
 
             updateLoadMoreUI();
@@ -163,6 +168,18 @@ public class HomeFragment extends Fragment {
         viewModel.getDailyPoem().observe(getViewLifecycleOwner(), this::updateDailyCard);
 
         viewModel.getCategories().observe(getViewLifecycleOwner(), this::setupCategoryChips);
+
+        // 搜索加载状态：显示/隐藏搜索框内的小型 ProgressBar
+        viewModel.getIsSearching().observe(getViewLifecycleOwner(), searching -> {
+            if (searching != null && searching) {
+                progressSearch.setVisibility(View.VISIBLE);
+                btnSearchClear.setVisibility(View.GONE);
+            } else {
+                progressSearch.setVisibility(View.GONE);
+                btnSearchClear.setVisibility(
+                    etSearch.getText().length() > 0 ? View.VISIBLE : View.GONE);
+            }
+        });
 
         viewModel.getTotalCount().observe(getViewLifecycleOwner(), count -> {
             if (count != null) {

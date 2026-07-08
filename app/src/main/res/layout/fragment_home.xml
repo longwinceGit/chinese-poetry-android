@@ -61,6 +61,18 @@
                     android:imeOptions="actionSearch"
                     android:inputType="text"
                     app:layout_constraintStart_toEndOf="@id/iv_search_icon"
+                    app:layout_constraintEnd_toStartOf="@id/progress_search"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
+
+                <ProgressBar
+                    android:id="@+id/progress_search"
+                    style="?android:attr/progressBarStyleSmall"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginEnd="4dp"
+                    android:visibility="gone"
+                    android:contentDescription="@string/a11y_searching"
                     app:layout_constraintEnd_toStartOf="@id/btn_search_clear"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent" />
