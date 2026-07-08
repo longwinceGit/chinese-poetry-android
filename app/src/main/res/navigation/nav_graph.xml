@@ -56,15 +56,6 @@
             android:name="poem_dynasty"
             app:argType="string" />
         <argument
-            android:name="poem_category"
-            app:argType="string" />
-        <argument
-            android:name="poem_tag"
-            app:argType="string" />
-        <argument
-            android:name="poem_emoji"
-            app:argType="string" />
-        <argument
             android:name="poem_lines"
             app:argType="string[]" />
         <argument

@@ -29,8 +29,10 @@ import java.util.Random;
  *   <li><b>poem_explanations.json</b> - 诗词释义数据（可选）</li>
  * </ul>
  *
- * <p>优化说明：使用 {@link JSONTokener} 进行流式解析，避免将整个文件读入内存后再解析，
- * 减少中间 {@link String} 对象的内存占用，适合处理较大的诗词数据文件。
+ * <p>优化说明：通过 {@link BufferedReader} 按行读取文件内容后，
+ * 使用 {@link JSONTokener} 解析为 JSON 对象。由于 org.json 的 {@link JSONTokener}
+ * 不支持直接从 {@link InputStream} 构造，需先读取为完整字符串再解析。
+ * 单文件体积通常 &lt; 10MB，内存占用可控。
  *
  * @author Poetry App Team
  * @version 2.0
@@ -136,13 +138,14 @@ public class PoemLoader {
      *
      * <p>实现说明：
      * <ol>
-     *   <li>使用 {@link BufferedReader} 按行读取文件内容</li>
-     *   <li>通过 {@link JSONTokener} 进行流式解析，避免一次性加载大文件到内存</li>
+     *   <li>使用 {@link BufferedReader} 按行读取文件内容，拼接为完整字符串</li>
+     *   <li>通过 {@link JSONTokener} 解析字符串为 JSON 对象</li>
      *   <li>确保 {@link InputStream} 在方法结束时被正确关闭</li>
      * </ol>
      *
      * <p>注意：{@link JSONTokener} 不支持直接从 {@link InputStream} 构造，
-     * 因此需要先读取为 {@link String} 再解析。这是 org.json 库的限制。
+     * 因此需要先读取为完整 {@link String} 再解析。这是 org.json 库的限制。
+     * 单文件体积通常 &lt; 10MB，全量读取的内存开销可控。
      *
      * @param assets Android AssetManager，用于访问 assets 目录
      * @param path   assets 目录中的文件路径，如 "web/data/nav.json"

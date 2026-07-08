@@ -163,7 +163,8 @@ public class QuizGenerator {
         used.add(pairIdx + 1);
         while (q.options.size() < 4) {
             Poem other = poemPool.get(RANDOM.nextInt(poemPool.size()));
-            if (other.lines == null) continue;
+            // 空数组守卫：lines 为 null 或长度为 0 时跳过，避免 nextInt(0) 崩溃
+            if (other.lines == null || other.lines.length == 0) continue;
             int idx = RANDOM.nextInt(other.lines.length);
             if (!used.contains(idx) && !q.options.contains(other.lines[idx])) {
                 q.options.add(other.lines[idx]);

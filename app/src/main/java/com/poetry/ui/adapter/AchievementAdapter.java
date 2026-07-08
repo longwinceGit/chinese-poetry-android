@@ -1,11 +1,13 @@
 package com.poetry.ui.adapter;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.poetry.R;
@@ -91,11 +93,13 @@ public class AchievementAdapter extends RecyclerView.Adapter<AchievementAdapter.
 
         if (entry.unlocked) {
             holder.tvStatus.setText("已达成");
-            holder.tvStatus.setTextColor(holder.itemView.getContext().getColor(R.color.answer_correct));
+            Context ctx = holder.itemView.getContext();
+            holder.tvStatus.setTextColor(ContextCompat.getColor(ctx, R.color.answer_correct));
             holder.itemView.setAlpha(1f);
         } else {
             holder.tvStatus.setText("未达成");
-            holder.tvStatus.setTextColor(holder.itemView.getContext().getColor(R.color.on_surface_variant));
+            Context ctx = holder.itemView.getContext();
+            holder.tvStatus.setTextColor(ContextCompat.getColor(ctx, R.color.on_surface_variant));
             holder.itemView.setAlpha(0.5f);
         }
 

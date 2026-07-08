@@ -88,7 +88,8 @@ public class GameEngine {
             // 从诗词池中随机抽取干扰项，凑满4个选项
             while (round.options.size() < 4) {
                 Poem other = pool.get(RANDOM.nextInt(pool.size()));
-                if (other.lines == null) continue;
+                // 空数组守卫：lines 为 null 或长度为 0 时跳过，避免 nextInt(0) 崩溃
+                if (other.lines == null || other.lines.length == 0) continue;
                 int idx = RANDOM.nextInt(other.lines.length);
                 // 确保干扰项不重复且未被使用
                 if (!used.contains(idx) && !round.options.contains(other.lines[idx])) {

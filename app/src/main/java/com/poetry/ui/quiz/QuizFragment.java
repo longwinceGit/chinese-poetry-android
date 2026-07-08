@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -253,7 +254,7 @@ public class QuizFragment extends Fragment {
         tv.setLayoutParams(lp);
         tv.setText("____");
         tv.setTextSize(18);
-        tv.setTextColor(getResources().getColor(R.color.tertiary, null));
+        tv.setTextColor(ContextCompat.getColor(requireContext(), R.color.tertiary));
         tv.setBackgroundResource(R.drawable.bg_chip);
         tv.setPadding(8, 4, 8, 4);
         tv.setTag(index);
@@ -272,7 +273,7 @@ public class QuizFragment extends Fragment {
         TextView tv = new TextView(requireContext());
         tv.setText(text);
         tv.setTextSize(20);
-        tv.setTextColor(getResources().getColor(R.color.on_surface, null));
+        tv.setTextColor(ContextCompat.getColor(requireContext(), R.color.on_surface));
         tv.setLineSpacing(0f, 1.6f);
         parent.addView(tv);
     }
@@ -307,7 +308,7 @@ public class QuizFragment extends Fragment {
                 chip.setLayoutParams(lp);
                 chip.setText(word);
                 chip.setTextSize(18);
-                chip.setTextColor(getResources().getColor(R.color.on_surface, null));
+                chip.setTextColor(ContextCompat.getColor(requireContext(), R.color.on_surface));
                 chip.setBackgroundResource(R.drawable.bg_chip_active);
                 chip.setPadding(24, 12, 24, 12);
                 chip.setClickable(true);
@@ -346,7 +347,7 @@ public class QuizFragment extends Fragment {
     private void fillBlank(int index, String word) {
         if (index < blankViews.size()) {
             blankViews.get(index).setText(word);
-            blankViews.get(index).setTextColor(getResources().getColor(R.color.answer_correct, null));
+            blankViews.get(index).setTextColor(ContextCompat.getColor(requireContext(), R.color.answer_correct));
             while (userAnswers.size() <= index) {
                 userAnswers.add("");
             }
@@ -354,7 +355,7 @@ public class QuizFragment extends Fragment {
             currentBlankIndex = index + 1;
             // 自动跳到下一个空位
             if (currentBlankIndex < blankViews.size()) {
-                blankViews.get(currentBlankIndex).setTextColor(getResources().getColor(R.color.tertiary, null));
+                blankViews.get(currentBlankIndex).setTextColor(ContextCompat.getColor(requireContext(), R.color.tertiary));
             }
             // 填满所有空位 → 自动提交
             if (allBlanksFilled()) {
@@ -416,7 +417,7 @@ public class QuizFragment extends Fragment {
 
         // 清空空位
         blankViews.get(index).setText("____");
-        blankViews.get(index).setTextColor(getResources().getColor(R.color.tertiary, null));
+        blankViews.get(index).setTextColor(ContextCompat.getColor(requireContext(), R.color.tertiary));
         userAnswers.set(index, "");
 
         // 恢复对应的候选词 chip

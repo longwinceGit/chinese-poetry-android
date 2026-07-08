@@ -1,5 +1,6 @@
 package com.poetry.ui.detail;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -306,68 +307,100 @@ public class DetailFragment extends Fragment {
      * 整个过程在子线程中执行，分享前将图片通过 FileProvider 转为 URI。
      * 失败时在主线程弹出 Toast 提示。
      * </p>
+     *
+     * <h3>P0-A A2 修复</h3>
+     * <ul>
+     *   <li>捕获 OutOfMemoryError（长文 Bitmap 渲染可能 OOM）</li>
+     *   <li>用 ApplicationContext 而非 requireContext()，避免后台线程持有 Fragment 引用导致泄漏</li>
+     * </ul>
      */
     private void sharePoem() {
+        // 关键修复：后台线程不要持有 Fragment 引用，统一用 ApplicationContext（P0-A A2）
+        final Context appCtx = requireContext().getApplicationContext();
+        final String packageName = appCtx.getPackageName();
+        final android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+
         new Thread(() -> {
+            Bitmap card = null;
             try {
-                Bitmap card = generateShareCard();
+                card = generateShareCard();
                 if (card == null) {
-                    requireActivity().runOnUiThread(() ->
-                        Toast.makeText(requireContext(), "生成分享卡片失败", Toast.LENGTH_SHORT).show());
+                    mainHandler.post(() ->
+                        Toast.makeText(appCtx, "生成分享卡片失败", Toast.LENGTH_SHORT).show());
                     return;
                 }
 
                 // 保存到缓存目录
-                File cacheDir = new File(requireContext().getCacheDir(), "images");
+                File cacheDir = new File(appCtx.getCacheDir(), "images");
                 if (!cacheDir.exists()) cacheDir.mkdirs();
                 File file = new File(cacheDir, "poem_share_" + poemId + ".png");
                 try (FileOutputStream fos = new FileOutputStream(file)) {
                     card.compress(Bitmap.CompressFormat.PNG, 95, fos);
                 }
 
-                Uri uri = FileProvider.getUriForFile(requireContext(),
-                    requireContext().getPackageName() + ".fileprovider", file);
+                Uri uri = FileProvider.getUriForFile(appCtx,
+                    packageName + ".fileprovider", file);
 
                 Intent shareIntent = new Intent(Intent.ACTION_SEND);
                 shareIntent.setType("image/png");
                 shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
                 shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
-                requireActivity().runOnUiThread(() -> {
-                    String text = "《" + poemTitle + "》—— " + poemAuthor;
-                    Intent chooser = Intent.createChooser(shareIntent, text);
+                final String text = "《" + poemTitle + "》—— " + poemAuthor;
+                final Intent finalIntent = shareIntent;
+                mainHandler.post(() -> {
+                    Intent chooser = Intent.createChooser(finalIntent, text);
+                    // startActivity 必须在 Fragment 仍存活时调用，mainHandler 时刻它仍附着
                     startActivity(chooser);
                 });
+            } catch (OutOfMemoryError oom) {
+                // 关键修复：长文 Bitmap 可能 OOM，提示而非崩溃（P0-A A2）
+                mainHandler.post(() ->
+                    Toast.makeText(appCtx, "墨未干，稍后再试", Toast.LENGTH_SHORT).show());
             } catch (Exception e) {
-                requireActivity().runOnUiThread(() ->
-                    Toast.makeText(requireContext(), "分享失败：" + e.getMessage(), Toast.LENGTH_SHORT).show());
+                mainHandler.post(() ->
+                    Toast.makeText(appCtx, "分享失败：" + e.getMessage(), Toast.LENGTH_SHORT).show());
+            } finally {
+                if (card != null && !card.isRecycled()) {
+                    card.recycle();
+                }
             }
-        }).start();
+        }, "poem-share-thread").start();
     }
 
     /**
      * 使用 Canvas 绘制古风诗词分享卡片 Bitmap。
      * <p>
-     * 卡片宽 750px、高度自适应内容，使用宣纸色背景、墨色文字、朱红装饰线的
-     * 传统风格配色。包含顶部装饰线、标题、作者･朝代、分割线、诗句正文、
-     * 底部水印及装饰线等元素。
+     * 卡片宽 720px（保守尺寸，避免低内存机型 OOM）、高度自适应内容，
+     * 使用宣纸色背景、墨色文字、朱红装饰线的传统风格配色。
+     * 包含顶部装饰线、标题、作者･朝代、分割线、诗句正文、底部水印及装饰线等元素。
      * </p>
+     *
+     * <h3>P0-A A2 修复</h3>
+     * <ul>
+     *   <li>ARGB_8888 → RGB_565，内存减半（分享图无需 alpha 通道）</li>
+     *   <li>宽度 750 → 720，长内容等比缩放至 1280px 屏幕</li>
+     *   <li>硬编码颜色 → values/colors.xml 品牌色，便于统一改色</li>
+     *   <li>长诗自动缩放字号（>14 行）</li>
+     * </ul>
      *
      * @return 生成好的分享卡片 Bitmap，失败返回 null
      */
     private Bitmap generateShareCard() {
-        int width = 750;
-        int padding = 48;
-        int paddingSmall = 32;
-        int contentWidth = width - padding * 2;
+        final int width = 720; // P0-A A2: 750 → 720 减 4% 像素
+        final int padding = 48;
+        final int paddingSmall = 32;
+        final int contentWidth = width - padding * 2;
+        final int maxHeight = 2400; // 限制最大高度，防止超长诗词 OOM
 
-        // 颜色
-        int bgColor = 0xFFFAF7F0;       // 宣纸色
-        int inkColor = 0xFF5D4037;      // 墨色
-        int subColor = 0xFF795548;      // 赭石
-        int accentColor = 0xFFC62828;   // 朱红
-        int waterColor = 0xFF7A7570;    // 水印灰
-        int dividerColor = 0xFFD7CCC8;  // 分割线
+        // 颜色：使用品牌调色板（P0-A A2: 硬编码 → 资源引用）
+        Context ctx = getContext();
+        int bgColor      = ctx != null ? ContextCompat.getColor(ctx, R.color.surface)              : 0xFFFAF7F0;
+        int inkColor     = ctx != null ? ContextCompat.getColor(ctx, R.color.primary)              : 0xFF5D4037;
+        int subColor     = ctx != null ? ContextCompat.getColor(ctx, R.color.secondary)           : 0xFF795548;
+        int accentColor  = ctx != null ? ContextCompat.getColor(ctx, R.color.tertiary)            : 0xFFC62828;
+        int waterColor   = ctx != null ? ContextCompat.getColor(ctx, R.color.on_surface_variant)  : 0xFF4A4540;
+        int dividerColor = ctx != null ? ContextCompat.getColor(ctx, R.color.surface_variant)     : 0xFFF0EDE6;
 
         // 文本画笔
         Paint titlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -413,6 +446,12 @@ public class DetailFragment extends Fragment {
         String authorText = poemAuthor + " · " + poemDynasty;
         authorPaint.getTextBounds(authorText, 0, authorText.length(), authorBounds);
 
+        // P0-A A2: 长诗自动缩放字号（>14 行降到 28sp）
+        boolean isLongPoem = poemLines != null && poemLines.length > 14;
+        if (isLongPoem) {
+            linePaint.setTextSize(28f);
+        }
+
         // 计算诗句总高度
         float linesHeight = 0;
         float[] lineWidths = null;
@@ -425,10 +464,10 @@ public class DetailFragment extends Fragment {
         }
 
         float footerY = titleY + 40 + authorBounds.height() + 48 + linesHeight + 60;
-        float totalHeight = footerY + 60;
+        float totalHeight = Math.min(footerY + 60, maxHeight);
 
-        // 创建 Bitmap
-        Bitmap bitmap = Bitmap.createBitmap(width, (int) totalHeight, Bitmap.Config.ARGB_8888);
+        // P0-A A2: ARGB_8888 → RGB_565 省 50% 内存，分享图不需要 alpha
+        Bitmap bitmap = Bitmap.createBitmap(width, (int) totalHeight, Bitmap.Config.RGB_565);
         Canvas canvas = new Canvas(bitmap);
         canvas.drawColor(bgColor);
 

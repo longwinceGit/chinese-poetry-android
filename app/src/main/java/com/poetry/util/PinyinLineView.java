@@ -8,6 +8,8 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.core.content.ContextCompat;
+
 import com.poetry.R;
 
 import java.util.List;
@@ -30,6 +32,13 @@ public class PinyinLineView extends LinearLayout {
     private static final float CHAR_SP  = 20f;
 
     private final int maxCharsPerRow;
+    private final String sourceLine;
+
+    /**
+     * 标记子 View 层级是否已构建。P0-A 优化：避免父布局多次 onMeasure 时重复创建大量 TextView
+     * （长诗 28 字 × 2 行 = 56 个 TextView，重建成本不可忽视）。
+     */
+    private boolean mBuilt = false;
 
     /**
      * 构建多行拼音视图。
@@ -41,12 +50,30 @@ public class PinyinLineView extends LinearLayout {
     public PinyinLineView(Context context, String line, int maxCharsPerRow) {
         super(context);
         this.maxCharsPerRow = maxCharsPerRow > 0 ? maxCharsPerRow : 10;
+        this.sourceLine = line != null ? line : "";
         setOrientation(VERTICAL);
         setGravity(Gravity.CENTER);
         setLayoutParams(new LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
-        buildRows(line);
+        // 不在构造时 buildRows，等首次 onMeasure 时构建（避免父布局尚未 measure 时无谓创建）
+    }
+
+    /**
+     * 首次测量时构建子 View 层级；后续 measure 直接复用。
+     * <p>
+     * 修复背景（P0-A A1）：原版在构造函数中调用 buildRows，
+     * 父布局 ConstraintLayout 多次 measure 会触发 view tree 重建，
+     * 长诗 28 字 × 2 行 = 56 个 TextView 创建代价集中爆发。
+     * </p>
+     */
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        if (!mBuilt) {
+            buildRows(sourceLine);
+            mBuilt = true;
+        }
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
     /**
@@ -62,8 +89,8 @@ public class PinyinLineView extends LinearLayout {
         // ceil 除法：计算需要的行数
         int rowCount = (total + maxCharsPerRow - 1) / maxCharsPerRow;
 
-        int pinyinColor = getContext().getColor(R.color.on_surface_variant);
-        int charColor   = getContext().getColor(R.color.on_surface);
+        int pinyinColor = ContextCompat.getColor(getContext(), R.color.on_surface_variant);
+        int charColor   = ContextCompat.getColor(getContext(), R.color.on_surface);
         List<String> pinyinList = PinyinHelper.toPinyinList(text);
 
         for (int row = 0; row < rowCount; row++) {

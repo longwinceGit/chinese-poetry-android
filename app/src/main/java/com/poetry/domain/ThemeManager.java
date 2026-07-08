@@ -35,15 +35,12 @@ public class ThemeManager {
         public int requireLevel;
         /** 需要的最低连续天数 */
         public int requireStreak;
-        /** 是否要求学完所有诗词 */
-        public boolean requireAllPoems;
 
         public ThemeDef(String id, String name, String icon, String desc) {
             this.id = id; this.name = name; this.icon = icon; this.desc = desc;
             this.defaultUnlocked = false;
             this.requireLevel = 0;
             this.requireStreak = 0;
-            this.requireAllPoems = false;
         }
         /** 标记为默认解锁主题 */
         public ThemeDef setDefault() { this.defaultUnlocked = true; return this; }

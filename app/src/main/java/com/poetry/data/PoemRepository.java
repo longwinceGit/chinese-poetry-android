@@ -47,8 +47,11 @@ public class PoemRepository {
     private List<Poem> famousPoems = new ArrayList<>();
     private List<String> categories = new ArrayList<>();
     private List<String> categoryIcons = new ArrayList<>();
-    private boolean loaded = false;
-    private boolean indicesBuilt = false;
+    // T2-2: volatile 保证后台线程赋值后 UI 线程立即可见
+    private volatile boolean loaded = false;
+    private volatile boolean indicesBuilt = false;
+    // T2-1: ID → Poem 索引，O(1) 查找替代 O(n) 线性遍历
+    private final Map<String, Poem> poemIdIndex = new HashMap<>();
 
     // 🔴 B3 修复：搜索倒排索引（字符级）
     private final Map<Character, Set<Integer>> titleCharIndex = new HashMap<>();
@@ -95,6 +98,11 @@ public class PoemRepository {
                     }
                 });
                 allPoems = poems;
+                // T2-1: 构建 ID → Poem 索引，findPoemById 从 O(n) 优化为 O(1)
+                poemIdIndex.clear();
+                for (Poem p : poems) {
+                    poemIdIndex.put(p.id, p);
+                }
                 // 构建著名诗词列表（有释义的诗词，用于每日推荐）
                 famousPoems = new ArrayList<>();
                 for (Poem p : poems) {
@@ -249,16 +257,15 @@ public class PoemRepository {
     /**
      * 根据诗词 ID 查找诗词。
      *
-     * <p>在线性时间复杂度 O(n) 下遍历全量诗词进行匹配。
+     * <p>使用 HashMap 索引实现 O(1) 查找，替代原先的 O(n) 线性遍历。
+     * 索引在 {@link #loadPoemsAsync(AssetManager)} 完成后自动构建。
      *
      * @param id 诗词的唯一标识符
-     * @return 匹配的诗词对象，若未找到则返回 {@code null}
+     * @return 匹配的诗词对象，若未找到或 id 为 null 则返回 {@code null}
      */
     public Poem findPoemById(String id) {
-        for (Poem p : allPoems) {
-            if (p.id.equals(id)) return p;
-        }
-        return null;
+        if (id == null) return null;
+        return poemIdIndex.get(id);
     }
 
     /**
