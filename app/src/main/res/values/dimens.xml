@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ================================================================ -->
+    <!-- 间距令牌 (Spacing) — 基准 4dp grid                              -->
+    <!-- ================================================================ -->
+    <dimen name="spacing_xs">2dp</dimen>
+    <dimen name="spacing_sm">4dp</dimen>
+    <dimen name="spacing_md">8dp</dimen>
+    <dimen name="spacing_lg">12dp</dimen>
+    <dimen name="spacing_xl">16dp</dimen>
+    <dimen name="spacing_xl_2">20dp</dimen>
+    <dimen name="spacing_xxl">24dp</dimen>
+    <dimen name="spacing_xxxl">32dp</dimen>
+    <dimen name="spacing_huge">48dp</dimen>
+
+    <!-- 语义间距 -->
+    <dimen name="spacing_page_horizontal">@dimen/spacing_xl</dimen>
+    <dimen name="spacing_page_top">@dimen/spacing_xl_2</dimen>
+    <dimen name="spacing_page_bottom">@dimen/spacing_xxl</dimen>
+    <dimen name="spacing_card_padding">@dimen/spacing_xl</dimen>
+    <dimen name="spacing_card_gap">@dimen/spacing_lg</dimen>
+    <dimen name="spacing_card_gap_large">@dimen/spacing_xl_2</dimen>
+    <dimen name="spacing_icon_text">@dimen/spacing_md</dimen>
+    <dimen name="spacing_chip_gap">@dimen/spacing_md</dimen>
+    <dimen name="spacing_section_gap">@dimen/spacing_xl_2</dimen>
+
+    <!-- ================================================================ -->
+    <!-- 排版令牌 (Typography)                                           -->
+    <!-- ================================================================ -->
+    <dimen name="text_size_caption">10sp</dimen>
+    <dimen name="text_size_label_sm">11sp</dimen>
+    <dimen name="text_size_label">12sp</dimen>
+    <dimen name="text_size_body_sm">13sp</dimen>
+    <dimen name="text_size_body">14sp</dimen>
+    <dimen name="text_size_title_card">15sp</dimen>
+    <dimen name="text_size_title">16sp</dimen>
+    <dimen name="text_size_headline">20sp</dimen>
+    <dimen name="text_size_display_sm">22sp</dimen>
+    <dimen name="text_size_display">28sp</dimen>
+    <dimen name="text_size_stat">36sp</dimen>
+    <dimen name="text_size_emoji">48sp</dimen>
+    <dimen name="text_size_icon_emoji">24sp</dimen>
+    <dimen name="text_size_avatar">32sp</dimen>
+    <dimen name="text_size_game_icon">28sp</dimen>
+
+    <!-- 行高 -->
+    <dimen name="line_height_compact">4dp</dimen>
+    <dimen name="line_height_body">6dp</dimen>
+    <dimen name="line_height_loose">8dp</dimen>
+
+    <!-- ================================================================ -->
+    <!-- 圆角令牌 (Shape)                                                -->
+    <!-- ================================================================ -->
+    <dimen name="radius_none">0dp</dimen>
+    <dimen name="radius_small">8dp</dimen>
+    <dimen name="radius_medium">12dp</dimen>
+    <dimen name="radius_large">16dp</dimen>
+    <dimen name="radius_xlarge">24dp</dimen>
+
+    <!-- ================================================================ -->
+    <!-- 阴影令牌 (Elevation)                                            -->
+    <!-- ================================================================ -->
+    <dimen name="elevation_none">0dp</dimen>
+    <dimen name="elevation_card">1dp</dimen>
+    <dimen name="elevation_card_raised">2dp</dimen>
+    <dimen name="elevation_overlay">4dp</dimen>
+
+    <!-- ================================================================ -->
+    <!-- 描边令牌 (Stroke)                                               -->
+    <!-- ================================================================ -->
+    <dimen name="stroke_none">0dp</dimen>
+    <dimen name="stroke_thin">0.5dp</dimen>
+    <dimen name="stroke_normal">1dp</dimen>
+
+    <!-- ================================================================ -->
+    <!-- 组件尺寸令牌 (Component Size)                                   -->
+    <!-- ================================================================ -->
+    <dimen name="height_button">48dp</dimen>
+    <dimen name="height_button_small">36dp</dimen>
+    <dimen name="height_search_bar">48dp</dimen>
+    <dimen name="height_divider">1dp</dimen>
+    <dimen name="height_divider_decorative">2dp</dimen>
+    <dimen name="size_icon_sm">20dp</dimen>
+    <dimen name="size_icon_md">24dp</dimen>
+    <dimen name="size_icon_lg">48dp</dimen>
+    <dimen name="size_avatar">64dp</dimen>
+    <dimen name="size_progress_sm">20dp</dimen>
+    <dimen name="size_progress_md">24dp</dimen>
+    <dimen name="size_progress_lg">32dp</dimen>
+    <dimen name="width_divider_decorative">48dp</dimen>
+
+    <!-- ================================================================ -->
+    <!-- 触摸目标 (Touch Target) — WCAG 44px minimum                     -->
+    <!-- ================================================================ -->
+    <dimen name="touch_target_min">48dp</dimen>
+    <dimen name="touch_target_small">36dp</dimen>
+
+    <!-- ================================================================ -->
+    <!-- 动效时长 (Motion Duration)                                      -->
+    <!-- ================================================================ -->
+    <integer name="duration_fast">150</integer>
+    <integer name="duration_normal">300</integer>
+    <integer name="duration_slow">500</integer>
+
+</resources>

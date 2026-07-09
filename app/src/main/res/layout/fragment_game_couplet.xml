@@ -5,8 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
-    android:padding="16dp">
+    android:background="@color/bg_page"
+    android:padding="@dimen/spacing_page_horizontal">
 
     <LinearLayout
         android:id="@+id/ll_header"
@@ -23,8 +23,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="📝 对诗"
-            android:textSize="20sp"
-            android:textColor="@color/primary"
+            android:textSize="@dimen/text_size_headline"
+            android:textColor="@color/text_title"
             android:textStyle="bold"
             android:fontFamily="serif" />
 
@@ -32,8 +32,8 @@
             android:id="@+id/tv_score"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:textColor="@color/score_gold"
+            android:textSize="@dimen/text_size_headline"
+            android:textColor="@color/text_gold"
             android:textStyle="bold"
             tools:text="得分: 0" />
     </LinearLayout>
@@ -42,9 +42,9 @@
         android:id="@+id/tv_progress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:textSize="12sp"
-        android:textColor="@color/on_surface_variant"
+        android:layout_marginTop="@dimen/spacing_lg"
+        android:textSize="@dimen/text_size_label"
+        android:textColor="@color/text_body_secondary"
         app:layout_constraintTop_toBottomOf="@id/ll_header"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -52,12 +52,10 @@
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_question"
-        style="@style/Widget.Poetry.Card"
+        style="@style/Widget.Poetry.Card.Raised"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        app:cardElevation="2dp"
-        app:cardCornerRadius="16dp"
+        android:layout_marginTop="@dimen/spacing_xl_2"
         app:layout_constraintTop_toBottomOf="@id/tv_progress"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -66,11 +64,11 @@
             android:id="@+id/tv_question"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="20sp"
-            android:textColor="@color/on_surface"
+            android:textSize="@dimen/text_size_headline"
+            android:textColor="@color/text_body"
             android:gravity="center"
-            android:lineSpacingExtra="6dp"
-            android:padding="24dp"
+            android:lineSpacingExtra="@dimen/line_height_body"
+            android:padding="@dimen/spacing_xxl"
             android:fontFamily="serif"
             tools:text="床前明月光，\n____？" />
     </com.google.android.material.card.MaterialCardView>
@@ -79,7 +77,7 @@
         android:id="@+id/ll_options"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="@dimen/spacing_xl"
         android:orientation="vertical"
         app:layout_constraintTop_toBottomOf="@id/card_question"
         app:layout_constraintStart_toStartOf="parent"
@@ -89,8 +87,8 @@
         android:id="@+id/tv_feedback"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:textSize="14sp"
+        android:layout_marginTop="@dimen/spacing_lg"
+        android:textSize="@dimen/text_size_body"
         android:gravity="center"
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/ll_options"
@@ -101,11 +99,11 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_next"
         android:layout_width="0dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="24dp"
+        android:layout_height="@dimen/height_button"
+        android:layout_marginTop="@dimen/spacing_xxl"
         android:text="@string/game_next"
-        android:textSize="14sp"
-        app:cornerRadius="12dp"
+        android:textSize="@dimen/text_size_body"
+        app:cornerRadius="@dimen/radius_medium"
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/tv_feedback"
         app:layout_constraintStart_toStartOf="parent"

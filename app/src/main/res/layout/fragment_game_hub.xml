@@ -4,20 +4,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
-    android:paddingStart="16dp"
-    android:paddingEnd="16dp"
-    android:paddingTop="20dp">
+    android:background="@color/bg_page"
+    android:paddingStart="@dimen/spacing_page_horizontal"
+    android:paddingEnd="@dimen/spacing_page_horizontal"
+    android:paddingTop="@dimen/spacing_page_top">
 
     <TextView
         android:id="@+id/tv_game_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/game_title"
-        android:textSize="22sp"
-        android:textColor="@color/primary"
-        android:fontFamily="serif"
-        android:textStyle="bold"
+        android:textAppearance="@style/TextAppearance.Poetry.PageTitle"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -25,10 +22,9 @@
         android:id="@+id/tv_game_subtitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="@dimen/spacing_sm"
         android:text="@string/game_subtitle"
-        android:textSize="13sp"
-        android:textColor="@color/on_surface_variant"
+        android:textAppearance="@style/TextAppearance.Poetry.BodySecondary"
         app:layout_constraintTop_toBottomOf="@id/tv_game_title"
         app:layout_constraintStart_toStartOf="@id/tv_game_title" />
 
@@ -36,12 +32,10 @@
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_couplet"
         android:contentDescription="@string/a11y_game_couplet_card"
-        style="@style/Widget.Poetry.Card"
+        style="@style/Widget.Poetry.Card.Raised"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        app:cardElevation="2dp"
-        app:cardCornerRadius="16dp"
+        android:layout_marginTop="@dimen/spacing_xxl"
         app:layout_constraintTop_toBottomOf="@id/tv_game_subtitle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -50,14 +44,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="20dp"
+            android:padding="@dimen/spacing_xl_2"
             android:gravity="center_vertical">
 
             <TextView
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="@dimen/size_icon_lg"
+                android:layout_height="@dimen/size_icon_lg"
                 android:text="📝"
-                android:textSize="28sp"
+                android:textSize="@dimen/text_size_game_icon"
                 android:gravity="center"
                 android:importantForAccessibility="no"
                 android:background="@drawable/bg_checkin_future" />
@@ -67,22 +61,22 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:paddingStart="14dp">
+                android:paddingStart="@dimen/spacing_lg">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/game_couplet"
-                    android:textSize="16sp"
-                    android:textColor="@color/on_surface"
+                    android:textSize="@dimen/text_size_title"
+                    android:textColor="@color/text_body"
                     android:textStyle="bold" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
+                    android:layout_marginTop="@dimen/spacing_xs"
                     android:text="@string/game_couplet_desc"
-                    android:textSize="12sp"
-                    android:textColor="@color/on_surface_variant" />
+                    android:textSize="@dimen/text_size_label"
+                    android:textColor="@color/text_body_secondary" />
             </LinearLayout>
 
             <TextView
@@ -90,8 +84,8 @@
                 android:layout_height="wrap_content"
                 android:text="→"
                 android:importantForAccessibility="no"
-                android:textSize="20sp"
-                android:textColor="@color/outline" />
+                android:textSize="@dimen/text_size_headline"
+                android:textColor="@color/text_caption" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
@@ -99,12 +93,10 @@
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_match"
         android:contentDescription="@string/a11y_game_match_card"
-        style="@style/Widget.Poetry.Card"
+        style="@style/Widget.Poetry.Card.Raised"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        app:cardElevation="2dp"
-        app:cardCornerRadius="16dp"
+        android:layout_marginTop="@dimen/spacing_lg"
         app:layout_constraintTop_toBottomOf="@id/card_couplet"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -113,14 +105,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="20dp"
+            android:padding="@dimen/spacing_xl_2"
             android:gravity="center_vertical">
 
             <TextView
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="@dimen/size_icon_lg"
+                android:layout_height="@dimen/size_icon_lg"
                 android:text="🃏"
-                android:textSize="28sp"
+                android:textSize="@dimen/text_size_game_icon"
                 android:gravity="center"
                 android:importantForAccessibility="no"
                 android:background="@drawable/bg_checkin_future" />
@@ -130,22 +122,22 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:paddingStart="14dp">
+                android:paddingStart="@dimen/spacing_lg">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/game_match"
-                    android:textSize="16sp"
-                    android:textColor="@color/on_surface"
+                    android:textSize="@dimen/text_size_title"
+                    android:textColor="@color/text_body"
                     android:textStyle="bold" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
+                    android:layout_marginTop="@dimen/spacing_xs"
                     android:text="@string/game_match_desc"
-                    android:textSize="12sp"
-                    android:textColor="@color/on_surface_variant" />
+                    android:textSize="@dimen/text_size_label"
+                    android:textColor="@color/text_body_secondary" />
             </LinearLayout>
 
             <TextView
@@ -153,8 +145,8 @@
                 android:layout_height="wrap_content"
                 android:text="→"
                 android:importantForAccessibility="no"
-                android:textSize="20sp"
-                android:textColor="@color/outline" />
+                android:textSize="@dimen/text_size_headline"
+                android:textColor="@color/text_caption" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
@@ -162,12 +154,10 @@
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_quiz"
         android:contentDescription="@string/a11y_game_quiz_card"
-        style="@style/Widget.Poetry.Card"
+        style="@style/Widget.Poetry.Card.Raised"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        app:cardElevation="2dp"
-        app:cardCornerRadius="16dp"
+        android:layout_marginTop="@dimen/spacing_lg"
         app:layout_constraintTop_toBottomOf="@id/card_match"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -176,14 +166,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="20dp"
+            android:padding="@dimen/spacing_xl_2"
             android:gravity="center_vertical">
 
             <TextView
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="@dimen/size_icon_lg"
+                android:layout_height="@dimen/size_icon_lg"
                 android:text="✏️"
-                android:textSize="28sp"
+                android:textSize="@dimen/text_size_game_icon"
                 android:gravity="center"
                 android:importantForAccessibility="no"
                 android:background="@drawable/bg_checkin_future" />
@@ -193,22 +183,22 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:paddingStart="14dp">
+                android:paddingStart="@dimen/spacing_lg">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/game_quiz"
-                    android:textSize="16sp"
-                    android:textColor="@color/on_surface"
+                    android:textSize="@dimen/text_size_title"
+                    android:textColor="@color/text_body"
                     android:textStyle="bold" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
+                    android:layout_marginTop="@dimen/spacing_xs"
                     android:text="@string/game_quiz_desc"
-                    android:textSize="12sp"
-                    android:textColor="@color/on_surface_variant" />
+                    android:textSize="@dimen/text_size_label"
+                    android:textColor="@color/text_body_secondary" />
             </LinearLayout>
 
             <TextView
@@ -216,8 +206,8 @@
                 android:layout_height="wrap_content"
                 android:text="→"
                 android:importantForAccessibility="no"
-                android:textSize="20sp"
-                android:textColor="@color/outline" />
+                android:textSize="@dimen/text_size_headline"
+                android:textColor="@color/text_caption" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 

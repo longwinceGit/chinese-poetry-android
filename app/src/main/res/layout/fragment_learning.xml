@@ -5,40 +5,35 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background">
+    android:background="@color/bg_page">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingBottom="24dp">
+        android:paddingBottom="@dimen/spacing_page_bottom">
 
         <!-- 标题 -->
         <TextView
             android:id="@+id/tv_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="20dp"
-            android:layout_marginEnd="16dp"
+            android:layout_marginStart="@dimen/spacing_page_horizontal"
+            android:layout_marginTop="@dimen/spacing_page_top"
+            android:layout_marginEnd="@dimen/spacing_page_horizontal"
             android:text="@string/learn_title"
-            android:textSize="22sp"
-            android:textColor="@color/primary"
-            android:fontFamily="serif"
-            android:textStyle="bold"
+            android:textAppearance="@style/TextAppearance.Poetry.PageTitle"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
         <!-- ===== 学习统计卡片 ===== -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_stats"
-            style="@style/Widget.Poetry.Card"
+            style="@style/Widget.Poetry.Card.Raised"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
-            app:cardElevation="2dp"
-            app:cardCornerRadius="16dp"
+            android:layout_marginStart="@dimen/spacing_page_horizontal"
+            android:layout_marginTop="@dimen/spacing_xl"
+            android:layout_marginEnd="@dimen/spacing_page_horizontal"
             app:layout_constraintTop_toBottomOf="@id/tv_title"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -47,7 +42,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="20dp"
+                android:padding="@dimen/spacing_xl_2"
                 android:gravity="center">
 
                 <!-- 连续天数 -->
@@ -62,8 +57,8 @@
                         android:id="@+id/tv_streak_count"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="36sp"
-                        android:textColor="@color/tertiary"
+                        android:textSize="@dimen/text_size_stat"
+                        android:textColor="@color/text_accent"
                         android:contentDescription="@string/a11y_streak_count"
                         android:textStyle="bold"
                         tools:text="7" />
@@ -71,21 +66,21 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/learn_streak"
-                        android:textSize="12sp"
-                        android:textColor="@color/on_surface_variant" />
+                        android:textSize="@dimen/text_size_label"
+                        android:textColor="@color/text_body_secondary" />
                     <TextView
                         android:id="@+id/tv_streak_sub"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="11sp"
-                        android:textColor="@color/outline"
+                        android:textSize="@dimen/text_size_label_sm"
+                        android:textColor="@color/text_caption"
                         tools:text="连续7天" />
                 </LinearLayout>
 
                 <View
-                    android:layout_width="1dp"
-                    android:layout_height="48dp"
-                    android:background="@color/divider" />
+                    android:layout_width="@dimen/height_divider"
+                    android:layout_height="@dimen/size_icon_lg"
+                    android:background="@color/divider_default" />
 
                 <!-- 已学诗词数 -->
                 <LinearLayout
@@ -100,22 +95,22 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:contentDescription="@string/a11y_learned_count"
-                        android:textSize="36sp"
-                        android:textColor="@color/primary"
+                        android:textSize="@dimen/text_size_stat"
+                        android:textColor="@color/text_title"
                         android:textStyle="bold"
                         tools:text="42" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/learn_total_learned"
-                        android:textSize="12sp"
-                        android:textColor="@color/on_surface_variant" />
+                        android:textSize="@dimen/text_size_label"
+                        android:textColor="@color/text_body_secondary" />
                 </LinearLayout>
 
                 <View
-                    android:layout_width="1dp"
-                    android:layout_height="48dp"
-                    android:background="@color/divider" />
+                    android:layout_width="@dimen/height_divider"
+                    android:layout_height="@dimen/size_icon_lg"
+                    android:background="@color/divider_default" />
 
                 <!-- 等级 -->
                 <LinearLayout
@@ -130,16 +125,16 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:contentDescription="@string/a11y_user_level"
-                        android:textSize="36sp"
-                        android:textColor="@color/score_gold"
+                        android:textSize="@dimen/text_size_stat"
+                        android:textColor="@color/text_gold"
                         android:textStyle="bold"
                         tools:text="5" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="等级"
-                        android:textSize="12sp"
-                        android:textColor="@color/on_surface_variant" />
+                        android:textSize="@dimen/text_size_label"
+                        android:textColor="@color/text_body_secondary" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -147,14 +142,12 @@
         <!-- ===== 学习趋势图表 ===== -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_chart"
-            style="@style/Widget.Poetry.Card"
+            style="@style/Widget.Poetry.Card.Raised"
             android:layout_width="0dp"
             android:layout_height="180dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
-            app:cardElevation="2dp"
-            app:cardCornerRadius="16dp"
+            android:layout_marginStart="@dimen/spacing_page_horizontal"
+            android:layout_marginTop="@dimen/spacing_xl"
+            android:layout_marginEnd="@dimen/spacing_page_horizontal"
             app:layout_constraintTop_toBottomOf="@id/card_stats"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -163,47 +156,42 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="@dimen/spacing_xl">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="学习趋势"
-                    android:textSize="15sp"
-                    android:textColor="@color/primary"
-                    android:textStyle="bold"
-                    android:fontFamily="serif" />
+                    android:textAppearance="@style/TextAppearance.Poetry.CardTitle" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/learn_chart_subtitle"
-                    android:textSize="12sp"
-                    android:textColor="@color/on_surface_variant" />
+                    android:textSize="@dimen/text_size_label"
+                    android:textColor="@color/text_body_secondary" />
 
                 <com.poetry.ui.widget.StatsBarChart
                     android:id="@+id/chart_stats"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_weight="1"
-                    android:layout_marginTop="8dp"
-                    android:paddingStart="4dp"
-                    android:paddingEnd="4dp"
-                    android:paddingTop="4dp" />
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:paddingStart="@dimen/spacing_sm"
+                    android:paddingEnd="@dimen/spacing_sm"
+                    android:paddingTop="@dimen/spacing_sm" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <!-- ===== 打卡日历 ===== -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_checkin"
-            style="@style/Widget.Poetry.Card"
+            style="@style/Widget.Poetry.Card.Raised"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
-            app:cardElevation="2dp"
-            app:cardCornerRadius="16dp"
+            android:layout_marginStart="@dimen/spacing_page_horizontal"
+            android:layout_marginTop="@dimen/spacing_xl"
+            android:layout_marginEnd="@dimen/spacing_page_horizontal"
             app:layout_constraintTop_toBottomOf="@id/card_chart"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -212,22 +200,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="@dimen/spacing_xl">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/learn_weekly_calendar"
-                    android:textSize="15sp"
-                    android:textColor="@color/primary"
-                    android:textStyle="bold"
-                    android:fontFamily="serif" />
+                    android:textAppearance="@style/TextAppearance.Poetry.CardTitle" />
 
                 <LinearLayout
                     android:id="@+id/ll_calendar"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/spacing_lg"
                     android:orientation="horizontal"
                     android:gravity="center" />
 
@@ -237,14 +222,12 @@
         <!-- ===== 每日任务 ===== -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_tasks"
-            style="@style/Widget.Poetry.Card"
+            style="@style/Widget.Poetry.Card.Raised"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
-            app:cardElevation="2dp"
-            app:cardCornerRadius="16dp"
+            android:layout_marginStart="@dimen/spacing_page_horizontal"
+            android:layout_marginTop="@dimen/spacing_xl"
+            android:layout_marginEnd="@dimen/spacing_page_horizontal"
             app:layout_constraintTop_toBottomOf="@id/card_checkin"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -253,22 +236,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="@dimen/spacing_xl">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/learn_daily_tasks"
-                    android:textSize="15sp"
-                    android:textColor="@color/primary"
-                    android:textStyle="bold"
-                    android:fontFamily="serif" />
+                    android:textAppearance="@style/TextAppearance.Poetry.CardTitle" />
 
                 <LinearLayout
                     android:id="@+id/ll_tasks"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/spacing_lg"
                     android:orientation="vertical" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

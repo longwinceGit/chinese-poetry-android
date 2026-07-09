@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- 基础主题：中国风水墨淡彩 -->
     <style name="Theme.Poetry" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
@@ -26,24 +26,26 @@
         <item name="colorOutlineVariant">@color/outline_variant</item>
         <item name="android:statusBarColor">@color/background</item>
         <item name="android:navigationBarColor">@color/surface</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="23">true</item>
         <item name="fontFamily">sans-serif</item>
     </style>
 
-    <!-- 底部导航样式 -->
+    <!-- ================================================================ -->
+    <!-- 底部导航样式                                                     -->
+    <!-- ================================================================ -->
     <style name="Widget.Poetry.BottomNavigation" parent="Widget.Material3.BottomNavigationView">
         <item name="materialThemeOverlay">@style/ThemeOverlay.Poetry.BottomNav</item>
         <item name="itemActiveIndicatorStyle">@style/Widget.Poetry.BottomNav.ActiveIndicator</item>
-        <item name="itemIconSize">24dp</item>
+        <item name="itemIconSize">@dimen/size_icon_md</item>
         <item name="itemTextAppearanceActive">@style/TextAppearance.Poetry.BottomNav</item>
         <item name="itemTextAppearanceInactive">@style/TextAppearance.Poetry.BottomNav.Inactive</item>
         <item name="labelVisibilityMode">labeled</item>
     </style>
 
     <style name="ThemeOverlay.Poetry.BottomNav" parent="">
-        <item name="colorSurface">@color/surface</item>
-        <item name="colorOnSurface">@color/primary</item>
-        <item name="colorOnSurfaceVariant">@color/outline_variant</item>
+        <item name="colorSurface">@color/bg_card</item>
+        <item name="colorOnSurface">@color/text_title</item>
+        <item name="colorOnSurfaceVariant">@color/text_body_secondary</item>
     </style>
 
     <style name="Widget.Poetry.BottomNav.ActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
@@ -52,87 +54,210 @@
     </style>
 
     <style name="TextAppearance.Poetry.BottomNav" parent="TextAppearance.Material3.LabelMedium">
-        <item name="android:textColor">@color/primary</item>
+        <item name="android:textColor">@color/text_title</item>
         <item name="android:fontFamily">sans-serif-medium</item>
     </style>
 
     <style name="TextAppearance.Poetry.BottomNav.Inactive" parent="TextAppearance.Material3.LabelMedium">
-        <item name="android:textColor">@color/on_surface_variant</item>
+        <item name="android:textColor">@color/text_body_secondary</item>
     </style>
 
-    <!-- 形状 -->
-    <style name="ShapeAppearance.Poetry.Pill" parent="">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">16dp</item>
-    </style>
-
+    <!-- ================================================================ -->
+    <!-- 形状令牌 (ShapeAppearance)                                      -->
+    <!-- ================================================================ -->
     <style name="ShapeAppearance.Poetry.Small" parent="">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">8dp</item>
+        <item name="cornerSize">@dimen/radius_small</item>
     </style>
 
     <style name="ShapeAppearance.Poetry.Medium" parent="">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">12dp</item>
+        <item name="cornerSize">@dimen/radius_medium</item>
     </style>
 
     <style name="ShapeAppearance.Poetry.Large" parent="">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">20dp</item>
+        <item name="cornerSize">@dimen/radius_large</item>
     </style>
 
-    <!-- 文字样式 -->
+    <style name="ShapeAppearance.Poetry.Pill" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_xlarge</item>
+    </style>
+
+    <!-- ================================================================ -->
+    <!-- 排版样式 (TextAppearance)                                       -->
+    <!-- ================================================================ -->
+
+    <!-- 展示级：诗题、大标题 -->
     <style name="TextAppearance.Poetry.Display" parent="TextAppearance.Material3.DisplaySmall">
-        <item name="android:textColor">@color/primary</item>
+        <item name="android:textSize">@dimen/text_size_display</item>
+        <item name="android:textColor">@color/text_title</item>
         <item name="android:fontFamily">serif</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:lineSpacingExtra">@dimen/line_height_compact</item>
     </style>
 
+    <!-- 页面标题：学习/游戏页 -->
+    <style name="TextAppearance.Poetry.PageTitle" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:textSize">@dimen/text_size_display_sm</item>
+        <item name="android:textColor">@color/text_title</item>
+        <item name="android:fontFamily">serif</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- 区块标题 -->
+    <style name="TextAppearance.Poetry.SectionTitle" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:textSize">@dimen/text_size_title</item>
+        <item name="android:textColor">@color/text_title</item>
+        <item name="android:fontFamily">serif</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- 卡片标题 -->
+    <style name="TextAppearance.Poetry.CardTitle" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:textSize">@dimen/text_size_title_card</item>
+        <item name="android:textColor">@color/text_body</item>
+        <item name="android:fontFamily">serif</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- 头条标题（兼容旧名 Headline） -->
     <style name="TextAppearance.Poetry.Headline" parent="TextAppearance.Material3.HeadlineSmall">
-        <item name="android:textColor">@color/on_surface</item>
+        <item name="android:textSize">@dimen/text_size_headline</item>
+        <item name="android:textColor">@color/text_body</item>
         <item name="android:fontFamily">serif</item>
     </style>
 
+    <!-- 兼容旧名 Title -->
     <style name="TextAppearance.Poetry.Title" parent="TextAppearance.Material3.TitleMedium">
-        <item name="android:textColor">@color/primary</item>
+        <item name="android:textSize">@dimen/text_size_title</item>
+        <item name="android:textColor">@color/text_title</item>
         <item name="android:fontFamily">serif</item>
     </style>
 
+    <!-- 标准正文 -->
     <style name="TextAppearance.Poetry.Body" parent="TextAppearance.Material3.BodyLarge">
-        <item name="android:textColor">@color/on_surface</item>
-        <item name="android:lineSpacingExtra">4dp</item>
+        <item name="android:textSize">@dimen/text_size_body</item>
+        <item name="android:textColor">@color/text_body</item>
+        <item name="android:lineSpacingExtra">@dimen/line_height_compact</item>
     </style>
 
+    <!-- 次要正文（描述、作者） -->
+    <style name="TextAppearance.Poetry.BodySecondary" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textSize">@dimen/text_size_body_sm</item>
+        <item name="android:textColor">@color/text_body_secondary</item>
+    </style>
+
+    <!-- 标签 -->
     <style name="TextAppearance.Poetry.Label" parent="TextAppearance.Material3.LabelMedium">
-        <item name="android:textColor">@color/on_surface_variant</item>
+        <item name="android:textSize">@dimen/text_size_label</item>
+        <item name="android:textColor">@color/text_body_secondary</item>
     </style>
 
-    <!-- 卡片样式 -->
+    <!-- 释义正文（特殊：较大字号 + 宽行距） -->
+    <style name="TextAppearance.Poetry.Explanation" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:textSize">@dimen/text_size_title_card</item>
+        <item name="android:textColor">@color/text_body</item>
+        <item name="android:lineSpacingExtra">@dimen/line_height_body</item>
+        <item name="android:textAlignment">viewStart</item>
+    </style>
+
+    <!-- 统计数字（特殊：超大号） -->
+    <style name="TextAppearance.Poetry.StatNumber" parent="TextAppearance.Material3.DisplayLarge">
+        <item name="android:textSize">@dimen/text_size_stat</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- 每日推荐标签（朱红 + 加粗 + 字间距） -->
+    <style name="TextAppearance.Poetry.DailyLabel" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:textSize">@dimen/text_size_label</item>
+        <item name="android:textColor">@color/text_accent</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.1</item>
+    </style>
+
+    <!-- ================================================================ -->
+    <!-- 卡片样式 (Card)                                                 -->
+    <!-- ================================================================ -->
+
+    <!-- 标准卡片 -->
     <style name="Widget.Poetry.Card" parent="Widget.Material3.CardView.Elevated">
-        <item name="cardBackgroundColor">@color/surface</item>
-        <item name="cardElevation">1dp</item>
-        <item name="cardCornerRadius">12dp</item>
+        <item name="cardBackgroundColor">@color/bg_card</item>
+        <item name="cardElevation">@dimen/elevation_card</item>
+        <item name="cardCornerRadius">@dimen/radius_large</item>
         <item name="strokeColor">@color/outline_variant</item>
-        <item name="strokeWidth">0.5dp</item>
-        <item name="contentPadding">16dp</item>
+        <item name="strokeWidth">@dimen/stroke_thin</item>
+        <item name="contentPadding">@dimen/spacing_card_padding</item>
     </style>
 
-    <!-- 按钮样式 -->
+    <!-- 凸起卡片（可点击的游戏入口卡片等） -->
+    <style name="Widget.Poetry.Card.Raised" parent="Widget.Poetry.Card">
+        <item name="cardElevation">@dimen/elevation_card_raised</item>
+    </style>
+
+    <!-- 搜索框卡片（胶囊型） -->
+    <style name="Widget.Poetry.Card.Search" parent="Widget.Poetry.Card">
+        <item name="cardCornerRadius">@dimen/radius_xlarge</item>
+        <item name="cardElevation">@dimen/elevation_card_raised</item>
+        <item name="strokeWidth">@dimen/stroke_none</item>
+        <item name="contentPadding">0dp</item>
+    </style>
+
+    <!-- ================================================================ -->
+    <!-- 按钮样式 (Button)                                               -->
+    <!-- ================================================================ -->
+
+    <!-- 标准按钮（主操作：朗读、学习） -->
     <style name="Widget.Poetry.Button" parent="Widget.Material3.Button">
-        <item name="shapeAppearance">@style/ShapeAppearance.Poetry.Small</item>
+        <item name="android:minHeight">@dimen/height_button</item>
+        <item name="android:textSize">@dimen/text_size_body</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Poetry.Medium</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconPadding">@dimen/spacing_md</item>
     </style>
 
+    <!-- 描边按钮（次操作：收藏、分享） -->
     <style name="Widget.Poetry.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
-        <item name="shapeAppearance">@style/ShapeAppearance.Poetry.Small</item>
+        <item name="android:minHeight">@dimen/height_button</item>
+        <item name="android:textSize">@dimen/text_size_body</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Poetry.Medium</item>
         <item name="strokeColor">@color/primary</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconPadding">@dimen/spacing_md</item>
     </style>
 
-    <!-- Chip 样式 -->
+    <!-- 小型按钮（拼音切换等辅助操作） -->
+    <style name="Widget.Poetry.Button.Small" parent="Widget.Poetry.Button.Outlined">
+        <item name="android:minHeight">@dimen/height_button_small</item>
+        <item name="android:textSize">@dimen/text_size_label</item>
+    </style>
+
+    <!-- ================================================================ -->
+    <!-- Chip 样式                                                      -->
+    <!-- ================================================================ -->
+
+    <!-- 筛选 Chip -->
     <style name="Widget.Poetry.Chip" parent="Widget.Material3.Chip.Filter">
-        <item name="chipBackgroundColor">@color/surface_variant</item>
+        <item name="chipBackgroundColor">@color/bg_card_elevated</item>
         <item name="checkedIconVisible">false</item>
         <item name="shapeAppearance">@style/ShapeAppearance.Poetry.Pill</item>
-        <item name="android:textColor">@color/on_surface_variant</item>
+        <item name="android:textColor">@color/text_body_secondary</item>
         <item name="chipStrokeColor">@color/outline_variant</item>
-        <item name="chipStrokeWidth">0.5dp</item>
+        <item name="chipStrokeWidth">@dimen/stroke_thin</item>
+        <item name="chipMinHeight">32dp</item>
+        <item name="android:textSize">@dimen/text_size_body</item>
+    </style>
+
+    <!-- 朝代标签 Chip（小型） -->
+    <style name="Widget.Poetry.Chip.Tag" parent="Widget.Material3.Chip.Assist">
+        <item name="checkedIconVisible">false</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Poetry.Small</item>
+        <item name="chipMinHeight">18dp</item>
+        <item name="android:textSize">@dimen/text_size_caption</item>
+        <item name="chipStartPadding">6dp</item>
+        <item name="chipEndPadding">6dp</item>
+        <item name="android:clickable">false</item>
+        <item name="android:checkable">false</item>
     </style>
 </resources>

@@ -5,8 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
-    android:padding="16dp">
+    android:background="@color/bg_page"
+    android:padding="@dimen/spacing_page_horizontal">
 
     <!-- 顶部标题栏 -->
     <LinearLayout
@@ -25,8 +25,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="🃏 诗词消消乐"
-            android:textSize="20sp"
-            android:textColor="@color/primary"
+            android:textSize="@dimen/text_size_headline"
+            android:textColor="@color/text_title"
             android:textStyle="bold"
             android:fontFamily="serif" />
 
@@ -34,8 +34,8 @@
             android:id="@+id/tv_match_progress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:textColor="@color/on_surface_variant"
+            android:textSize="@dimen/text_size_body"
+            android:textColor="@color/text_body_secondary"
             tools:text="0 / 6" />
     </LinearLayout>
 
@@ -44,10 +44,10 @@
         android:id="@+id/tv_instruction"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="@dimen/spacing_md"
         android:text="找到每首诗的上句和下句，点击两张卡片配对消除 👇"
-        android:textSize="12sp"
-        android:textColor="@color/on_surface_variant"
+        android:textSize="@dimen/text_size_label"
+        android:textColor="@color/text_body_secondary"
         android:gravity="center"
         app:layout_constraintTop_toBottomOf="@id/ll_header"
         app:layout_constraintStart_toStartOf="parent"
@@ -58,9 +58,9 @@
         android:id="@+id/tv_match_tip"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:textSize="13sp"
-        android:textColor="@color/answer_correct"
+        android:layout_marginTop="@dimen/spacing_md"
+        android:textSize="@dimen/text_size_body_sm"
+        android:textColor="@color/state_success"
         android:textStyle="bold"
         android:gravity="center"
         android:visibility="gone"
@@ -75,9 +75,9 @@
         android:id="@+id/recycler_cards"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="@dimen/spacing_lg"
         android:clipToPadding="false"
-        android:padding="2dp"
+        android:padding="@dimen/spacing_xs"
         app:layout_constraintTop_toBottomOf="@id/tv_match_tip"
         app:layout_constraintBottom_toTopOf="@id/btn_match_restart"
         app:layout_constraintStart_toStartOf="parent"
@@ -87,11 +87,11 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_match_restart"
         android:layout_width="0dp"
-        android:layout_height="48dp"
-        android:layout_marginBottom="16dp"
+        android:layout_height="@dimen/height_button"
+        android:layout_marginBottom="@dimen/spacing_xl"
         android:text="🔄 再来一局"
-        android:textSize="14sp"
-        app:cornerRadius="12dp"
+        android:textSize="@dimen/text_size_body"
+        app:cornerRadius="@dimen/radius_medium"
         style="@style/Widget.Poetry.Button.Outlined"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -105,7 +105,7 @@
         android:orientation="vertical"
         android:gravity="center"
         android:background="@drawable/bg_card_surface"
-        android:padding="20dp"
+        android:padding="@dimen/spacing_xl_2"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -117,15 +117,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="🎉"
-            android:textSize="48sp" />
+            android:textSize="@dimen/text_size_emoji" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="@dimen/spacing_md"
             android:text="恭喜全部消除！"
-            android:textSize="20sp"
-            android:textColor="@color/primary"
+            android:textSize="@dimen/text_size_headline"
+            android:textColor="@color/text_title"
             android:textStyle="bold"
             android:fontFamily="serif" />
 
@@ -133,9 +133,9 @@
             android:id="@+id/tv_match_complete_score"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:textSize="14sp"
-            android:textColor="@color/on_surface_variant"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:textSize="@dimen/text_size_body"
+            android:textColor="@color/text_body_secondary"
             tools:text="得分 45  ·  尝试 8 次" />
 
     </LinearLayout>

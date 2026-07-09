@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background">
+    android:background="@color/bg_page">
 
     <!-- 空状态提示 -->
     <LinearLayout
@@ -25,23 +25,23 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="📭"
-            android:textSize="48sp" />
+            android:textSize="@dimen/text_size_emoji" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="@dimen/spacing_lg"
             android:text="@string/favorites_empty"
-            android:textSize="15sp"
-            android:textColor="@color/on_surface_variant" />
+            android:textSize="@dimen/text_size_title_card"
+            android:textColor="@color/text_body_secondary" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="@dimen/spacing_md"
             android:text="@string/favorites_empty_hint"
-            android:textSize="13sp"
-            android:textColor="@color/outline" />
+            android:textSize="@dimen/text_size_body_sm"
+            android:textColor="@color/text_caption" />
     </LinearLayout>
 
     <!-- 收藏列表 -->
@@ -50,8 +50,8 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:clipToPadding="false"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
+        android:paddingTop="@dimen/spacing_md"
+        android:paddingBottom="@dimen/spacing_md"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"

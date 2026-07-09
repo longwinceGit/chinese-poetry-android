@@ -5,27 +5,23 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="@color/bg_page"
     android:fillViewport="true">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingBottom="24dp">
+        android:paddingBottom="@dimen/spacing_page_bottom">
 
         <!-- ========== 搜索栏 ========== -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/search_card"
-            style="@style/Widget.Poetry.Card"
+            style="@style/Widget.Poetry.Card.Search"
             android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
-            app:cardElevation="2dp"
-            app:cardCornerRadius="24dp"
-            app:strokeWidth="0dp"
-            app:contentPadding="0dp"
+            android:layout_height="@dimen/height_search_bar"
+            android:layout_marginStart="@dimen/spacing_page_horizontal"
+            android:layout_marginTop="@dimen/spacing_xl"
+            android:layout_marginEnd="@dimen/spacing_page_horizontal"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -33,13 +29,13 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:paddingStart="16dp"
-                android:paddingEnd="8dp">
+                android:paddingStart="@dimen/spacing_xl"
+                android:paddingEnd="@dimen/spacing_md">
 
                 <ImageView
                     android:id="@+id/iv_search_icon"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="@dimen/size_icon_sm"
+                    android:layout_height="@dimen/size_icon_sm"
                     android:src="@drawable/ic_search"
                     android:contentDescription="@string/a11y_search_icon"
                     android:alpha="0.5"
@@ -51,12 +47,12 @@
                     android:id="@+id/et_search"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="@dimen/spacing_md"
                     android:background="@null"
                     android:hint="@string/home_search_hint"
-                    android:textColor="@color/on_surface"
+                    android:textColor="@color/text_body"
                     android:textColorHint="@color/outline_variant"
-                    android:textSize="14sp"
+                    android:textSize="@dimen/text_size_body"
                     android:maxLines="1"
                     android:imeOptions="actionSearch"
                     android:inputType="text"
@@ -68,9 +64,9 @@
                 <ProgressBar
                     android:id="@+id/progress_search"
                     style="?android:attr/progressBarStyleSmall"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginEnd="4dp"
+                    android:layout_width="@dimen/size_progress_sm"
+                    android:layout_height="@dimen/size_progress_sm"
+                    android:layout_marginEnd="@dimen/spacing_sm"
                     android:visibility="gone"
                     android:contentDescription="@string/a11y_searching"
                     app:layout_constraintEnd_toStartOf="@id/btn_search_clear"
@@ -79,8 +75,8 @@
 
                 <ImageButton
                     android:id="@+id/btn_search_clear"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
+                    android:layout_width="@dimen/touch_target_small"
+                    android:layout_height="@dimen/touch_target_small"
                     android:src="@drawable/ic_close"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/a11y_clear_search"
@@ -96,14 +92,12 @@
         <!-- ========== 每日推荐卡片 ========== -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/daily_card"
-            style="@style/Widget.Poetry.Card"
+            style="@style/Widget.Poetry.Card.Raised"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="20dp"
-            android:layout_marginEnd="16dp"
-            app:cardElevation="2dp"
-            app:cardCornerRadius="16dp"
+            android:layout_marginStart="@dimen/spacing_page_horizontal"
+            android:layout_marginTop="@dimen/spacing_page_top"
+            android:layout_marginEnd="@dimen/spacing_page_horizontal"
             app:layout_constraintTop_toBottomOf="@id/search_card"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -111,17 +105,14 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp">
+                android:padding="@dimen/spacing_card_padding">
 
                 <TextView
                     android:id="@+id/tv_daily_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/home_daily_recommend"
-                    android:textColor="@color/tertiary"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.1"
+                    android:textAppearance="@style/TextAppearance.Poetry.DailyLabel"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
@@ -129,7 +120,7 @@
                     android:id="@+id/ll_daily_poem"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/spacing_lg"
                     android:orientation="vertical"
                     android:gravity="center"
                     app:layout_constraintStart_toStartOf="parent"
@@ -140,16 +131,16 @@
                         android:id="@+id/tv_daily_emoji"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="32sp"
+                        android:textSize="@dimen/text_size_avatar"
                         tools:text="🌸" />
 
                     <TextView
                         android:id="@+id/tv_daily_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:textSize="20sp"
-                        android:textColor="@color/primary"
+                        android:layout_marginTop="@dimen/spacing_md"
+                        android:textSize="@dimen/text_size_headline"
+                        android:textColor="@color/text_title"
                         android:fontFamily="serif"
                         android:textStyle="bold"
                         tools:text="静夜思" />
@@ -158,18 +149,18 @@
                         android:id="@+id/tv_daily_author"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:textSize="14sp"
-                        android:textColor="@color/on_surface_variant"
+                        android:layout_marginTop="@dimen/spacing_sm"
+                        android:textSize="@dimen/text_size_body"
+                        android:textColor="@color/text_body_secondary"
                         tools:text="李白 · 唐代" />
 
                     <TextView
                         android:id="@+id/tv_daily_excerpt"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:textSize="13sp"
-                        android:textColor="@color/on_surface_variant"
+                        android:layout_marginTop="@dimen/spacing_md"
+                        android:textSize="@dimen/text_size_body_sm"
+                        android:textColor="@color/text_body_secondary"
                         android:maxLines="2"
                         android:ellipsize="end"
                         tools:text="床前明月光，疑是地上霜..." />
@@ -179,10 +170,10 @@
                     android:id="@+id/tv_daily_tap_hint"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="@dimen/spacing_md"
                     android:text="点击查看详情 →"
-                    android:textSize="11sp"
-                    android:textColor="@color/outline"
+                    android:textSize="@dimen/text_size_label_sm"
+                    android:textColor="@color/text_caption"
                     app:layout_constraintTop_toBottomOf="@id/ll_daily_poem"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent" />
@@ -195,10 +186,10 @@
             android:id="@+id/hsv_categories"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="@dimen/spacing_page_top"
             android:scrollbars="none"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
+            android:paddingStart="@dimen/spacing_lg"
+            android:paddingEnd="@dimen/spacing_lg"
             app:layout_constraintTop_toBottomOf="@id/daily_card"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -209,7 +200,7 @@
                 android:layout_height="wrap_content"
                 app:singleSelection="true"
                 app:selectionRequired="true"
-                app:chipSpacingHorizontal="8dp" />
+                app:chipSpacingHorizontal="@dimen/spacing_chip_gap" />
         </HorizontalScrollView>
 
         <!-- ========== 搜索结果标题 ========== -->
@@ -217,14 +208,11 @@
             android:id="@+id/tv_section_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="20dp"
-            android:layout_marginEnd="16dp"
+            android:layout_marginStart="@dimen/spacing_page_horizontal"
+            android:layout_marginTop="@dimen/spacing_page_top"
+            android:layout_marginEnd="@dimen/spacing_page_horizontal"
             android:text="@string/home_all_poems"
-            android:textSize="16sp"
-            android:textColor="@color/primary"
-            android:textStyle="bold"
-            android:fontFamily="serif"
+            android:textAppearance="@style/TextAppearance.Poetry.SectionTitle"
             app:layout_constraintTop_toBottomOf="@id/hsv_categories"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -234,12 +222,12 @@
             android:id="@+id/tv_poem_count"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
-            android:textColor="@color/on_surface_variant"
+            android:textSize="@dimen/text_size_label"
+            android:textColor="@color/text_body_secondary"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/tv_section_title"
             app:layout_constraintBottom_toBottomOf="@id/tv_section_title"
-            android:layout_marginEnd="16dp"
+            android:layout_marginEnd="@dimen/spacing_page_horizontal"
             tools:text="共收录 1091 首" />
 
         <!-- ========== 加载状态 ========== -->
@@ -247,7 +235,7 @@
             android:id="@+id/loading_container"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="@dimen/spacing_xxxl"
             android:orientation="vertical"
             android:gravity="center"
             app:layout_constraintTop_toBottomOf="@id/tv_section_title"
@@ -256,18 +244,18 @@
 
             <ProgressBar
                 android:id="@+id/progress_loading"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="@dimen/size_progress_lg"
+                android:layout_height="@dimen/size_progress_lg"
                 android:indeterminateTint="@color/primary" />
 
             <TextView
                 android:id="@+id/tv_loading_message"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="@dimen/spacing_lg"
                 android:text="@string/home_loading"
-                android:textSize="13sp"
-                android:textColor="@color/on_surface_variant" />
+                android:textSize="@dimen/text_size_body_sm"
+                android:textColor="@color/text_body_secondary" />
         </LinearLayout>
 
         <!-- ========== 错误状态 ========== -->
@@ -275,9 +263,9 @@
             android:id="@+id/error_container"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:layout_marginTop="48dp"
-            android:layout_marginEnd="32dp"
+            android:layout_marginStart="@dimen/spacing_xxxl"
+            android:layout_marginTop="@dimen/spacing_huge"
+            android:layout_marginEnd="@dimen/spacing_xxxl"
             android:orientation="vertical"
             android:gravity="center"
             android:visibility="gone"
@@ -290,28 +278,28 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="😿"
-                android:textSize="48sp" />
+                android:textSize="@dimen/text_size_emoji" />
 
             <TextView
                 android:id="@+id/tv_error_message"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/spacing_xl"
                 android:text="数据加载失败，请检查存储空间后重试"
-                android:textSize="14sp"
-                android:textColor="@color/on_surface_variant"
+                android:textSize="@dimen/text_size_body"
+                android:textColor="@color/text_body_secondary"
                 android:gravity="center"
-                android:lineSpacingExtra="4dp"
+                android:lineSpacingExtra="@dimen/line_height_compact"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_retry"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:layout_marginTop="20dp"
+                android:layout_height="@dimen/height_button"
+                android:layout_marginTop="@dimen/spacing_xl_2"
                 android:text="重新加载"
-                android:textSize="13sp"
+                android:textSize="@dimen/text_size_body_sm"
                 style="@style/Widget.Poetry.Button.Outlined" />
         </LinearLayout>
 
@@ -320,12 +308,12 @@
             android:id="@+id/tv_empty"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:layout_marginTop="48dp"
-            android:layout_marginEnd="32dp"
+            android:layout_marginStart="@dimen/spacing_xxxl"
+            android:layout_marginTop="@dimen/spacing_huge"
+            android:layout_marginEnd="@dimen/spacing_xxxl"
             android:text="@string/home_search_empty"
-            android:textSize="14sp"
-            android:textColor="@color/on_surface_variant"
+            android:textSize="@dimen/text_size_body"
+            android:textColor="@color/text_body_secondary"
             android:gravity="center"
             android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/tv_section_title"
@@ -337,9 +325,9 @@
             android:id="@+id/recycler_poems"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginTop="12dp"
-            android:layout_marginEnd="12dp"
+            android:layout_marginStart="@dimen/spacing_lg"
+            android:layout_marginTop="@dimen/spacing_lg"
+            android:layout_marginEnd="@dimen/spacing_lg"
             android:nestedScrollingEnabled="false"
             android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/tv_section_title"
@@ -351,7 +339,7 @@
             android:id="@+id/load_more_area"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="@dimen/spacing_md"
             android:orientation="vertical"
             android:gravity="center"
             android:visibility="gone"
@@ -361,30 +349,30 @@
 
             <ProgressBar
                 android:id="@+id/progress_load_more"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="@dimen/size_progress_md"
+                android:layout_height="@dimen/size_progress_md"
                 android:indeterminateTint="@color/primary"
                 android:visibility="gone"
-                android:layout_marginTop="8dp" />
+                android:layout_marginTop="@dimen/spacing_md" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_load_more"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_height="@dimen/height_button"
                 android:text="@string/home_load_more"
-                android:textSize="13sp"
+                android:textSize="@dimen/text_size_body_sm"
                 style="@style/Widget.Poetry.Button.Outlined"
-                android:layout_marginTop="8dp" />
+                android:layout_marginTop="@dimen/spacing_md" />
 
             <TextView
                 android:id="@+id/tv_no_more"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/home_no_more"
-                android:textSize="12sp"
-                android:textColor="@color/outline"
+                android:textSize="@dimen/text_size_label"
+                android:textColor="@color/text_caption"
                 android:visibility="gone"
-                android:layout_marginTop="16dp" />
+                android:layout_marginTop="@dimen/spacing_xl" />
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

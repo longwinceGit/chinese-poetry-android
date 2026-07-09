@@ -5,21 +5,21 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background">
+    android:background="@color/bg_page">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingBottom="24dp">
+        android:paddingBottom="@dimen/spacing_page_bottom">
 
         <!-- 头像区域 -->
         <LinearLayout
             android:id="@+id/header"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="20dp"
-            android:layout_marginEnd="16dp"
+            android:layout_marginStart="@dimen/spacing_page_horizontal"
+            android:layout_marginTop="@dimen/spacing_page_top"
+            android:layout_marginEnd="@dimen/spacing_page_horizontal"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             app:layout_constraintTop_toTopOf="parent"
@@ -28,11 +28,11 @@
 
             <TextView
                 android:id="@+id/tv_avatar"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
+                android:layout_width="@dimen/size_avatar"
+                android:layout_height="@dimen/size_avatar"
                 android:text="📚"
                 android:contentDescription="@string/a11y_avatar_emoji"
-                android:textSize="32sp"
+                android:textSize="@dimen/text_size_avatar"
                 android:gravity="center"
                 android:background="@drawable/bg_checkin_future" />
 
@@ -40,15 +40,15 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="14dp"
+                android:layout_marginStart="@dimen/spacing_lg"
                 android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/tv_level_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="13sp"
-                    android:textColor="@color/score_gold"
+                    android:textSize="@dimen/text_size_body_sm"
+                    android:textColor="@color/text_gold"
                     tools:text="等级 5" />
 
                 <ProgressBar
@@ -57,18 +57,18 @@
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="6dp"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="@dimen/spacing_md"
                     android:progressTint="@color/score_gold"
-                    android:progressBackgroundTint="@color/surface_variant"
+                    android:progressBackgroundTint="@color/bg_card_elevated"
                     tools:progress="60" />
 
                 <TextView
                     android:id="@+id/tv_exp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textSize="11sp"
-                    android:textColor="@color/on_surface_variant"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:textSize="@dimen/text_size_label_sm"
+                    android:textColor="@color/text_body_secondary"
                     tools:text="120 / 200 经验" />
             </LinearLayout>
         </LinearLayout>
@@ -76,14 +76,12 @@
         <!-- 统计卡片 -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_favorites"
-            style="@style/Widget.Poetry.Card"
+            style="@style/Widget.Poetry.Card.Raised"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="20dp"
-            android:layout_marginEnd="8dp"
-            app:cardElevation="2dp"
-            app:cardCornerRadius="16dp"
+            android:layout_marginStart="@dimen/spacing_page_horizontal"
+            android:layout_marginTop="@dimen/spacing_page_top"
+            android:layout_marginEnd="@dimen/spacing_md"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@id/card_learned"
             app:layout_constraintTop_toBottomOf="@id/header">
@@ -98,35 +96,33 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="❤️"
-                    android:textSize="24sp" />
+                    android:textSize="@dimen/text_size_icon_emoji" />
                 <TextView
                     android:id="@+id/tv_favorites_count"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:textSize="22sp"
-                    android:textColor="@color/primary"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:textSize="@dimen/text_size_display_sm"
+                    android:textColor="@color/text_title"
                     android:textStyle="bold"
                     tools:text="15" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/profile_favorites"
-                    android:textSize="11sp"
-                    android:textColor="@color/on_surface_variant" />
+                    android:textSize="@dimen/text_size_label_sm"
+                    android:textColor="@color/text_body_secondary" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_learned"
-            style="@style/Widget.Poetry.Card"
+            style="@style/Widget.Poetry.Card.Raised"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginStart="8dp"
-            app:cardElevation="2dp"
-            app:cardCornerRadius="16dp"
+            android:layout_marginTop="@dimen/spacing_page_top"
+            android:layout_marginEnd="@dimen/spacing_page_horizontal"
+            android:layout_marginStart="@dimen/spacing_md"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/card_favorites"
             app:layout_constraintTop_toBottomOf="@id/header">
@@ -141,36 +137,34 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="📖"
-                    android:textSize="24sp" />
+                    android:textSize="@dimen/text_size_icon_emoji" />
                 <TextView
                     android:id="@+id/tv_learned_count"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:textSize="22sp"
-                    android:textColor="@color/primary"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:textSize="@dimen/text_size_display_sm"
+                    android:textColor="@color/text_title"
                     android:textStyle="bold"
                     tools:text="42" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/profile_learned"
-                    android:textSize="11sp"
-                    android:textColor="@color/on_surface_variant" />
+                    android:textSize="@dimen/text_size_label_sm"
+                    android:textColor="@color/text_body_secondary" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <!-- 成就区域 -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_achievements"
-            style="@style/Widget.Poetry.Card"
+            style="@style/Widget.Poetry.Card.Raised"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
-            app:cardElevation="2dp"
-            app:cardCornerRadius="16dp"
+            android:layout_marginStart="@dimen/spacing_page_horizontal"
+            android:layout_marginTop="@dimen/spacing_xl"
+            android:layout_marginEnd="@dimen/spacing_page_horizontal"
             app:layout_constraintTop_toBottomOf="@id/card_favorites"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -179,7 +173,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="@dimen/spacing_xl">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -192,17 +186,14 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/profile_achievements"
-                        android:textSize="15sp"
-                        android:textColor="@color/primary"
-                        android:textStyle="bold"
-                        android:fontFamily="serif" />
+                        android:textAppearance="@style/TextAppearance.Poetry.CardTitle" />
 
                     <TextView
                         android:id="@+id/tv_achievement_count"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="12sp"
-                        android:textColor="@color/on_surface_variant"
+                        android:textSize="@dimen/text_size_label"
+                        android:textColor="@color/text_body_secondary"
                         tools:text="3/12" />
                 </LinearLayout>
 
@@ -210,23 +201,21 @@
                     android:id="@+id/ll_achievements"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/spacing_lg"
                     android:orientation="horizontal"
                     android:gravity="center" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- 🔴 B5 修复：主题展示区域 -->
+        <!-- 主题展示区域 -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_themes"
-            style="@style/Widget.Poetry.Card"
+            style="@style/Widget.Poetry.Card.Raised"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
-            app:cardElevation="2dp"
-            app:cardCornerRadius="16dp"
+            android:layout_marginStart="@dimen/spacing_page_horizontal"
+            android:layout_marginTop="@dimen/spacing_xl"
+            android:layout_marginEnd="@dimen/spacing_page_horizontal"
             app:layout_constraintTop_toBottomOf="@id/card_achievements"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -235,7 +224,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="@dimen/spacing_xl">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -248,17 +237,14 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="主题装扮"
-                        android:textSize="15sp"
-                        android:textColor="@color/primary"
-                        android:textStyle="bold"
-                        android:fontFamily="serif" />
+                        android:textAppearance="@style/TextAppearance.Poetry.CardTitle" />
 
                     <TextView
                         android:id="@+id/tv_theme_count"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="12sp"
-                        android:textColor="@color/on_surface_variant"
+                        android:textSize="@dimen/text_size_label"
+                        android:textColor="@color/text_body_secondary"
                         tools:text="1/9" />
                 </LinearLayout>
 
@@ -266,7 +252,7 @@
                     android:id="@+id/ll_themes"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/spacing_lg"
                     android:orientation="horizontal"
                     android:gravity="center" />
             </LinearLayout>
@@ -276,16 +262,16 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_share_app"
             android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
+            android:layout_height="@dimen/height_button"
+            android:layout_marginStart="@dimen/spacing_page_horizontal"
+            android:layout_marginTop="@dimen/spacing_xl"
+            android:layout_marginEnd="@dimen/spacing_page_horizontal"
             android:text="@string/profile_share_app"
-            android:textSize="14sp"
+            android:textSize="@dimen/text_size_body"
             app:icon="@drawable/ic_share"
             app:iconGravity="textStart"
-            app:iconPadding="8dp"
-            app:cornerRadius="12dp"
+            app:iconPadding="@dimen/spacing_icon_text"
+            app:cornerRadius="@dimen/radius_medium"
             app:layout_constraintTop_toBottomOf="@id/card_themes"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />

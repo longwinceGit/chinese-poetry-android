@@ -5,16 +5,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginStart="12dp"
-    android:layout_marginTop="6dp"
-    android:layout_marginEnd="12dp"
-    android:layout_marginBottom="6dp"
+    android:layout_marginStart="@dimen/spacing_lg"
+    android:layout_marginTop="@dimen/spacing_md"
+    android:layout_marginEnd="@dimen/spacing_lg"
+    android:layout_marginBottom="@dimen/spacing_md"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground"
-    app:cardElevation="1dp"
-    app:cardCornerRadius="10dp"
-    app:strokeWidth="0.5dp"
+    app:cardElevation="@dimen/elevation_card"
+    app:cardCornerRadius="@dimen/radius_medium"
+    app:strokeWidth="@dimen/stroke_thin"
     app:strokeColor="@color/outline_variant">
 
     <LinearLayout
@@ -22,7 +22,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:padding="14dp">
+        android:padding="@dimen/spacing_lg">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -34,8 +34,8 @@
                 android:id="@+id/tv_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="16sp"
-                android:textColor="@color/on_surface"
+                android:textSize="@dimen/text_size_title"
+                android:textColor="@color/text_body"
                 android:textStyle="bold"
                 android:fontFamily="serif"
                 android:maxLines="1"
@@ -46,9 +46,9 @@
                 android:id="@+id/tv_author"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textSize="13sp"
-                android:textColor="@color/on_surface_variant"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:textSize="@dimen/text_size_body_sm"
+                android:textColor="@color/text_body_secondary"
                 android:maxLines="1"
                 android:ellipsize="end"
                 tools:text="李白 · 唐代" />
@@ -56,10 +56,10 @@
 
         <TextView
             android:id="@+id/btn_unfav"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:layout_width="@dimen/touch_target_small"
+            android:layout_height="@dimen/touch_target_small"
             android:text="❤️"
-            android:textSize="18sp"
+            android:textSize="@dimen/text_size_headline"
             android:gravity="center"
             android:clickable="true"
             android:focusable="true"
