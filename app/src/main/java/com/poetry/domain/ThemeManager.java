@@ -100,11 +100,11 @@ public class ThemeManager {
      * @param db 数据库实例
      */
     public static void syncUnlockedThemes(LearningDatabase db) {
-        UserProfile profile = db.poemDao().getUserProfileSync();
+        UserProfile profile = db.userProfileDao().getUserProfileSync();
         if (profile == null) return;
         List<String> available = getCurrentUnlockedIds(profile);
         profile.unlockedThemes = new JSONArray(available).toString();
-        db.poemDao().insertUserProfile(profile);
+        db.userProfileDao().insertUserProfile(profile);
     }
 
     /**

@@ -7,6 +7,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.poetry.data.LearningDatabase;
+import com.poetry.util.AppExecutors;
 
 /**
  * 详情页 ViewModel，管理诗词的收藏和已学状态。
@@ -43,12 +44,12 @@ public class DetailViewModel extends AndroidViewModel {
      */
     public void checkStatus(String poemId) {
         this.currentPoemId = poemId;
-        new Thread(() -> {
-            boolean fav = db.poemDao().isFavorite(poemId);
-            boolean learned = db.poemDao().isLearned(poemId);
+        AppExecutors.io(() -> {
+            boolean fav = db.learningRecordDao().isFavorite(poemId);
+            boolean learned = db.learningRecordDao().isLearned(poemId);
             isFavorite.postValue(fav);
             isLearned.postValue(learned);
-        }).start();
+        });
     }
 
     /**
@@ -61,15 +62,15 @@ public class DetailViewModel extends AndroidViewModel {
         String poemId = this.currentPoemId;
         if (poemId == null) return;
 
-        new Thread(() -> {
-            db.poemDao().ensureRecordExists(poemId);
+        AppExecutors.io(() -> {
+            db.learningRecordDao().ensureRecordExists(poemId);
             if (newFav) {
-                db.poemDao().addFavorite(poemId);
+                db.learningRecordDao().addFavorite(poemId);
             } else {
-                db.poemDao().removeFavorite(poemId);
+                db.learningRecordDao().removeFavorite(poemId);
             }
             isFavorite.postValue(newFav);
-        }).start();
+        });
     }
 
     /**
@@ -81,20 +82,20 @@ public class DetailViewModel extends AndroidViewModel {
         String poemId = this.currentPoemId;
         if (poemId == null) return;
 
-        new Thread(() -> {
-            db.poemDao().ensureRecordExists(poemId);
-            db.poemDao().markLearned(poemId, System.currentTimeMillis());
+        AppExecutors.io(() -> {
+            db.learningRecordDao().ensureRecordExists(poemId);
+            db.learningRecordDao().markLearned(poemId, System.currentTimeMillis());
 
             // 更新每日统计：确保今日行存在后递增已学诗词数
             String today = java.time.LocalDate.now().toString();
-            com.poetry.data.DailyStats existing = db.poemDao().getDailyStatsSync(today);
+            com.poetry.data.DailyStats existing = db.dailyStatsDao().getDailyStatsSync(today);
             if (existing == null) {
-                db.poemDao().upsertDailyStats(new com.poetry.data.DailyStats(today));
+                db.dailyStatsDao().upsertDailyStats(new com.poetry.data.DailyStats(today));
             }
-            db.poemDao().incrementPoemsLearned(today);
+            db.dailyStatsDao().incrementPoemsLearned(today);
 
             isLearned.postValue(true);
-        }).start();
+        });
     }
 
     /**

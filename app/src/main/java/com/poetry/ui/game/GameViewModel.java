@@ -9,6 +9,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.poetry.data.DailyStats;
 import com.poetry.data.LearningDatabase;
 import com.poetry.data.PoemRepository;
+import com.poetry.util.AppExecutors;
 import com.poetry.data.UserProfile;
 import com.poetry.data.model.Poem;
 import com.poetry.domain.AchievementEngine;
@@ -256,15 +257,15 @@ public class GameViewModel extends AndroidViewModel {
      * @param points 要添加的积分数量
      */
     private void savePoints(int points) {
-        new Thread(() -> {
+        AppExecutors.io(() -> {
             // 🔴 B2 修复：使用原子 SQL 增量，避免读-改-写竞态
-            db.poemDao().addTotalPoints(points);
+            db.userProfileDao().addTotalPoints(points);
             // 重新读取最新积分以计算等级
-            UserProfile profile = db.poemDao().getUserProfileSync();
+            UserProfile profile = db.userProfileDao().getUserProfileSync();
             if (profile != null) {
                 int newLevel = LearningEngine.calcLevel(profile.totalPoints);
                 if (newLevel != profile.level) {
-                    db.poemDao().updateLevel(newLevel);
+                    db.userProfileDao().updateLevel(newLevel);
                 }
             }
             // 🔴 B4 修复：每次积分变更后检测成就
@@ -273,7 +274,7 @@ public class GameViewModel extends AndroidViewModel {
             });
             // 🔴 B5 修复：等级提升后同步主题解锁
             ThemeManager.syncUnlockedThemes(db);
-        }).start();
+        });
     }
 
     /**
@@ -289,13 +290,13 @@ public class GameViewModel extends AndroidViewModel {
      */
     private void recordGameActivity() {
         final String today = LocalDate.now().toString();
-        new Thread(() -> {
-            DailyStats existing = db.poemDao().getDailyStatsSync(today);
+        AppExecutors.io(() -> {
+            DailyStats existing = db.dailyStatsDao().getDailyStatsSync(today);
             if (existing == null) {
-                db.poemDao().upsertDailyStats(new DailyStats(today));
+                db.dailyStatsDao().upsertDailyStats(new DailyStats(today));
             }
-            db.poemDao().incrementGamesPlayed(today);
-        }).start();
+            db.dailyStatsDao().incrementGamesPlayed(today);
+        });
     }
 
     // ==================== Getters ====================

@@ -20,6 +20,7 @@ import com.poetry.R;
 import com.poetry.data.LearningRecord;
 import com.poetry.data.PoemRepository;
 import com.poetry.data.model.Poem;
+import com.poetry.util.PoemArgs;
 
 /**
  * 收藏列表 Fragment。
@@ -110,13 +111,6 @@ public class FavoritesFragment extends Fragment {
             return;
         }
 
-        Bundle args = new Bundle();
-        args.putString("poem_id", poem.id);
-        args.putString("poem_title", poem.title);
-        args.putString("poem_author", poem.author);
-        args.putString("poem_dynasty", poem.dynasty);
-        args.putStringArray("poem_lines", poem.lines);
-        args.putString("poem_explanation", poem.explanation != null ? poem.explanation : "");
-        navController.navigate(R.id.nav_detail, args);
+        navController.navigate(R.id.nav_detail, PoemArgs.fromPoem(poem).toBundle());
     }
 }

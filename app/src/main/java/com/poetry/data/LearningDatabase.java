@@ -21,8 +21,12 @@ public abstract class LearningDatabase extends RoomDatabase {
     /** 单例（volatile 保证可见性） */
     private static volatile LearningDatabase instance;
 
-    /** 获取 PoemDao 实例 */
-    public abstract PoemDao poemDao();
+    /** 获取学习记录 DAO */
+    public abstract LearningRecordDao learningRecordDao();
+    /** 获取每日统计 DAO */
+    public abstract DailyStatsDao dailyStatsDao();
+    /** 获取用户档案 DAO */
+    public abstract UserProfileDao userProfileDao();
 
     /** v1 → v2 数据库迁移：新增 daily_stats 表 */
     static final Migration MIGRATION_1_2 = new Migration(1, 2) {

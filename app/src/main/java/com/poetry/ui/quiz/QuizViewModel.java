@@ -8,6 +8,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.poetry.data.LearningDatabase;
 import com.poetry.data.PoemRepository;
+import com.poetry.util.AppExecutors;
 import com.poetry.data.UserProfile;
 import com.poetry.data.model.Poem;
 import com.poetry.domain.AchievementEngine;
@@ -127,23 +128,23 @@ public class QuizViewModel extends AndroidViewModel {
         final boolean finalCorrect = allCorrect;
         final int blanksCount = q.blanks.size();
         final String poemId = q.poem.id;
-        new Thread(() -> {
+        AppExecutors.io(() -> {
             // 🔴 B2 修复：原子增量代替读-改-写
             int points = LearningEngine.calcPointsForQuiz(finalCorrect ? blanksCount : 0, blanksCount);
-            db.poemDao().addTotalPoints(points);
-            UserProfile profile = db.poemDao().getUserProfileSync();
+            db.userProfileDao().addTotalPoints(points);
+            UserProfile profile = db.userProfileDao().getUserProfileSync();
             if (profile != null) {
                 int newLevel = LearningEngine.calcLevel(profile.totalPoints);
                 if (newLevel != profile.level) {
-                    db.poemDao().updateLevel(newLevel);
+                    db.userProfileDao().updateLevel(newLevel);
                 }
                 score.postValue(profile.totalPoints);
             }
 
             // 持久化 quizScore 到 learning_records，供每日任务检测
-            db.poemDao().ensureRecordExists(poemId);
+            db.learningRecordDao().ensureRecordExists(poemId);
             int newScore = (finalCorrect ? blanksCount : 0);
-            db.poemDao().updateQuizScore(poemId, newScore);
+            db.learningRecordDao().updateQuizScore(poemId, newScore);
 
             // 🔴 B4 修复：每次答题后检测成就
             AchievementEngine.checkAndUnlock(db, def -> {
@@ -151,7 +152,7 @@ public class QuizViewModel extends AndroidViewModel {
             });
             // 🔴 B5 修复：等级提升后同步主题解锁
             ThemeManager.syncUnlockedThemes(db);
-        }).start();
+        });
     }
 
     /**
@@ -170,14 +171,14 @@ public class QuizViewModel extends AndroidViewModel {
     private void finishQuiz() {
         // 更新每日统计：答题完成
         final String today = LocalDate.now().toString();
-        new Thread(() -> {
+        AppExecutors.io(() -> {
             // 确保今日行存在
-            com.poetry.data.DailyStats existing = db.poemDao().getDailyStatsSync(today);
+            com.poetry.data.DailyStats existing = db.dailyStatsDao().getDailyStatsSync(today);
             if (existing == null) {
-                db.poemDao().upsertDailyStats(new com.poetry.data.DailyStats(today));
+                db.dailyStatsDao().upsertDailyStats(new com.poetry.data.DailyStats(today));
             }
-            db.poemDao().incrementQuizCompleted(today);
-        }).start();
+            db.dailyStatsDao().incrementQuizCompleted(today);
+        });
 
         isFinished.setValue(true);
     }

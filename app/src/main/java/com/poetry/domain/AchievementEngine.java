@@ -66,14 +66,14 @@ public class AchievementEngine {
      * @param listener 解锁回调（用于 UI 通知）
      */
     public static void checkAndUnlock(LearningDatabase db, AchievementListener listener) {
-        UserProfile profile = db.poemDao().getUserProfileSync();
+        UserProfile profile = db.userProfileDao().getUserProfileSync();
         if (profile == null) return;
 
         List<String> unlocked = parseIds(profile.achievements);
         List<String> newlyUnlocked = new ArrayList<>();
-        int learned = db.poemDao().getLearnedCountSync();
+        int learned = db.learningRecordDao().getLearnedCountSync();
         int favCount = getFavCount(db);
-        int perfectQuizCount = db.poemDao().getPerfectQuizCountSync(10);
+        int perfectQuizCount = db.learningRecordDao().getPerfectQuizCountSync(10);
         int gameCount = getGameCount(db);
 
         for (AchievementDef def : ALL_ACHIEVEMENTS) {
@@ -88,7 +88,7 @@ public class AchievementEngine {
 
         if (!newlyUnlocked.isEmpty()) {
             unlocked.addAll(newlyUnlocked);
-            db.poemDao().updateAchievements(toJson(unlocked));
+            db.userProfileDao().updateAchievements(toJson(unlocked));
         }
     }
 
@@ -130,7 +130,7 @@ public class AchievementEngine {
             for (int i = 0; i < arr.length(); i++) ids.add(arr.getString(i));
         } catch (JSONException e) {
             // JSON 数据损坏或版本不兼容，降级返回空列表
-            android.util.Log.w("AchievementEngine", "Failed to parse achievement JSON", e);
+            // domain 层不依赖 Android Log，静默降级
         }
         return ids;
     }
@@ -143,12 +143,12 @@ public class AchievementEngine {
 
     /** 查询已收藏诗词数量 */
     private static int getFavCount(LearningDatabase db) {
-        return db.poemDao().getFavCountSync();
+        return db.learningRecordDao().getFavCountSync();
     }
 
     /** 查询游戏总次数（所有诗词的 gamePlayed 累加） */
     private static int getGameCount(LearningDatabase db) {
-        List<LearningRecord> records = db.poemDao().getGameRecords();
+        List<LearningRecord> records = db.learningRecordDao().getGameRecords();
         int total = 0;
         for (LearningRecord r : records) total += r.gamePlayed;
         return total;

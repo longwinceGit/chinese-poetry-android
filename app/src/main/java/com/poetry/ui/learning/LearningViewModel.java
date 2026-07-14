@@ -10,6 +10,7 @@ import com.poetry.data.DailyStats;
 import com.poetry.data.LearningDatabase;
 import com.poetry.data.UserProfile;
 import com.poetry.domain.AchievementEngine;
+import com.poetry.util.AppExecutors;
 import com.poetry.domain.ThemeManager;
 import com.poetry.ui.widget.StatsBarChart;
 
@@ -51,12 +52,12 @@ public class LearningViewModel extends AndroidViewModel {
      * 成就检测和主题解锁。
      */
     public void loadData() {
-        new Thread(() -> {
+        AppExecutors.io(() -> {
             // 自动签到当日
             doAutoCheckin();
 
-            UserProfile profile = db.poemDao().getUserProfileSync();
-            int count = db.poemDao().getLearnedCountSync();
+            UserProfile profile = db.userProfileDao().getUserProfileSync();
+            int count = db.learningRecordDao().getLearnedCountSync();
             Set<String> dates = loadWeekCheckins();
 
             // 查询当日任务完成状态（使用 DailyStats 表）
@@ -64,9 +65,9 @@ public class LearningViewModel extends AndroidViewModel {
             long startOfDay = LocalDate.now().atStartOfDay(java.time.ZoneId.systemDefault())
                 .toInstant().toEpochMilli();
             boolean[] tasks = new boolean[]{
-                db.poemDao().getTodayLearnedCount(startOfDay) > 0,
-                db.poemDao().hasQuizToday(today),
-                db.poemDao().hasGameToday(today)
+                db.learningRecordDao().getTodayLearnedCount(startOfDay) > 0,
+                db.dailyStatsDao().hasQuizToday(today),
+                db.dailyStatsDao().hasGameToday(today)
             };
 
             userProfile.postValue(profile);
@@ -83,7 +84,7 @@ public class LearningViewModel extends AndroidViewModel {
 
             // 加载最近 7 天学习统计柱状图数据
             loadChartData();
-        }).start();
+        });
     }
 
     /**
@@ -94,7 +95,7 @@ public class LearningViewModel extends AndroidViewModel {
         LocalDate sevenDaysAgo = today.minusDays(6);
         String startDate = sevenDaysAgo.toString();
 
-        List<DailyStats> statsList = db.poemDao().getRecentStats(startDate);
+        List<DailyStats> statsList = db.dailyStatsDao().getRecentStats(startDate);
         String[] weekLabels = {"一", "二", "三", "四", "五", "六", "日"};
 
         List<StatsBarChart.BarData> bars = new ArrayList<>();
@@ -124,14 +125,14 @@ public class LearningViewModel extends AndroidViewModel {
      */
     private void doAutoCheckin() {
         String today = LocalDate.now().toString();
-        DailyStats existing = db.poemDao().getDailyStats(today);
+        DailyStats existing = db.dailyStatsDao().getDailyStats(today);
         if (existing == null) {
             DailyStats stats = new DailyStats(today);
-            db.poemDao().upsertDailyStats(stats);
+            db.dailyStatsDao().upsertDailyStats(stats);
         }
 
         // 更新连续签到天数
-        UserProfile profile = db.poemDao().getUserProfileSync();
+        UserProfile profile = db.userProfileDao().getUserProfileSync();
         String lastActive = profile.lastActiveDate;
         LocalDate yesterday = LocalDate.now().minusDays(1);
 
@@ -150,9 +151,9 @@ public class LearningViewModel extends AndroidViewModel {
             newLevel = profile.level + 1;
         }
 
-        db.poemDao().updateStreak(newStreak, today);
+        db.userProfileDao().updateStreak(newStreak, today);
         if (newLevel != profile.level) {
-            db.poemDao().updateLevel(newLevel);
+            db.userProfileDao().updateLevel(newLevel);
         }
     }
 
@@ -164,7 +165,7 @@ public class LearningViewModel extends AndroidViewModel {
         LocalDate monday = today.minusDays(today.getDayOfWeek().getValue() - 1);
         LocalDate sunday = monday.plusDays(6);
 
-        List<String> dates = db.poemDao().getCheckinDates(
+        List<String> dates = db.dailyStatsDao().getCheckinDates(
             monday.toString(), sunday.toString());
         return new HashSet<>(dates);
     }

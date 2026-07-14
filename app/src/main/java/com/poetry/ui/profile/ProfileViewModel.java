@@ -8,6 +8,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.poetry.data.LearningDatabase;
 import com.poetry.data.UserProfile;
+import com.poetry.util.AppExecutors;
 
 /**
  * 个人中心 ViewModel，管理个人中心的用户数据。
@@ -34,14 +35,14 @@ public class ProfileViewModel extends AndroidViewModel {
      * 在后台线程加载用户信息、收藏数和已学数量。
      */
     public void loadData() {
-        new Thread(() -> {
-            UserProfile profile = db.poemDao().getUserProfileSync();
-            int favCount = db.poemDao().getFavCountSync();
-            int learned = db.poemDao().getLearnedCountSync();
+        AppExecutors.io(() -> {
+            UserProfile profile = db.userProfileDao().getUserProfileSync();
+            int favCount = db.learningRecordDao().getFavCountSync();
+            int learned = db.learningRecordDao().getLearnedCountSync();
             userProfile.postValue(profile);
             favoriteCount.postValue(favCount);
             learnedCount.postValue(learned);
-        }).start();
+        });
     }
 
     /**
@@ -80,19 +81,19 @@ public class ProfileViewModel extends AndroidViewModel {
      */
     public void setCurrentTheme(UserProfile profile, String newThemeId) {
         profile.currentTheme = newThemeId;
-        new Thread(() -> {
-            db.poemDao().insertUserProfile(profile);
+        AppExecutors.io(() -> {
+            db.userProfileDao().insertUserProfile(profile);
             userProfile.postValue(profile);
-        }).start();
+        });
     }
 
     /**
      * 刷新用户档案数据（用于主题切换后立即刷新）。
      */
     public void refreshProfile() {
-        new Thread(() -> {
-            UserProfile profile = db.poemDao().getUserProfileSync();
+        AppExecutors.io(() -> {
+            UserProfile profile = db.userProfileDao().getUserProfileSync();
             userProfile.postValue(profile);
-        }).start();
+        });
     }
 }

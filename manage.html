@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>诗词内容管理</title>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #f5f5f5; --surface: #fff; --border: #e0e0e0;
+  --text: #333; --text-secondary: #888; --text-muted: #aaa;
+  --primary: #1976d2; --primary-light: #e3f2fd;
+  --warn: #f57c00; --warn-light: #fff3e0;
+  --error: #d32f2f; --error-light: #ffebee;
+  --success: #388e3c; --success-light: #e8f5e9;
+}
+html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+#app { display: flex; height: 100vh; }
+
+/* Sidebar */
+.sidebar { width: 260px; min-width: 260px; background: var(--surface); border-right: 1px solid var(--border); padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+.sidebar h1 { font-size: 18px; font-weight: 700; }
+.sidebar h2 { font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 8px; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.stat-card { background: var(--bg); border-radius: 8px; padding: 10px; text-align: center; }
+.stat-card .num { font-size: 20px; font-weight: 700; color: var(--primary); }
+.stat-card .label { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+.stat-card.warn .num { color: var(--warn); }
+.stat-card.error .num { color: var(--error); }
+.dynasty-list { display: flex; flex-direction: column; gap: 4px; }
+.dynasty-item { display: flex; justify-content: space-between; padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+.dynasty-item:hover { background: var(--primary-light); }
+.dynasty-item.active { background: var(--primary); color: #fff; }
+.dynasty-item .count { color: var(--text-muted); font-size: 12px; }
+.dynasty-item.active .count { color: rgba(255,255,255,0.7); }
+.sidebar-actions { display: flex; flex-direction: column; gap: 6px; margin-top: auto; }
+.sidebar-actions button { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; font-size: 13px; text-align: left; }
+.sidebar-actions button:hover { background: var(--bg); }
+
+/* Main */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.toolbar { padding: 16px 20px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.toolbar input[type=text] { flex: 1; min-width: 200px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; outline: none; }
+.toolbar input[type=text]:focus { border-color: var(--primary); }
+.toolbar select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; outline: none; background: var(--surface); }
+.toolbar .issues-btn { padding: 8px 14px; border-radius: 6px; border: 1px solid var(--warn); background: var(--warn-light); color: var(--warn); cursor: pointer; font-size: 13px; font-weight: 500; }
+.toolbar .issues-btn:hover { background: var(--warn); color: #fff; }
+.toolbar-info { margin-left: auto; font-size: 12px; color: var(--text-secondary); }
+
+/* Poem List */
+.poem-list { flex: 1; overflow-y: auto; padding: 12px 20px; }
+.poem-item { background: var(--surface); border-radius: 8px; padding: 12px 16px; margin-bottom: 6px; cursor: pointer; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); }
+.poem-item:hover { border-color: var(--primary); }
+.poem-item .id-badge { font-size: 11px; color: var(--text-muted); min-width: 60px; font-family: monospace; }
+.poem-item .info { flex: 1; min-width: 0; }
+.poem-item .info .title { font-size: 14px; font-weight: 500; }
+.poem-item .info .meta { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.poem-item .info .first-line { font-size: 12px; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.poem-item .badges { display: flex; gap: 4px; }
+.badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+.badge.issue { background: var(--error-light); color: var(--error); }
+.badge.ok { background: var(--success-light); color: var(--success); }
+
+.pagination { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 20px; background: var(--surface); border-top: 1px solid var(--border); }
+.pagination button { padding: 6px 12px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); cursor: pointer; font-size: 13px; }
+.pagination button:hover { background: var(--bg); }
+.pagination button:disabled { opacity: 0.4; cursor: default; }
+.pagination .page-info { font-size: 13px; color: var(--text-secondary); }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal { background: var(--surface); border-radius: 12px; width: 90%; max-width: 720px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+.modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.modal-header h2 { font-size: 16px; font-weight: 600; }
+.modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-secondary); padding: 4px; }
+.modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+.modal-footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
+.form-group input, .form-group select { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; outline: none; }
+.form-group input:focus, .form-group select:focus { border-color: var(--primary); }
+.form-group textarea { width: 100%; min-height: 120px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; font-family: inherit; resize: vertical; outline: none; }
+.form-group textarea:focus { border-color: var(--primary); }
+
+.original-ref { background: var(--bg); border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12px; color: var(--text-secondary); }
+.original-ref code { font-family: monospace; }
+.original-ref .diff-line { display: flex; gap: 8px; padding: 2px 0; }
+.original-ref .diff-line .old { color: var(--error); text-decoration: line-through; }
+.original-ref .diff-line .new { color: var(--success); }
+
+button.btn-primary { padding: 8px 20px; background: var(--primary); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; }
+button.btn-primary:hover { opacity: 0.9; }
+button.btn-secondary { padding: 8px 20px; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 14px; }
+button.btn-secondary:hover { background: var(--bg); }
+button.btn-danger { padding: 8px 20px; background: var(--error); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; }
+
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 10px 24px; border-radius: 8px; font-size: 14px; z-index: 2000; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+.toast.success { background: var(--success); }
+.toast.error { background: var(--error); }
+.toast.info { background: var(--primary); }
+
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+.empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+/* Scan results */
+.scan-page { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.scan-toolbar { padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.scan-toolbar .total { font-weight: 600; font-size: 14px; }
+.scan-toolbar select { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; outline: none; }
+.scan-table-wrap { flex: 1; overflow-y: auto; padding: 0; }
+.scan-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.scan-table th { position: sticky; top: 0; background: var(--surface); text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border); font-weight: 600; font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+.scan-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.scan-table tr:hover td { background: var(--primary-light); }
+.scan-table .col-id { font-family: monospace; color: var(--text-muted); width: 80px; }
+.scan-table .col-title { min-width: 120px; }
+.scan-table .col-meta { color: var(--text-secondary); white-space: nowrap; }
+.scan-table .col-issues { min-width: 150px; }
+.scan-table .col-first-line { color: var(--text-muted); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.scan-issue-badge { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 8px; margin: 1px 2px; font-weight: 500; }
+.scan-issue-badge.empty_p { background: var(--error-light); color: var(--error); }
+.scan-issue-badge.only_punct { background: var(--warn-light); color: var(--warn); }
+.scan-issue-badge.short { background: #fff3e0; color: #e65100; }
+.scan-issue-badge.long_single { background: #e8eaf6; color: #283593; }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h1>📖 诗词管理</h1>
+
+    <h2>数据概览</h2>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="num">{{ stats.total.toLocaleString() }}</div><div class="label">诗词总数</div></div>
+      <div class="stat-card"><div class="num">{{ stats.files }}</div><div class="label">文件数</div></div>
+      <div class="stat-card warn"><div class="num">{{ stats.only_punct_lines }}</div><div class="label">纯标点行</div></div>
+      <div class="stat-card warn"><div class="num">{{ stats.empty_p }}</div><div class="label">空内容</div></div>
+      <div class="stat-card error"><div class="num">{{ scanCount }}</div><div class="label">问题条目</div></div>
+    </div>
+
+    <h2>朝代筛选</h2>
+    <div class="dynasty-list">
+      <div class="dynasty-item" :class="{active: dynasty===''}" @click="setDynasty('')">
+        <span>全部</span><span class="count">{{ stats.total.toLocaleString() }}</span>
+      </div>
+      <div v-for="d in dynasties" :key="d.dynasty" class="dynasty-item"
+           :class="{active: dynasty===d.dynasty}" @click="setDynasty(d.dynasty)">
+        <span>{{ d.dynasty }}</span><span class="count">{{ d.count.toLocaleString() }}</span>
+      </div>
+    </div>
+
+    <div class="sidebar-actions">
+      <button @click="scanIssues()">🔍 扫描问题</button>
+      <button @click="backup()">💾 手动备份</button>
+      <button @click="showCreate = true">➕ 新增诗词</button>
+      <button @click="refresh()">🔄 刷新数据</button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="toolbar">
+      <input type="text" v-model="search" placeholder="搜索标题/作者/诗句/ID..." @input="onSearch" />
+      <select v-model="issueFilter" @change="loadPoems(1)">
+        <option value="">所有内容</option>
+        <option value="empty_p">空内容</option>
+        <option value="only_punct">纯标点行</option>
+        <option value="short">过短行</option>
+      </select>
+      <button class="issues-btn" v-if="scanCount" @click="showScan = true">
+        ⚠️ {{ scanCount }} 个问题
+      </button>
+      <span class="toolbar-info">共 {{ poemsTotal.toLocaleString() }} 条</span>
+    </div>
+
+    <!-- Scan Results Panel -->
+    <div class="main" v-if="showScan">
+      <div class="scan-toolbar">
+        <span class="total">⚠️ 问题扫描结果 ({{ scanTotal }})</span>
+        <select v-model="scanDynasty" @change="loadScanPage(1)">
+          <option value="">全部朝代</option>
+          <option v-for="d in dynasties" :key="d.dynasty" :value="d.dynasty">{{ d.dynasty }}</option>
+        </select>
+        <select v-model="scanIssueType" @change="loadScanPage(1)">
+          <option value="">全部类型</option>
+          <option value="empty_p">空内容 (empty_p)</option>
+          <option value="only_punct">纯标点行 (only_punct)</option>
+          <option value="short">过短行 (short)</option>
+          <option value="long_single">过长单行 (long_single)</option>
+        </select>
+        <button class="btn-secondary" @click="showScan=false">← 返回列表</button>
+        <span style="margin-left:auto;font-size:12px;color:var(--text-muted)">共 {{ scanTotal }} 条</span>
+      </div>
+      <div class="scan-table-wrap">
+        <table class="scan-table">
+          <thead>
+            <tr>
+              <th class="col-id">ID</th>
+              <th class="col-title">标题</th>
+              <th class="col-meta">作者</th>
+              <th class="col-meta">朝代</th>
+              <th class="col-issues">问题</th>
+              <th class="col-first-line">首行</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in scanPageItems" :key="item.id" @click="openEdit(item.id)">
+              <td class="col-id">{{ item.id }}</td>
+              <td class="col-title">{{ item.title || '无题' }}</td>
+              <td class="col-meta">{{ item.author }}</td>
+              <td class="col-meta">{{ item.dynasty }}</td>
+              <td class="col-issues">
+                <span v-for="iss in item.issues" :key="iss" class="scan-issue-badge" :class="iss.split('@')[0]">
+                  {{ iss }}
+                </span>
+              </td>
+              <td class="col-first-line">{{ item.firstLine || '(空)' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <button :disabled="scanPage <= 1" @click="scanPage=1; loadScanPage()">«</button>
+        <button :disabled="scanPage <= 1" @click="scanPage--; loadScanPage()">‹</button>
+        <span class="page-info">第 {{ scanPage }} / {{ scanTotalPages }} 页</span>
+        <button :disabled="scanPage >= scanTotalPages" @click="scanPage++; loadScanPage()">›</button>
+        <button :disabled="scanPage >= scanTotalPages" @click="scanPage=scanTotalPages; loadScanPage()">»</button>
+      </div>
+    </div>
+
+    <!-- Poem List -->
+    <div class="poem-list" v-if="!showScan">
+      <div v-if="poems.length === 0" class="empty-state">
+        <div class="icon">📭</div>
+        <p>暂无匹配</p>
+      </div>
+      <div v-for="p in poems" :key="p.id" class="poem-item" @click="openEdit(p.id)">
+        <span class="id-badge">{{ p.id }}</span>
+        <div class="info">
+          <div class="title">{{ p.title || '无题' }}</div>
+          <div class="meta">{{ p.author }} · {{ p.dynasty }} · {{ p.s }}</div>
+          <div class="first-line">{{ p.first_line || '(空)' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" v-if="!showScan">
+      <button :disabled="page <= 1" @click="loadPoems(1)">«</button>
+      <button :disabled="page <= 1" @click="loadPoems(page-1)">‹</button>
+      <span class="page-info">第 {{ page }} / {{ totalPages }} 页</span>
+      <button :disabled="page >= totalPages" @click="loadPoems(page+1)">›</button>
+      <button :disabled="page >= totalPages" @click="loadPoems(totalPages)">»</button>
+    </div>
+  </div>
+
+  <!-- Create Modal -->
+  <div class="modal-overlay" v-if="showCreate" @click.self="showCreate = false">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>➕ 新增诗词</h2>
+        <button class="modal-close" @click="showCreate = false">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>标题 *</label>
+          <input v-model="createForm.title" placeholder="如：静夜思" />
+        </div>
+        <div class="form-group">
+          <label>作者 *</label>
+          <input v-model="createForm.author" placeholder="如：李白" />
+        </div>
+        <div class="form-group">
+          <label>朝代 *</label>
+          <select v-model="createForm.dynasty">
+            <option value="">— 请选择 —</option>
+            <option v-for="d in dynasties" :key="d.dynasty" :value="d.dynasty">{{ d.dynasty }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>分类 (s)</label>
+          <input v-model="createForm.s" placeholder="如：全唐诗" />
+        </div>
+        <div class="form-group">
+          <label>诗句（每行一句）*</label>
+          <textarea v-model="createForm.linesText" rows="8" placeholder="一行一句，如：&#10;床前明月光，&#10;疑是地上霜。&#10;举头望明月，&#10;低头思故乡。"></textarea>
+        </div>
+        <div class="form-group">
+          <label>释义 / 注释</label>
+          <textarea v-model="createForm.explanation" rows="4" placeholder="可选：添加诗词释义或赏析文字…"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" @click="showCreate = false">取消</button>
+        <button class="btn-primary" @click="createPoem" :disabled="creating">
+          {{ creating ? '保存中...' : '💾 保存' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="modal-overlay" v-if="editPoem" @click.self="closeEdit">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>✏️ 编辑：{{ editPoem.title }}</h2>
+        <button class="modal-close" @click="closeEdit">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="original-ref">
+          📁 {{ editPoem.file }} · 索引 #{{ editPoem.entry_idx }}
+          · ID: <code>{{ editPoem.id }}</code>
+        </div>
+
+        <div class="form-group">
+          <label>标题</label>
+          <input v-model="form.title" />
+        </div>
+        <div class="form-group">
+          <label>作者</label>
+          <input v-model="form.author" />
+        </div>
+        <div class="form-group">
+          <label>朝代</label>
+          <select v-model="form.dynasty">
+            <option v-for="d in dynasties" :key="d.dynasty" :value="d.dynasty">{{ d.dynasty }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>分类</label>
+          <input v-model="form.s" />
+        </div>
+        <div class="form-group">
+          <label>诗句（每行一句）</label>
+          <textarea v-model="form.linesText" rows="8"></textarea>
+        </div>
+        <div class="form-group">
+          <label>释义 / 注释
+            <span v-if="editPoem.explanationSource === 'external'" style="font-weight:400;color:var(--primary);font-size:11px;margin-left:6px;">(来自 poem_explanations.json)</span>
+            <span v-else-if="editPoem.explanationSource === 'inline'" style="font-weight:400;color:var(--success);font-size:11px;margin-left:6px;">(诗词内嵌)</span>
+          </label>
+          <textarea v-model="form.explanation" rows="4" placeholder="可选：添加诗词释义、注释或赏析文字…"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" @click="closeEdit">取消</button>
+        <button class="btn-danger" @click="revertEdit" v-if="hasCorrection">还原原始</button>
+        <button class="btn-primary" @click="saveEdit" :disabled="saving">
+          {{ saving ? '保存中...' : '💾 保存修正' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" v-if="toast" :class="toast.type">{{ toast.message }}</div>
+</div>
+
+<script>
+const { createApp, ref, reactive, computed, watch } = Vue;
+
+createApp({
+  setup() {
+    const stats = reactive({ total: 0, files: 0, empty_p: 0, only_punct_lines: 0, short_lines: 0, long_single: 0 });
+    const dynasties = ref([]);
+    const poems = ref([]);
+    const poemsTotal = ref(0);
+    const page = ref(1);
+    const totalPages = ref(1);
+    const search = ref('');
+    const dynasty = ref('');
+    const issueFilter = ref('');
+    const editPoem = ref(null);
+    const saving = ref(false);
+    const toast = ref(null);
+    const scanResults = ref({ total: 0, issues: [] });
+    const showScan = ref(false);
+    const scanPage = ref(1);
+    const scanTotal = ref(0);
+    const scanTotalPages = ref(1);
+    const scanPageSize = ref(50);
+    const scanPageItems = ref([]);
+    const scanDynasty = ref('');
+    const scanIssueType = ref('');
+    const showCreate = ref(false);
+    const creating = ref(false);
+
+    const form = reactive({ title: '', author: '', dynasty: '', s: '', linesText: '', explanation: '' });
+    const hasCorrection = ref(false);
+
+    const scanCount = computed(() => scanResults.value.total);
+
+    function showToast(message, type = 'info') {
+      toast.value = { message, type };
+      setTimeout(() => { toast.value = null; }, 3000);
+    }
+
+    async function api(path, opts = {}) {
+      const res = await fetch('/api' + path, {
+        headers: { 'Content-Type': 'application/json' },
+        ...opts,
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(err.error || res.statusText);
+      }
+      return res.json();
+    }
+
+    async function loadStats() {
+      const data = await api('/stats');
+      Object.assign(stats, data);
+    }
+
+    async function loadDynasties() {
+      dynasties.value = await api('/dynasties');
+    }
+
+    async function loadPoems(p) {
+      if (p) page.value = p;
+      const params = new URLSearchParams({
+        page: page.value,
+        pageSize: 50,
+        dynasty: dynasty.value,
+        search: search.value,
+        issue: issueFilter.value,
+      });
+      const data = await api('/poems?' + params.toString());
+      poems.value = data.poems;
+      poemsTotal.value = data.total;
+      totalPages.value = data.totalPages;
+    }
+
+    let searchTimer = null;
+    function onSearch() {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => loadPoems(1), 300);
+    }
+
+    function setDynasty(d) {
+      dynasty.value = d;
+      loadPoems(1);
+    }
+
+    async function openEdit(id) {
+      const data = await api('/poems/' + id);
+      editPoem.value = data;
+      form.title = data.title;
+      form.author = data.author;
+      form.dynasty = data.dynasty;
+      form.s = data.s;
+      form.linesText = (data.lines || []).join('\n');
+      form.explanation = data.explanation || '';
+      hasCorrection.value = data.explanationSource !== '';
+    }
+
+    function closeEdit() {
+      editPoem.value = null;
+    }
+
+    async function saveEdit() {
+      if (!editPoem.value) return;
+      saving.value = true;
+      try {
+        const lines = form.linesText.split('\n').filter(l => l.trim() || true);
+        const body = {
+          title: form.title,
+          author: form.author,
+          dynasty: form.dynasty,
+          s: form.s,
+          lines: lines,
+          explanation: form.explanation,
+        };
+        const result = await api('/poems/' + editPoem.value.id, {
+          method: 'PUT',
+          body: JSON.stringify(body),
+        });
+        if (result.changed && result.changed.length > 0) {
+          showToast('已保存：' + result.changed.join(', '), 'success');
+          hasCorrection.value = true;
+          closeEdit();
+          loadPoems();
+          loadStats();
+        } else {
+          showToast('无变化', 'info');
+        }
+      } catch (e) {
+        showToast('保存失败：' + e.message, 'error');
+      } finally {
+        saving.value = false;
+      }
+    }
+
+    async function revertEdit() {
+      if (!editPoem.value || !confirm('确定还原为原始数据？')) return;
+      try {
+        await api('/poems/' + editPoem.value.id, {
+          method: 'PUT',
+          body: JSON.stringify({
+            title: editPoem.value.title,
+            author: editPoem.value.author,
+            dynasty: editPoem.value.dynasty,
+            s: editPoem.value.s,
+            lines: editPoem.value.lines,
+          }),
+        });
+        showToast('已还原', 'info');
+        closeEdit();
+        loadPoems();
+      } catch (e) {
+        showToast('还原失败：' + e.message, 'error');
+      }
+    }
+
+    async function backup() {
+      try {
+        const result = await api('/backup', { method: 'POST' });
+        showToast('已备份：' + result.backup, 'success');
+      } catch (e) {
+        showToast('备份失败：' + e.message, 'error');
+      }
+    }
+
+    async function loadScanPage(p) {
+      if (p) scanPage.value = p;
+      const params = new URLSearchParams({
+        page: scanPage.value,
+        pageSize: scanPageSize.value,
+        dynasty: scanDynasty.value,
+        issueType: scanIssueType.value,
+      });
+      const data = await api('/scan-issues?' + params.toString());
+      scanPageItems.value = data.issues.map(item => ({
+        ...item,
+        firstLine: '',
+      }));
+      // Fill firstLine from GLOBAL_ENTRIES
+      for (const item of scanPageItems.value) {
+        const gi = allEntries.value.find(e => e.id === item.id);
+        if (gi) item.firstLine = gi.first_line;
+      }
+      scanTotal.value = data.total;
+      scanTotalPages.value = data.totalPages;
+      scanResults.value.total = data.total;
+    }
+
+    async function scanIssues() {
+      try {
+        scanPage.value = 1;
+        scanDynasty.value = '';
+        scanIssueType.value = '';
+        await loadScanPage(1);
+        showScan.value = true;
+        showToast(`扫描完成，发现 ${scanTotal.value} 个问题条目`, scanTotal.value > 0 ? 'error' : 'success');
+      } catch (e) {
+        showToast('扫描失败：' + e.message, 'error');
+      }
+    }
+
+    const allEntries = ref([]);
+    const createForm = reactive({ title: '', author: '', dynasty: '', s: '', linesText: '', explanation: '' });
+
+    function resetCreateForm() {
+      createForm.title = '';
+      createForm.author = '';
+      createForm.dynasty = '';
+      createForm.s = '';
+      createForm.linesText = '';
+      createForm.explanation = '';
+    }
+
+    async function createPoem() {
+      if (!createForm.title.trim() || !createForm.linesText.trim() || !createForm.dynasty) {
+        showToast('标题、诗句、朝代不能为空', 'error');
+        return;
+      }
+      creating.value = true;
+      try {
+        const lines = createForm.linesText.split('\n').filter(l => l.trim() || true);
+        const body = {
+          title: createForm.title.trim(),
+          author: createForm.author.trim(),
+          dynasty: createForm.dynasty,
+          s: createForm.s.trim(),
+          lines: lines,
+          explanation: createForm.explanation.trim(),
+        };
+        const result = await api('/poems', {
+          method: 'POST',
+          body: JSON.stringify(body),
+        });
+        showToast('诗词已添加，ID: ' + (result.id || '?' ), 'success');
+        showCreate.value = false;
+        resetCreateForm();
+        loadStats();
+        loadPoems(1);
+      } catch (e) {
+        showToast('创建失败：' + e.message, 'error');
+      } finally {
+        creating.value = false;
+      }
+    }
+
+    async function refresh() {
+      await loadStats();
+      await loadPoems();
+      showToast('已刷新', 'info');
+    }
+
+    // Init
+    Promise.all([loadStats(), loadDynasties()]).then(() => loadPoems(1));
+
+    return {
+      stats, dynasties, poems, poemsTotal, page, totalPages,
+      search, dynasty, issueFilter, editPoem, saving, toast,
+      form, hasCorrection, scanResults, showScan, scanCount,
+      scanPage, scanTotal, scanTotalPages, scanPageItems, scanDynasty, scanIssueType,
+      showCreate, creating, createForm, resetCreateForm,
+      loadPoems, onSearch, setDynasty, openEdit, closeEdit,
+      saveEdit, revertEdit, backup, scanIssues, refresh, createPoem, loadScanPage,
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>

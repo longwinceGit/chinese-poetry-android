@@ -14,6 +14,7 @@ import com.poetry.data.LearningDatabase;
 import com.poetry.data.UserProfile;
 import com.poetry.domain.LearningEngine;
 import com.poetry.ui.widget.ConfettiView;
+import com.poetry.util.AppExecutors;
 
 import java.time.LocalDate;
 
@@ -101,16 +102,16 @@ public class MainActivity extends AppCompatActivity {
         LearningDatabase db = LearningDatabase.getInstance(this);
 
         // 在后台线程执行数据库操作，避免阻塞 UI 线程
-        new Thread(() -> {
+        AppExecutors.io(() -> {
             // 查询用户档案（同步操作）
-            UserProfile profile = db.poemDao().getUserProfileSync();
+            UserProfile profile = db.userProfileDao().getUserProfileSync();
             if (profile == null) {
                 // 首次使用：创建新档案
                 profile = new UserProfile();
                 String today = LocalDate.now().toString();
                 profile.lastActiveDate = today;
                 profile.streak = 1;
-                db.poemDao().insertUserProfile(profile);
+                db.userProfileDao().insertUserProfile(profile);
             } else {
                 // 老用户：检查并更新 streak
                 String today = LocalDate.now().toString();
@@ -125,19 +126,19 @@ public class MainActivity extends AppCompatActivity {
                     profile.lastActiveDate = today;
 
                     // 将更新后的 streak 持久化到数据库
-                    db.poemDao().updateStreak(profile.streak, today);
+                    db.userProfileDao().updateStreak(profile.streak, today);
 
                     // 里程碑判断：连续学习天数达到 7 的倍数时弹出庆祝提示
                     final int streak = profile.streak;
                     if (streak >= 7 && streak % 7 == 0) {
                         // 切回主线程显示 Toast
-                        runOnUiThread(() -> Toast.makeText(this,
+                        AppExecutors.main(() -> Toast.makeText(this,
                             "🎉 你已经连续学习 " + streak + " 天啦！太棒了！",
                             Toast.LENGTH_LONG).show());
                     }
                 }
             }
-        }).start();
+        });
     }
 
     /**

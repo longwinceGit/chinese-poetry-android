@@ -11,6 +11,7 @@ import com.poetry.data.PoemRepository;
 import com.poetry.data.UserProfile;
 import com.poetry.data.model.Poem;
 import com.poetry.domain.LearningEngine;
+import com.poetry.util.AppExecutors;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,7 +71,7 @@ public class HomeViewModel extends AndroidViewModel {
     public void loadPoems() {
         isLoading.setValue(true);
         loadingMessage.setValue("正在加载诗词数据...");
-        new Thread(() -> {
+        AppExecutors.io(() -> {
             try {
                 List<Poem> result = repo.loadPoemsAsync(getApplication().getAssets()).get();
                 java.util.List<String> cats = repo.getCategories();
@@ -99,7 +100,7 @@ public class HomeViewModel extends AndroidViewModel {
                 isLoading.postValue(false);
                 errorMessage.postValue("数据加载失败：" + e.getMessage());
             }
-        }).start();
+        });
     }
 
     /**
@@ -149,9 +150,9 @@ public class HomeViewModel extends AndroidViewModel {
         searchCancelled = true;
         // 显示搜索中状态
         isSearching.setValue(true);
-        // 启动新搜索线程
+        // 启动新搜索任务
         final String q = searchQuery;
-        searchThread = new Thread(() -> {
+        AppExecutors.io(() -> {
             searchCancelled = false;
             List<Poem> results = repo.search(q);
             // 检查是否已被新搜索取消
@@ -166,8 +167,7 @@ public class HomeViewModel extends AndroidViewModel {
             currentPage = 0;
             poems.postValue(page);
             isSearching.postValue(false);
-        }, "poetry-search");
-        searchThread.start();
+        });
     }
 
     /**
@@ -259,7 +259,7 @@ public class HomeViewModel extends AndroidViewModel {
 
     /** @return 用户学习档案 LiveData */
     public LiveData<UserProfile> getUserProfile() {
-        return db.poemDao().getUserProfile();
+        return db.userProfileDao().getUserProfile();
     }
 
     /** @return 当前分类下的诗词总数 LiveData */

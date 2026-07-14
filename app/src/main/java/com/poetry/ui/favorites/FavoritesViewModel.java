@@ -7,6 +7,7 @@ import androidx.lifecycle.LiveData;
 
 import com.poetry.data.LearningDatabase;
 import com.poetry.data.LearningRecord;
+import com.poetry.util.AppExecutors;
 
 import java.util.List;
 
@@ -30,7 +31,7 @@ public class FavoritesViewModel extends AndroidViewModel {
     public FavoritesViewModel(Application app) {
         super(app);
         db = LearningDatabase.getInstance(app);
-        favorites = db.poemDao().getFavorites();
+        favorites = db.learningRecordDao().getFavorites();
     }
 
     /**
@@ -42,9 +43,9 @@ public class FavoritesViewModel extends AndroidViewModel {
      * @param poemId 诗词 ID
      */
     public void removeFavorite(String poemId) {
-        new Thread(() -> {
-            db.poemDao().removeFavorite(poemId);
-        }).start();
+        AppExecutors.io(() -> {
+            db.learningRecordDao().removeFavorite(poemId);
+        });
     }
 
     /**
