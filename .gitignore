@@ -40,3 +40,27 @@ out/
 
 # Code graph / analysis tools
 .codegraph/
+.codebuddy/
+.workbuddy/
+.project
+.omo/
+
+# IDE / Editor
+.settings/
+*.classpath
+*.project
+.vscode/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Java heap dump
+*.hprof
+
+# Lint temp
+*.crc
