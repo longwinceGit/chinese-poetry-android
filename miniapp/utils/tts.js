@@ -113,41 +113,47 @@ function getAccessToken() {
 }
 
 /**
- * 合成语音并播放（百度 AI TTS RPC API）
- * API: https://aip.baidubce.com/rpc/2.0/tts/v1/create
- * 文档: https://ai.baidu.com/ai-doc/SPEECH/Vk38lxily
+ * 合成语音并播放（百度 TTS REST API /text2audio）
+ * 参考: https://ai.baidu.com/ai-doc/SPEECH/Vk38lxily
  *
- * ⚠️ 需要在微信小程序后台「开发设置」→「request合法域名」中添加：
- *    - aip.baidubce.com
- *    （如果未添加，真机会被拦截。开发工具不校验是因为勾选了「不校验合法域名」）
+ * ⚠️ 微信小程序后台「开发设置」→「request合法域名」中需要添加：
+ *    - tsn.baidu.com
  */
 function synthesizeAndPlay(text) {
   // 截断过长文本（限制 1024 字节）
-  var utterance = text;
+  var tex = text;
   if (text.length > 200) {
-    utterance = text.substring(0, 197) + '。。。';
+    tex = text.substring(0, 197) + '。。。';
   }
 
   var doRequest = function(token) {
+    // form-urlencoded 请求体（与 Java 示例一致）
+    var params = [
+      'tok=' + encodeURIComponent(token),
+      'cuid=tts_miniapp_cuid_001',
+      'ctp=1',
+      'lan=zh',
+      'spd=5',
+      'pit=5',
+      'vol=5',
+      'per=1',
+      'aue=3',
+      'tex=' + encodeURIComponent(tex),
+    ];
+    var bodyStr = params.join('&');
+
     wx.request({
       method: 'POST',
-      url: 'https://aip.baidubce.com/rpc/2.0/tts/v1/create?access_token=' + token,
-      header: { 'Content-Type': 'application/json' },
-      data: {
-        text: utterance,
-        spd: 5,
-        pit: 5,
-        vol: 5,
-        per: 1,
-        aue: 6,
-      },
+      url: 'https://tsn.baidu.com/text2audio',
+      header: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      data: bodyStr,
       responseType: 'arraybuffer',
       success: function(res) {
+        // 成功返回 audio/mp3 二进制；失败返回 JSON
         var contentType = (res.header && res.header['Content-Type']) || '';
-        var isAudio = contentType.indexOf('audio') >= 0;
+        var isAudio = contentType.indexOf('audio') >= 0 || contentType.indexOf('octet-stream') >= 0;
 
         if (res.data && res.data.byteLength > 200 && isAudio) {
-          // 音频 → 写入临时文件播放
           var fs = wx.getFileSystemManager();
           var path = wx.env.USER_DATA_PATH + '/tts_' + Date.now() + '.mp3';
           try {
@@ -163,14 +169,14 @@ function synthesizeAndPlay(text) {
             if (onStopCallback) onStopCallback();
           }
         } else {
-          // 非音频 → JSON 错误
+          // JSON 错误
           var errDetail = '';
           try {
             var bytes = new Uint8Array(res.data);
             var str = '';
             for (var i = 0; i < bytes.length; i++) str += String.fromCharCode(bytes[i]);
             var json = JSON.parse(str);
-            errDetail = 'code=' + json.error_code + ' msg=' + json.error_msg;
+            errDetail = 'err_no=' + json.err_no + ' err_msg=' + json.err_msg;
             console.error('[TTS] API error:', json);
           } catch(e) {
             errDetail = 'content-type=' + contentType + ' size=' + (res.data ? res.data.byteLength : 0) + 'B';
@@ -188,7 +194,6 @@ function synthesizeAndPlay(text) {
     });
   };
 
-  // 检查 token 是否过期
   if (accessToken && Date.now() < tokenExpireTime) {
     doRequest(accessToken);
   } else {
