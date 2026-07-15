@@ -1,0 +1,17 @@
+<scroll-view scroll-y class="page-favorites">
+  <view class="page-title">❤️ 我的收藏</view>
+  <view wx:if="{{isEmpty}}" class="empty-state">
+    <text style="font-size:80rpx;">💝</text>
+    <text>还没有收藏诗词</text>
+    <text style="font-size:24rpx;color:var(--text-muted);margin-top:10rpx;">在诗词详情页点击 🤍 即可收藏</text>
+  </view>
+  <view wx:for="{{favorites}}" wx:key="poemId" class="fav-item card fade-in">
+    <view class="flex-between" bindtap="goToDetail" data-item="{{item}}">
+      <view><text style="font-size:32rpx;font-weight:bold;">{{item.title}}</text><text style="font-size:26rpx;color:var(--text-muted);margin-left:16rpx;">{{item.author}}</text></view>
+    </view>
+    <view class="fav-actions flex-between">
+      <view class="tag tag-default">{{item.dynasty}}</view>
+      <text bindtap="removeFavorite" data-item="{{item}}" style="font-size:36rpx;">❤️</text>
+    </view>
+  </view>
+</scroll-view>

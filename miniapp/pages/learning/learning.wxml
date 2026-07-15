@@ -1,0 +1,30 @@
+<scroll-view scroll-y class="page-learning">
+  <view class="page-title">📚 学习统计</view>
+  <view class="stats-row card">
+    <view class="stat-item"><text class="stat-num">{{stats.poemsLearned || 0}}</text><text class="stat-label">已学诗词</text></view>
+    <view class="stat-item"><text class="stat-num">{{stats.streak || 0}}🔥</text><text class="stat-label">连续天数</text></view>
+    <view class="stat-item"><text class="stat-num">{{stats.totalPoints || 0}}</text><text class="stat-label">总积分</text></view>
+  </view>
+  <view class="card level-card">
+    <view class="flex-between">
+      <text style="font-weight:bold;font-size:32rpx;">{{levelInfo.name || '诗词小学徒'}}</text>
+      <text style="color:var(--text-muted);">{{stats.level || 1}} 级</text>
+    </view>
+    <view class="progress-bar"><view class="progress-fill" style="width:{{progressPercent}}%"></view></view>
+  </view>
+  <view class="card">
+    <view style="font-weight:bold;font-size:30rpx;margin-bottom:20rpx;">📅 本周学习</view>
+    <view class="week-chart">
+      <view wx:for="{{weekStats}}" wx:key="date" class="week-bar-wrapper">
+        <view class="week-bar" style="height:{{item.poemsLearned > 0 ? (item.poemsLearned / 5 * 120 + 20) : 20}}rpx;"></view>
+        <text class="week-label">{{item.date.slice(-5)}}</text>
+      </view>
+    </view>
+  </view>
+  <view class="card">
+    <view style="font-weight:bold;font-size:30rpx;margin-bottom:20rpx;">📋 每日任务</view>
+    <view class="task-item flex-between"><text>📖 学习一首诗词</text><text>{{todayStat.poemsLearned > 0 ? '✅' : '⬜'}}</text></view>
+    <view class="task-item flex-between"><text>🎮 玩一次游戏</text><text>{{todayStat.gamesPlayed > 0 ? '✅' : '⬜'}}</text></view>
+    <view class="task-item flex-between"><text>✍️ 完成一次答题</text><text>{{todayStat.quizCompleted > 0 ? '✅' : '⬜'}}</text></view>
+  </view>
+</scroll-view>

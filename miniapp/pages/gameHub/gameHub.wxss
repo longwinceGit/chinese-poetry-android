@@ -1,0 +1,7 @@
+.page-game-hub { min-height: 100vh; }
+.game-entry { display: flex; align-items: center; padding: 30rpx; margin-top: 20rpx; }
+.game-icon { font-size: 64rpx; margin-right: 24rpx; }
+.game-info { flex: 1; display: flex; flex-direction: column; }
+.game-name { font-size: 34rpx; font-weight: bold; color: var(--text-primary); }
+.game-desc { font-size: 26rpx; color: var(--text-muted); margin-top: 6rpx; }
+.game-arrow { font-size: 32rpx; color: var(--text-muted); }

@@ -1,0 +1,6 @@
+<view class="poem-card {{className}}" bindtap="onTap">
+  <view class="poem-card-emoji">{{poem.emoji}}</view>
+  <view class="poem-card-title">{{poem.title}}</view>
+  <view class="poem-card-author">{{poem.author}}</view>
+  <view class="tag tag-{{poem.tag || 'default'}}">{{poem.dynasty}}</view>
+</view>

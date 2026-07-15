@@ -1,0 +1,3 @@
+<view wx:if="{{show}}" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;pointer-events:none;">
+  <canvas canvas-id="confettiCanvas" style="width:100%;height:100%;"></canvas>
+</view>

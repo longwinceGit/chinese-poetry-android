@@ -1,0 +1,11 @@
+.page-match { min-height: 100vh; }
+.game-header { margin-top: 20rpx; font-size: 30rpx; padding: 24rpx; }
+.match-grid { display: flex; flex-wrap: wrap; padding: 20rpx; }
+.match-card { width: calc(33.33% - 20rpx); margin: 10rpx; aspect-ratio: 1; background: var(--bg-card); border-radius: 16rpx; display: flex; align-items: center; justify-content: center; padding: 16rpx; border: 3rpx solid var(--border); box-shadow: 0 2rpx 12rpx var(--shadow); transition: all 0.3s; }
+.match-card.selected { border-color: #C62828; background: #FFF0F0; transform: scale(1.05); }
+.match-card.matched { opacity: 0; transform: scale(0.5); pointer-events: none; }
+.match-card.shake { animation: shake 0.5s; border-color: #C62828; }
+.card-text { font-size: 26rpx; text-align: center; color: var(--text-primary); line-height: 1.4; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-12rpx)} 50%{transform:translateX(12rpx)} 75%{transform:translateX(-12rpx)} }
+.game-over-overlay { position: fixed; top:0;left:0;right:0;bottom:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:100; }
+.game-over-card { text-align:center; padding:60rpx; min-width:500rpx; }

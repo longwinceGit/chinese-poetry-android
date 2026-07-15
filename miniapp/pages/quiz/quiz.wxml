@@ -1,0 +1,29 @@
+<scroll-view scroll-y class="page-quiz">
+  <view class="game-header flex-between card">
+    <text>✍️ 填空挑战</text>
+    <text>{{currentRound+1}}/{{totalRounds}} · {{correctCount}}/{{score}}分</text>
+  </view>
+  <view wx:if="{{!gameOver && quizzes.length > 0}}" class="card quiz-card slide-up">
+    <view class="quiz-line">{{quizzes[currentRound].question}}</view>
+    <view class="quiz-hint" wx:if="{{quizzes[currentRound].poemTitle}}">
+      —— {{quizzes[currentRound].poemTitle}} · {{quizzes[currentRound].poemAuthor}}
+    </view>
+    <view class="quiz-options">
+      <view wx:for="{{quizzes[currentRound].options}}" wx:key="index"
+        class="quiz-option {{selectedOption === index ? (isCorrect ? 'correct' : 'wrong') : ''}} {{showResult && quizzes[currentRound].answer === item ? 'highlight' : ''}}"
+        bindtap="selectOption" data-index="{{index}}">{{item}}</view>
+    </view>
+    <view class="btn-primary" wx:if="{{showResult && !gameOver}}" bindtap="nextRound" style="margin-top:30rpx;text-align:center;">
+      {{currentRound + 1 >= totalRounds ? '查看成绩' : '下一题'}}
+    </view>
+  </view>
+  <view class="game-over-overlay" wx:if="{{gameOver}}">
+    <view class="game-over-card card">
+      <text style="font-size:80rpx;">{{correctCount === totalRounds ? '🎉' : '📝'}}</text>
+      <text style="font-size:40rpx;font-weight:bold;margin:20rpx 0;">答题完成</text>
+      <text style="font-size:36rpx;color:var(--primary);">{{correctCount}}/{{totalRounds}} 正确</text>
+      <text style="font-size:32rpx;color:var(--text-secondary);margin-top:10rpx;">得分: {{score}}</text>
+      <view class="btn-primary" bindtap="restartQuiz" style="margin-top:30rpx;">再来一次</view>
+    </view>
+  </view>
+</scroll-view>

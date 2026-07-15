@@ -1,0 +1,11 @@
+.page-profile { min-height: 100vh; }
+.profile-header { text-align: center; padding: 40rpx; }
+.profile-avatar { font-size: 120rpx; margin-bottom: 12rpx; }
+.profile-level { font-size: 36rpx; font-weight: bold; color: var(--primary-dark); margin-bottom: 8rpx; }
+.achievement-grid { display: flex; flex-wrap: wrap; }
+.achievement-item { width: 33.33%; display: flex; flex-direction: column; align-items: center; padding: 16rpx 0; }
+.achievement-item.locked { opacity: 0.4; }
+.ach-name { font-size: 22rpx; color: var(--text-secondary); margin-top: 4rpx; }
+.theme-scroll { white-space: nowrap; padding: 10rpx 0; }
+.theme-card { display: inline-flex; flex-direction: column; align-items: center; width: 140rpx; padding: 20rpx 10rpx; margin-right: 16rpx; border-radius: 16rpx; background: var(--bg-warm); }
+.theme-card.active { border: 3rpx solid var(--primary); background: var(--bg-card); }

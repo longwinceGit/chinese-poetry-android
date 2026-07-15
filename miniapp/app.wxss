@@ -1,0 +1,209 @@
+/* 诗词乐园 - 全局样式（中国风主题） */
+/** 颜色变量 **/
+:root {
+  --primary: #8B4513;
+  --primary-light: #A0522D;
+  --primary-dark: #5D2E0C;
+  --secondary: #D4A574;
+  --accent: #C62828;
+  --bg-main: #FFF8F0;
+  --bg-card: #FFFFFF;
+  --bg-warm: #FFF0E0;
+  --text-primary: #3E2723;
+  --text-secondary: #6D4C41;
+  --text-muted: #A1887F;
+  --border: #E0C9B6;
+  --success: #2E7D32;
+  --error: #C62828;
+  --gold: #FFD700;
+  --shadow: rgba(139, 69, 19, 0.1);
+}
+
+/** 页面通用 */
+page {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'STSong', 'SimSun', serif;
+  font-size: 28rpx;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/** 卡片样式 */
+.card {
+  background: var(--bg-card);
+  border-radius: 24rpx;
+  padding: 30rpx;
+  margin: 20rpx 30rpx;
+  box-shadow: 0 4rpx 20rpx var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6rpx;
+  background: linear-gradient(90deg, var(--primary), var(--secondary), var(--primary));
+}
+
+/** 标题样式 */
+.page-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: var(--primary-dark);
+  padding: 30rpx 30rpx 20rpx;
+  text-align: center;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: var(--primary);
+  padding: 20rpx 30rpx 10rpx;
+}
+
+/** 按钮样式 */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: #fff;
+  border: none;
+  border-radius: 40rpx;
+  padding: 20rpx 60rpx;
+  font-size: 30rpx;
+  font-weight: bold;
+  box-shadow: 0 4rpx 16rpx rgba(139, 69, 19, 0.3);
+  transition: all 0.3s;
+}
+
+.btn-primary:active {
+  transform: scale(0.96);
+  box-shadow: 0 2rpx 8rpx rgba(139, 69, 19, 0.2);
+}
+
+.btn-secondary {
+  background: var(--bg-warm);
+  color: var(--primary);
+  border: 2rpx solid var(--border);
+  border-radius: 40rpx;
+  padding: 16rpx 48rpx;
+  font-size: 28rpx;
+}
+
+/** 文字标签 */
+.tag {
+  display: inline-block;
+  padding: 6rpx 20rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  margin: 4rpx;
+}
+
+.tag-tang { background: #FFE0E0; color: #C62828; }
+.tag-song { background: #E0F0E0; color: #2E7D32; }
+.tag-qin { background: #E8E0D0; color: #5D4037; }
+.tag-default { background: #F0E8E0; color: #8D6E63; }
+
+/** 滚动容器 */
+.scroll-container {
+  height: 100vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/** 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 40rpx;
+  color: var(--text-muted);
+}
+
+.empty-state text {
+  margin-top: 20rpx;
+  font-size: 28rpx;
+}
+
+/** 加载动画 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400rpx;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 6rpx solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/** 弹性布局工具 */
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+/** 动画 */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(60rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-up {
+  animation: slideUp 0.5s ease-out;
+}
+
+/** 气泡提示 */
+.toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  padding: 20rpx 40rpx;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease;
+}

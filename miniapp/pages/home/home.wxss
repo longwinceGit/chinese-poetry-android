@@ -1,0 +1,20 @@
+.page-home { min-height: 100vh; padding-bottom: 40rpx; }
+.daily-card { text-align: center; padding: 40rpx; margin-top: 30rpx; }
+.daily-emoji { font-size: 80rpx; margin-bottom: 12rpx; }
+.daily-title { font-size: 40rpx; font-weight: bold; color: var(--primary-dark); }
+.daily-author { font-size: 28rpx; color: var(--text-secondary); margin-top: 8rpx; }
+.daily-line { font-size: 32rpx; color: var(--primary); margin-top: 20rpx; font-style: italic; }
+.search-bar { margin: 20rpx 30rpx; background: var(--bg-card); border-radius: 40rpx; padding: 16rpx 30rpx; box-shadow: 0 2rpx 12rpx var(--shadow); }
+.search-emoji { font-size: 32rpx; margin-right: 16rpx; }
+.search-input { flex: 1; font-size: 28rpx; }
+.filter-scroll { white-space: nowrap; padding: 10rpx 30rpx; margin-bottom: 10rpx; }
+.filter-chip { display: inline-block; padding: 12rpx 28rpx; margin-right: 16rpx; border-radius: 30rpx; background: var(--bg-card); font-size: 26rpx; color: var(--text-secondary); border: 2rpx solid var(--border); }
+.filter-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.poem-grid { display: flex; flex-wrap: wrap; padding: 0 20rpx; }
+.poem-card { width: calc(50% - 24rpx); margin: 12rpx; background: var(--bg-card); border-radius: 20rpx; padding: 24rpx; box-shadow: 0 2rpx 12rpx var(--shadow); position: relative; }
+.poem-card-emoji { font-size: 48rpx; margin-bottom: 8rpx; }
+.poem-card-title { font-size: 30rpx; font-weight: bold; color: var(--text-primary); }
+.poem-card-author { font-size: 24rpx; color: var(--text-muted); margin-top: 6rpx; }
+.poem-card-dynasty { position: absolute; bottom: 16rpx; right: 16rpx; font-size: 20rpx; }
+.load-more { text-align: center; padding: 30rpx; color: var(--primary); font-size: 28rpx; }
+.load-hint { text-align: center; padding: 16rpx; color: var(--text-muted); font-size: 24rpx; background: var(--bg-warm); margin: 0 30rpx 10rpx; border-radius: 16rpx; }

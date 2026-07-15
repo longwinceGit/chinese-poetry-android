@@ -1,0 +1,4 @@
+.poem-card { background: var(--bg-card); border-radius: 20rpx; padding: 24rpx; box-shadow: 0 2rpx 12rpx var(--shadow); position: relative; }
+.poem-card-emoji { font-size: 48rpx; margin-bottom: 8rpx; }
+.poem-card-title { font-size: 30rpx; font-weight: bold; color: var(--text-primary); }
+.poem-card-author { font-size: 24rpx; color: var(--text-muted); margin-top: 6rpx; }

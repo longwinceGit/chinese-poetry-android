@@ -1,0 +1,14 @@
+.page-quiz { min-height: 100vh; }
+.quiz-card { text-align: center; padding: 40rpx; margin-top: 20rpx; }
+.quiz-line { font-size: 44rpx; color: var(--primary-dark); letter-spacing: 6rpx; margin-bottom: 16rpx; }
+.quiz-hint { font-size: 24rpx; color: var(--text-muted); margin-bottom: 40rpx; }
+.quiz-options { display: flex; flex-wrap: wrap; justify-content: center; gap: 20rpx; }
+.quiz-option { width: 100rpx; height: 100rpx; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; border: 3rpx solid var(--border); font-size: 44rpx; font-weight: bold;
+  background: var(--bg-card); transition: all 0.3s; }
+.quiz-option.correct { border-color: var(--success); background: #E8F5E9; transform: scale(1.1); }
+.quiz-option.wrong { border-color: var(--error); background: #FFEBEE; }
+.quiz-option.highlight { border-color: var(--success); background: #E8F5E9; }
+.game-header { margin-top: 20rpx; font-size: 30rpx; padding: 24rpx; }
+.game-over-overlay { position: fixed; top:0;left:0;right:0;bottom:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:100; }
+.game-over-card { text-align:center; padding:60rpx; min-width:500rpx; }

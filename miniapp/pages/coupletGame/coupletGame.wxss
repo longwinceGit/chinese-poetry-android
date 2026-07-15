@@ -1,0 +1,15 @@
+.page-couplet { min-height: 100vh; }
+.game-header { margin-top: 20rpx; font-size: 30rpx; padding: 24rpx; }
+.question-card { text-align: center; padding: 40rpx; margin-top: 20rpx; }
+.progress-dots { justify-content: center; margin-bottom: 30rpx; }
+.dot { width: 16rpx; height: 16rpx; border-radius: 50%; background: var(--border); margin: 0 8rpx; }
+.dot.active { background: var(--primary); width: 24rpx; border-radius: 12rpx; }
+.dot.done { background: var(--secondary); }
+.given-line { font-size: 40rpx; color: var(--primary-dark); margin-bottom: 40rpx; letter-spacing: 4rpx; font-weight: bold; }
+.options { text-align: left; }
+.option { display: flex; align-items: center; padding: 20rpx 24rpx; margin: 12rpx 0; border-radius: 16rpx; border: 2rpx solid var(--border); background: var(--bg-card); font-size: 30rpx; }
+.option.correct { border-color: var(--success); background: #E8F5E9; }
+.option.wrong { border-color: var(--error); background: #FFEBEE; }
+.option-label { font-weight: bold; margin-right: 16rpx; color: var(--text-muted); }
+.game-over-overlay { position: fixed; top:0;left:0;right:0;bottom:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:100; }
+.game-over-card { text-align:center; padding:60rpx; min-width:500rpx; }

@@ -1,0 +1,6 @@
+<view class="pinyin-line-wrapper">
+  <view wx:for="{{cells}}" wx:key="index" class="pinyin-cell">
+    <text class="pinyin-p">{{item.pinyin}}</text>
+    <text class="pinyin-c">{{item.char}}</text>
+  </view>
+</view>

@@ -1,0 +1,32 @@
+<scroll-view scroll-y class="page-couplet">
+  <view class="game-header flex-between card">
+    <text>📜 诗词接龙</text>
+    <text>{{currentRound+1}}/{{totalRounds}}轮 · {{score}}分</text>
+  </view>
+  <view wx:if="{{!gameOver && questions.length > 0}}" class="card question-card">
+    <view class="progress-dots flex-row">
+      <view wx:for="{{totalRounds}}" wx:key="index" class="dot {{index < currentRound ? 'done' : ''}} {{index === currentRound ? 'active' : ''}}"></view>
+    </view>
+    <view class="given-line">{{questions[currentRound].givenLine}}</view>
+    <view class="options">
+      <view wx:for="{{questions[currentRound].options}}" wx:key="index"
+        class="option {{selectedAnswer === index ? (isCorrect ? 'correct' : 'wrong') : ''}} {{showResult && questions[currentRound].correctLine === item ? 'correct' : ''}}"
+        bindtap="selectAnswer" data-index="{{index}}">
+        <text class="option-label">{{String.fromCharCode(65 + index)}}.</text>
+        <text>{{item}}</text>
+      </view>
+    </view>
+    <view class="btn-primary" wx:if="{{showResult && !gameOver}}" bindtap="nextRound" style="margin-top:30rpx;text-align:center;">
+      {{currentRound + 1 >= totalRounds ? '查看结果' : '下一题'}}
+    </view>
+  </view>
+  <view class="game-over-overlay" wx:if="{{gameOver}}">
+    <view class="game-over-card card">
+      <text style="font-size:80rpx;">🎉</text>
+      <text style="font-size:40rpx;font-weight:bold;margin:20rpx 0;">游戏结束</text>
+      <text style="font-size:36rpx;color:var(--primary);">总分: {{score}}</text>
+      <text style="font-size:28rpx;color:var(--text-muted);margin-top:10rpx;">最长连对: {{streak}}</text>
+      <view class="btn-primary" bindtap="restartGame" style="margin-top:30rpx;">再来一局</view>
+    </view>
+  </view>
+</scroll-view>

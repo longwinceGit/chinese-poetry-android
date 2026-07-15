@@ -1,0 +1,40 @@
+<scroll-view scroll-y class="page-home">
+  <view class="daily-card card fade-in" bindtap="goToDetail" data-poem="{{dailyPoem}}">
+    <view class="daily-emoji">{{dailyPoem.emoji}}</view>
+    <view class="daily-title">{{dailyPoem.title}}</view>
+    <view class="daily-author">—— {{dailyPoem.author}}</view>
+    <view wx:if="{{dailyPoem.lines && dailyPoem.lines[0]}}" class="daily-line">「{{dailyPoem.lines[0]}}」</view>
+  </view>
+  <view class="search-bar flex-row">
+    <text class="search-emoji">🔍</text>
+    <input class="search-input" placeholder="搜索诗词、作者..." value="{{searchQuery}}" bindinput="onSearchInput" />
+  </view>
+  <scroll-view scroll-x class="filter-scroll" wx:if="{{categories.length > 0}}">
+    <view wx:for="{{categories}}" wx:key="index"
+      class="filter-chip {{selectedCategory === item ? 'active' : ''}}"
+      bindtap="onFilterTap" data-category="{{item}}">{{item}}</view>
+  </scroll-view>
+  <view class="poem-grid">
+    <view wx:for="{{displayedPoems}}" wx:key="id" class="poem-card fade-in"
+      bindtap="goToDetail" data-poem="{{item}}">
+      <view class="poem-card-emoji">{{item.emoji}}</view>
+      <view class="poem-card-title">{{item.title}}</view>
+      <view class="poem-card-author">{{item.author}}</view>
+      <view class="poem-card-dynasty tag tag-{{item.tag || 'default'}}">{{item.dynasty}}</view>
+    </view>
+  </view>
+  <view class="load-more" bindtap="loadMore" wx:if="{{!isLoading && !searchMode && hasMore}}">
+    <text>加载更多诗词</text>
+  </view>
+  <view class="loading-container" wx:if="{{isLoading}}">
+    <view class="loading-spinner"></view>
+    <text style="margin-top:20rpx;color:var(--text-muted)">正在加载诗词...</text>
+  </view>
+  <view wx:if="{{dataLoadHint}}" class="load-hint">
+    <text>{{dataLoadHint}}</text>
+  </view>
+  <view class="empty-state" wx:if="{{!isLoading && displayedPoems.length === 0}}">
+    <text style="font-size:80rpx">📖</text>
+    <text>没有找到匹配的诗词</text>
+  </view>
+</scroll-view>

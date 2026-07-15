@@ -1,0 +1,56 @@
+{
+  "pages": [
+    "pages/home/home",
+    "pages/learning/learning",
+    "pages/gameHub/gameHub",
+    "pages/profile/profile",
+    "pages/detail/detail",
+    "pages/quiz/quiz",
+    "pages/coupletGame/coupletGame",
+    "pages/matchGame/matchGame",
+    "pages/favorites/favorites"
+  ],
+  "window": {
+    "navigationBarTitleText": "诗词乐园",
+    "navigationBarTextStyle": "white",
+    "navigationBarBackgroundColor": "#8B4513",
+    "backgroundColor": "#FFF8F0",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#8B4513",
+    "backgroundColor": "#FFF8F0",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "首页",
+        "iconPath": "assets/icons/home.png",
+        "selectedIconPath": "assets/icons/home_active.png"
+      },
+      {
+        "pagePath": "pages/learning/learning",
+        "text": "学习",
+        "iconPath": "assets/icons/learn.png",
+        "selectedIconPath": "assets/icons/learn_active.png"
+      },
+      {
+        "pagePath": "pages/gameHub/gameHub",
+        "text": "游戏",
+        "iconPath": "assets/icons/game.png",
+        "selectedIconPath": "assets/icons/game_active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "assets/icons/profile.png",
+        "selectedIconPath": "assets/icons/profile_active.png"
+      }
+    ]
+  },
+  "usingComponents": {},
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents",
+  "subPackages": []
+}

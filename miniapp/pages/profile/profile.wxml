@@ -1,0 +1,30 @@
+<scroll-view scroll-y class="page-profile">
+  <view class="card profile-header">
+    <view class="profile-avatar">👤</view>
+    <view class="profile-level">{{levelInfo.name || '诗词小学徒'}}</view>
+    <view style="font-size:24rpx;color:var(--text-muted);">等级 {{profile.level || 1}} · {{profile.totalPoints || 0}} 积分</view>
+    <view class="progress-bar"><view class="progress-fill" style="width:{{progressPercent}}%"></view></view>
+  </view>
+  <view class="card" bindtap="goToFavorites">
+    <view class="flex-between"><text style="font-weight:bold;">❤️ 我的收藏</text><text>▶</text></view>
+  </view>
+  <view class="card">
+    <view style="font-weight:bold;font-size:30rpx;margin-bottom:20rpx;">🏆 成就 ({{unlockedCount}}/12)</view>
+    <view class="achievement-grid">
+      <view wx:for="{{achievements}}" wx:key="id" class="achievement-item {{!item.unlocked ? 'locked' : ''}}">
+        <text style="font-size:40rpx;">{{item.unlocked ? item.icon : '🔒'}}</text>
+        <text class="ach-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+  <view class="card">
+    <view style="font-weight:bold;font-size:30rpx;margin-bottom:20rpx;">🎨 主题</view>
+    <scroll-view scroll-x class="theme-scroll">
+      <view wx:for="{{themeList}}" wx:key="id" class="theme-card {{currentTheme === item.id ? 'active' : ''}}"
+        bindtap="selectTheme" data-theme="{{item.id}}">
+        <text style="font-size:40rpx;">{{item.icon}}</text>
+        <text style="font-size:24rpx;margin-top:8rpx;">{{item.name}}</text>
+      </view>
+    </scroll-view>
+  </view>
+</scroll-view>

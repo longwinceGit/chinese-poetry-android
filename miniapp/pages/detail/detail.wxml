@@ -1,0 +1,42 @@
+<scroll-view scroll-y class="page-detail">
+  <view class="detail-header card fade-in">
+    <view class="detail-emoji">{{poem.emoji}}</view>
+    <view class="detail-title">{{poem.title}}</view>
+    <view class="detail-author">{{poem.author}}</view>
+    <view class="tag tag-{{poem.tag || 'default'}}">{{poem.dynasty}}</view>
+  </view>
+  <view class="action-row card">
+    <view class="action-btn" bindtap="togglePinyin">
+      <text>{{showPinyin ? '🔤' : '📝'}}</text>
+      <text class="action-label">拼音</text>
+    </view>
+    <view class="action-btn" bindtap="toggleTts">
+      <text>{{isPlaying ? '⏹' : '🔊'}}</text>
+      <text class="action-label">{{isPlaying ? '停止' : '朗读'}}</text>
+    </view>
+    <view class="action-btn" bindtap="toggleFavorite">
+      <text>{{isFavorite ? '❤️' : '🤍'}}</text>
+      <text class="action-label">{{isFavorite ? '已收藏' : '收藏'}}</text>
+    </view>
+    <view class="action-btn" bindtap="markLearned">
+      <text>{{isLearned ? '✅' : '📖'}}</text>
+      <text class="action-label">{{isLearned ? '已学' : '已学'}}</text>
+    </view>
+  </view>
+  <view class="poem-body card slide-up">
+    <view wx:for="{{poem.lines}}" wx:for-index="li" wx:for-item="line" wx:key="li" class="poem-line-wrapper">
+      <view wx:if="{{showPinyin && pinyinLines[li]}}" class="pinyin-row">
+        <text wx:for="{{pinyinLines[li]}}" wx:for-item="py" wx:key="ci" class="pinyin-char">{{py}}</text>
+      </view>
+      <view class="poem-line-text">{{line}}</view>
+    </view>
+  </view>
+  <view class="explanation-card card" wx:if="{{poem.explanation}}" bindtap="toggleExplanation">
+    <view class="flex-between">
+      <text style="font-weight:bold;font-size:30rpx;">📖 释义</text>
+      <text style="color:var(--text-muted);font-size:24rpx;">{{showExplanation ? '收起 ▲' : '展开 ▼'}}</text>
+    </view>
+    <view wx:if="{{showExplanation}}" class="explanation-body">{{poem.explanation}}</view>
+  </view>
+  <view style="height:60rpx;"></view>
+</scroll-view>

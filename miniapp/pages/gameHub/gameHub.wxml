@@ -1,0 +1,21 @@
+<scroll-view scroll-y class="page-game-hub">
+  <view class="page-title">🎮 游戏乐园</view>
+  <view class="game-entry card" bindtap="goToMatch">
+    <view class="game-icon">🀄</view>
+    <view class="game-info"><text class="game-name">消消乐</text><text class="game-desc">配对诗句，挑战记忆</text></view>
+    <text class="game-arrow">▶</text>
+  </view>
+  <view class="game-entry card" bindtap="goToCouplet">
+    <view class="game-icon">📜</view>
+    <view class="game-info"><text class="game-name">诗词接龙</text><text class="game-desc">选择下一句，对诗挑战</text></view>
+    <text class="game-arrow">▶</text>
+  </view>
+  <view class="game-entry card" bindtap="goToQuiz">
+    <view class="game-icon">✍️</view>
+    <view class="game-info"><text class="game-name">填空挑战</text><text class="game-desc">补全诗句，测试学识</text></view>
+    <text class="game-arrow">▶</text>
+  </view>
+  <view class="card" style="text-align:center;margin-top:30rpx;">
+    <text style="color:var(--text-muted);">🎮 已玩 {{gamesPlayed}} 次</text>
+  </view>
+</scroll-view>
