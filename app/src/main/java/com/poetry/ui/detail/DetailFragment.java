@@ -85,7 +85,7 @@ public class DetailFragment extends Fragment {
         setupData();
         setupListeners();
         observeViewModel();
-        viewModel.checkStatus(poemArgs.getId());
+        viewModel.checkStatus(poemArgs.getId(), poemArgs.getTitle(), poemArgs.getAuthor(), poemArgs.getDynasty());
     }
 
     /**

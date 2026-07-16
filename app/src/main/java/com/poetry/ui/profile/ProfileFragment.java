@@ -38,7 +38,7 @@ public class ProfileFragment extends Fragment {
     // 🔴 B5 修复：主题展示容器
     private LinearLayout llThemes;
     private TextView tvThemeCount;
-    private MaterialCardView cardFavorites;
+    private MaterialCardView cardFavorites, cardLearned;
     private ProfileViewModel viewModel;
 
     /**
@@ -66,6 +66,8 @@ public class ProfileFragment extends Fragment {
         view.findViewById(R.id.btn_share_app).setOnClickListener(v -> shareApp());
         cardFavorites.setOnClickListener(v ->
             Navigation.findNavController(v).navigate(R.id.nav_favorites));
+        cardLearned.setOnClickListener(v ->
+            Navigation.findNavController(v).navigate(R.id.nav_learned));
     }
 
     /**
@@ -83,6 +85,7 @@ public class ProfileFragment extends Fragment {
         llThemes = v.findViewById(R.id.ll_themes);
         tvThemeCount = v.findViewById(R.id.tv_theme_count);
         cardFavorites = v.findViewById(R.id.card_favorites);
+        cardLearned = v.findViewById(R.id.card_learned);
     }
 
     /**

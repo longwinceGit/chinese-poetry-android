@@ -27,18 +27,19 @@ import com.poetry.util.PoemArgs;
 import java.util.List;
 
 /**
- * 收藏列表 Fragment。
+ * 已学诗词列表 Fragment。
  * <p>
- * 以线性列表形式展示用户收藏的诗词，支持点击跳转详情页和取消收藏操作。
- * 无收藏时显示空状态提示。利用 Room LiveData 自动刷新，无需手动刷新。
+ * 以线性列表形式展示用户已学习的诗词，按学习时间降序排列。
+ * 点击卡片跳转详情页。无已学记录时显示空状态提示。
+ * 利用 Room LiveData 自动刷新，标记新诗词为已学后自动更新列表。
  * </p>
  */
-public class FavoritesFragment extends Fragment {
+public class LearnedListFragment extends Fragment {
 
-    private RecyclerView rvFavorites;
+    private RecyclerView rvLearned;
     private LinearLayout layoutEmpty;
     private FavoriteAdapter adapter;
-    private FavoritesViewModel viewModel;
+    private LearnedListViewModel viewModel;
     private NavController navController;
 
     @Nullable
@@ -46,7 +47,7 @@ public class FavoritesFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_favorites, container, false);
+        return inflater.inflate(R.layout.fragment_learned, container, false);
     }
 
     @Override
@@ -54,12 +55,12 @@ public class FavoritesFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         navController = Navigation.findNavController(view);
-        rvFavorites = view.findViewById(R.id.rv_favorites);
+        rvLearned = view.findViewById(R.id.rv_learned);
         layoutEmpty = view.findViewById(R.id.layout_empty);
 
         viewModel = new ViewModelProvider(this,
-            ViewModelProvider.AndroidViewModelFactory.getInstance(
-                requireActivity().getApplication())).get(FavoritesViewModel.class);
+                ViewModelProvider.AndroidViewModelFactory.getInstance(
+                        requireActivity().getApplication())).get(LearnedListViewModel.class);
 
         setupRecyclerView();
         observeData();
@@ -69,7 +70,7 @@ public class FavoritesFragment extends Fragment {
      * 初始化 RecyclerView，设置 LinearLayoutManager 和适配器。
      */
     private void setupRecyclerView() {
-        rvFavorites.setLayoutManager(new LinearLayoutManager(requireContext()));
+        rvLearned.setLayoutManager(new LinearLayoutManager(requireContext()));
 
         adapter = new FavoriteAdapter(new FavoriteAdapter.OnItemClickListener() {
             @Override
@@ -79,23 +80,23 @@ public class FavoritesFragment extends Fragment {
 
             @Override
             public void onUnfavoriteClick(LearningRecord record, int position) {
-                viewModel.removeFavorite(record.poemId);
-                Toast.makeText(requireContext(), "已取消收藏", Toast.LENGTH_SHORT).show();
+                // 已学列表不支持取消收藏操作，无操作
             }
         });
+        adapter.setShowUnfavButton(false);
 
-        rvFavorites.setAdapter(adapter);
+        rvLearned.setAdapter(adapter);
     }
 
     /**
-     * 观察 ViewModel 中的收藏列表数据，自动更新 UI。
+     * 观察 ViewModel 中的已学诗词列表数据，自动更新 UI。
      * 自动修复 title/author/dynasty 为 null 的旧记录（首次加载时修复一次）。
      */
     private void observeData() {
-        viewModel.getFavorites().observe(getViewLifecycleOwner(), records -> {
+        viewModel.getLearnedPoems().observe(getViewLifecycleOwner(), records -> {
             boolean isEmpty = records == null || records.isEmpty();
             layoutEmpty.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
-            rvFavorites.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+            rvLearned.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
             if (records != null) adapter.setRecords(records);
 
             // 修复旧记录：补齐缺失的 title/author/dynasty
@@ -120,7 +121,7 @@ public class FavoritesFragment extends Fragment {
     private void repairRecords(List<LearningRecord> records) {
         PoemRepository repo = PoemRepository.getInstance();
         com.poetry.data.LearningRecordDao dao =
-            com.poetry.data.LearningDatabase.getInstance(requireContext()).learningRecordDao();
+                LearningDatabase.getInstance(requireContext()).learningRecordDao();
         for (LearningRecord r : records) {
             if (r.title == null || r.author == null) {
                 Poem poem = repo.findPoemById(r.poemId);
@@ -136,12 +137,8 @@ public class FavoritesFragment extends Fragment {
 
     /**
      * 跳转到诗词详情页。
-     * <p>
-     * 通过 PoemRepository 根据 poemId 查找完整诗词数据，
-     * 然后以 Bundle 形式传递至 DetailFragment。
-     * </p>
      *
-     * @param record 收藏记录（含 poemId、title、author、dynasty）
+     * @param record 学习记录（含 poemId、title、author、dynasty）
      */
     private void navigateToDetail(LearningRecord record) {
         Poem poem = PoemRepository.getInstance().findPoemById(record.poemId);

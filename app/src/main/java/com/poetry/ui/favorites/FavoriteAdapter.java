@@ -25,6 +25,7 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.ViewHo
 
     private List<LearningRecord> records = new ArrayList<>();
     private OnItemClickListener listener;
+    private boolean showUnfavButton = true;
 
     /** 列表项点击回调接口 */
     public interface OnItemClickListener {
@@ -53,6 +54,16 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.ViewHo
         notifyDataSetChanged();
     }
 
+    /**
+     * 设置是否显示取消收藏/操作按钮。
+     *
+     * @param show true 显示按钮（收藏列表），false 隐藏（已学列表）
+     */
+    public void setShowUnfavButton(boolean show) {
+        this.showUnfavButton = show;
+        notifyDataSetChanged();
+    }
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -64,13 +75,17 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.ViewHo
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         LearningRecord r = records.get(position);
-        holder.tvTitle.setText(r.title);
-        holder.tvAuthor.setText(r.author + " · " + r.dynasty);
+        holder.tvTitle.setText(r.title != null ? r.title : "未知诗词");
+        holder.tvAuthor.setText(
+            (r.author != null ? r.author : "佚名")
+            + " · "
+            + (r.dynasty != null ? r.dynasty : "未知朝代"));
 
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) listener.onItemClick(r, position);
         });
 
+        holder.btnUnfav.setVisibility(showUnfavButton ? View.VISIBLE : View.GONE);
         holder.btnUnfav.setOnClickListener(v -> {
             if (listener != null) listener.onUnfavoriteClick(r, position);
         });

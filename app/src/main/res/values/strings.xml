@@ -89,6 +89,11 @@
     <string name="favorites_empty">还没有收藏任何诗词</string>
     <string name="favorites_empty_hint">在诗词详情页点击❤️即可收藏</string>
 
+    <!-- 已学诗词 -->
+    <string name="learned_title">已学诗词</string>
+    <string name="learned_empty">还没有学习任何诗词</string>
+    <string name="learned_empty_hint">在诗词详情页点击"已学"按钮即可标记</string>
+
     <!-- 成就 -->
     <string name="achievement_unlocked_title">🎉 成就解锁！</string>
     <string name="achievement_all">全部成就</string>

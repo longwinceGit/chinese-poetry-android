@@ -31,7 +31,7 @@ public interface LearningRecordDao {
     @Query("SELECT * FROM learning_records ORDER BY learnedAt DESC")
     LiveData<List<LearningRecord>> getAllLearningRecords();
 
-    @Query("SELECT COUNT(*) FROM learning_records")
+    @Query("SELECT COUNT(*) FROM learning_records WHERE learnedAt > 0")
     LiveData<Integer> getLearnedCount();
 
     @Query("SELECT COUNT(*) > 0 FROM learning_records WHERE poemId = :poemId AND favorite = 1")
@@ -55,7 +55,7 @@ public interface LearningRecordDao {
     @Query("INSERT OR IGNORE INTO learning_records(poemId, favorite, learnedAt, quizScore, gamePlayed) VALUES (:poemId, 0, 0, 0, 0)")
     void ensureRecordExists(String poemId);
 
-    @Query("SELECT COUNT(*) FROM learning_records")
+    @Query("SELECT COUNT(*) FROM learning_records WHERE learnedAt > 0")
     int getLearnedCountSync();
 
     @Query("SELECT COUNT(*) FROM learning_records WHERE quizScore >= :score")
@@ -63,6 +63,9 @@ public interface LearningRecordDao {
 
     @Query("SELECT COUNT(*) FROM learning_records WHERE favorite = 1")
     int getFavCountSync();
+
+    @Query("SELECT * FROM learning_records WHERE learnedAt > 0 ORDER BY learnedAt DESC")
+    LiveData<List<LearningRecord>> getLearnedPoems();
 
     @Query("SELECT * FROM learning_records WHERE learnedAt >= :startOfDay")
     List<LearningRecord> getTodayRecords(long startOfDay);
