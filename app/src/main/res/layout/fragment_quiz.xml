@@ -53,6 +53,28 @@
             tools:ignore="HardcodedText" />
     </LinearLayout>
 
+    <!-- M3 对诗化：局内反馈层（星星进度环 + 连击条 + 飞分），由 Fragment 动态 addView -->
+    <FrameLayout
+        android:id="@+id/fl_feedback"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_sm"
+        app:layout_constraintTop_toBottomOf="@id/ll_header"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_lg"
+        android:textSize="@dimen/text_size_label"
+        android:textColor="@color/text_body_secondary"
+        app:layout_constraintTop_toBottomOf="@id/fl_feedback"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="第 1/5 题" />
+
     <TextView
         android:id="@+id/tv_title"
         android:layout_width="0dp"
@@ -61,7 +83,7 @@
         android:textSize="@dimen/text_size_title"
         android:textColor="@color/text_body_secondary"
         android:gravity="center"
-        app:layout_constraintTop_toBottomOf="@id/ll_header"
+        app:layout_constraintTop_toBottomOf="@id/tv_progress"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         tools:text="《静夜思》— 李白" />
@@ -88,6 +110,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- M3 对诗化：内联答题反馈（正确/错误），Fragment 动态控制 -->
+    <TextView
+        android:id="@+id/tv_feedback"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_lg"
+        android:textSize="@dimen/text_size_body"
+        android:gravity="center"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/chip_candidates"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="✅ 全对！" />
+
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_submit"
         style="@style/Widget.Poetry.Button.Outlined"
@@ -97,7 +133,7 @@
         android:text="提交答案"
         android:textSize="@dimen/text_size_body"
         app:cornerRadius="@dimen/radius_medium"
-        app:layout_constraintTop_toBottomOf="@id/chip_candidates"
+        app:layout_constraintTop_toBottomOf="@id/tv_feedback"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

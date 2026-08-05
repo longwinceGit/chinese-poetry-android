@@ -133,6 +133,10 @@ public class QuizViewModel extends AndroidViewModel {
         isFinished.setValue(false);
         totalHitBlanks = 0;
         totalBlanksCount = 0;
+        gameScoreValue = 0;
+        gameScore.setValue(0);
+        lastPoints = 0;
+        touchedPoemIds.clear();
 
         // 打散题目顺序（否则 Easy 会连着出多首名篇）
         if (questions.size() > 1) Collections.shuffle(questions);
@@ -213,6 +217,15 @@ public class QuizViewModel extends AndroidViewModel {
         if (allCorrect) {
             int correct = (totalCorrect.getValue() != null ? totalCorrect.getValue() : 0) + 1;
             totalCorrect.setValue(correct);
+        }
+
+        // 本局得分：按命中空数加分，供顶部显示 + 结算页
+        int gain = LearningEngine.calcPointsForQuiz(hitBlanks, totalBlanks);
+        gameScoreValue += gain;
+        gameScore.setValue(gameScoreValue);
+        lastPoints = gain;
+        if (q.poem != null && q.poem.id != null) {
+            touchedPoemIds.add(q.poem.id);
         }
 
         // M9 自适应排等：累计本局命中空数 / 总空数
@@ -336,4 +349,20 @@ public class QuizViewModel extends AndroidViewModel {
     public void clearAchievement() { newAchievement.setValue(null); }
     /** @return 本轮总题数 */
     public int getTotalQuestions() { return TOTAL_QUESTIONS; }
+
+    /** @return 本局得分 LiveData */
+    public LiveData<Integer> getGameScore() { return gameScore; }
+
+    /** @return 最近一题得分（供 Fragment 飞分展示） */
+    public int getLastPoints() { return lastPoints; }
+
+    /**
+     * 本局"最美一句"所属诗词 id（§9.2）。
+     * <p>统一经 {@link com.poetry.domain.GameSettlement#pickBestPoemId} 挑选。</p>
+     */
+    public String getBestPoemId() {
+        if (touchedPoemIds.isEmpty()) return null;
+        return com.poetry.domain.GameSettlement.pickBestPoemId(
+                new ArrayList<>(touchedPoemIds));
+    }
 }

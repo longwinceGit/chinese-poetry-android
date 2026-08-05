@@ -1,9 +1,12 @@
 package com.poetry.ui.quiz;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -14,6 +17,7 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.Navigation;
 
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -21,6 +25,7 @@ import com.poetry.R;
 import com.poetry.data.model.Poem;
 import com.poetry.domain.QuizDifficulty;
 import com.poetry.domain.QuizGenerator;
+import com.poetry.ui.widget.GameFeedback;
 import com.poetry.util.DifficultyProfile;
 import com.poetry.util.GameSnapshot;
 import com.poetry.util.TtsManager;
@@ -37,15 +42,22 @@ import java.util.Map;
  * 核心交互：点击已填写的空位可撤销（恢复候选词），所有空位填满后自动提交答案。
  * 通过 {@link QuizViewModel} 管理答题状态和计分逻辑。
  * </p>
+ * <p>
+ * <b>M3 对诗化改造</b>：顶部对齐对诗游戏的 {@link GameFeedback} 反馈层
+ * （星星进度环 + 连击条 + 飞分）、进度显示、内联反馈文本、1.5s 自动下一题，
+ * 答题完成后导航到结算页 {@code nav_game_settlement}（得分/得星/再来一局/回大厅），
+ * 替代原先直接 {@code onBackPressed()} 返回。
+ * </p>
  */
 public class QuizFragment extends Fragment {
 
     private QuizViewModel viewModel;
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
-    private TextView tvPoemTitle, tvScore;
+    private TextView tvPoemTitle, tvScore, tvProgress, tvFeedback;
     private LinearLayout layoutLines;
     private ViewGroup layoutCandidates;
-    private View btnBack, btnTip, btnSubmit, btnNext, btnReadPoem;
+    private View btnSubmit, btnNext, btnReadPoem;
     private List<TextView> blankViews = new ArrayList<>();
     private List<String> userAnswers = new ArrayList<>();
     /** 候选词 chip 视图，用于撤销时恢复 */
@@ -56,6 +68,15 @@ public class QuizFragment extends Fragment {
 
     /** 读题辅助（方案 §8.4）：🔊 一键朗读题干，答对自动朗读完整句 */
     private TtsManager tts;
+
+    /** M3：顶部 GameFeedback 反馈层 */
+    private GameFeedback gameFeedback;
+    /** M3：累计星数（用于 GameFeedback 星星进度环） */
+    private int accumulatedStars = 0;
+    /** M3：进题自动朗读的延迟任务 */
+    private Runnable autoReadRunnable;
+    /** M3：结算是否已导航（防 finished observer 双重导航） */
+    private boolean navigatedToSettlement = false;
 
     /**
      * 创建 QuizFragment 实例的静态工厂方法。
@@ -145,6 +166,11 @@ public class QuizFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        handler.removeCallbacksAndMessages(null);
+        if (autoReadRunnable != null) {
+            handler.removeCallbacks(autoReadRunnable);
+            autoReadRunnable = null;
+        }
         if (tts != null) tts.shutdown();
         tts = null;
     }
@@ -157,12 +183,30 @@ public class QuizFragment extends Fragment {
     private void initViews(View v) {
         tvPoemTitle = v.findViewById(R.id.tv_title);
         tvScore = v.findViewById(R.id.tv_score);
+        tvProgress = v.findViewById(R.id.tv_progress);
+        tvFeedback = v.findViewById(R.id.tv_feedback);
         layoutLines = v.findViewById(R.id.ll_poem_display);
         layoutCandidates = v.findViewById(R.id.chip_candidates);
         btnSubmit = v.findViewById(R.id.btn_submit);
         btnNext = v.findViewById(R.id.btn_next);
         btnReadPoem = v.findViewById(R.id.btn_read_poem);
         btnNext.setVisibility(View.GONE);
+
+        // M3：对诗化 —— 顶部 GameFeedback 反馈层
+        FrameLayout flFeedback = v.findViewById(R.id.fl_feedback);
+        gameFeedback = new GameFeedback(requireContext());
+        gameFeedback.setMaxStars(3);
+        gameFeedback.setMaxCombo(5);
+        gameFeedback.setOnComboFullListener(() -> {
+            if (getActivity() instanceof com.poetry.MainActivity) {
+                ((com.poetry.MainActivity) getActivity()).celebrate();
+            } else {
+                Toast.makeText(requireContext(), "🔥 连击满格！", Toast.LENGTH_SHORT).show();
+            }
+        });
+        flFeedback.addView(gameFeedback, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT));
     }
 
     /**
@@ -206,9 +250,10 @@ public class QuizFragment extends Fragment {
     /**
      * 观察 ViewModel 的 LiveData：
      * <ul>
-     *   <li>{@code currentQuestion} → 渲染题目</li>
-     *   <li>{@code isCorrect} → 显示结果 Toast 并显示"下一题"按钮</li>
-     *   <li>{@code isFinished} → 显示完成提示并返回上一页</li>
+     *   <li>{@code currentQuestion} → 渲染题目 + 进度</li>
+     *   <li>{@code gameScore} → 顶部得分</li>
+     *   <li>{@code isCorrect} → 内联反馈 + GameFeedback + 1.5s 自动下一题</li>
+     *   <li>{@code isFinished} → 导航到结算页（对诗化）</li>
      * </ul>
      */
     private void observeData() {
@@ -217,32 +262,56 @@ public class QuizFragment extends Fragment {
         });
 
         viewModel.getQuestionIndex().observe(getViewLifecycleOwner(), idx -> {
-            // Progress tracked in ViewModel
+            if (idx != null) {
+                tvProgress.setText(getString(R.string.game_progress,
+                        idx, viewModel.getTotalQuestions()));
+            }
+        });
+
+        viewModel.getGameScore().observe(getViewLifecycleOwner(), s -> {
+            if (s != null) tvScore.setText(getString(R.string.game_score) + ": " + s);
         });
 
         viewModel.getIsCorrect().observe(getViewLifecycleOwner(), correct -> {
             if (correct != null) {
-                btnNext.setVisibility(View.VISIBLE);
                 if (correct) {
-                    Toast.makeText(requireContext(), "✅ 回答正确！", Toast.LENGTH_SHORT).show();
-                    // 答对自动朗读完整句（§5.2 读题辅助）
+                    // M3：全对 → 绿反馈 + 连击 + 飞分 + 星星 + 朗读完整句
+                    tvFeedback.setText(getString(R.string.quiz_correct));
+                    tvFeedback.setTextColor(ContextCompat.getColor(
+                            requireContext(), R.color.answer_correct));
+                    gameFeedback.addCombo();
+                    gameFeedback.playFlyingScore(
+                            gameFeedback.getWidth() / 2, gameFeedback.getHeight(),
+                            viewModel.getLastPoints());
+                    accumulatedStars = Math.min(3, accumulatedStars + 1);
+                    gameFeedback.setStars(accumulatedStars);
                     speakCurrentQuestion();
                 } else {
-                    Toast.makeText(requireContext(), "❌ 再想想哦~", Toast.LENGTH_SHORT).show();
+                    // M3：答错 → 红反馈 + 连击清零
+                    tvFeedback.setText(getString(R.string.quiz_wrong));
+                    tvFeedback.setTextColor(ContextCompat.getColor(
+                            requireContext(), R.color.answer_wrong));
+                    gameFeedback.resetCombo();
                 }
+                tvFeedback.setVisibility(View.VISIBLE);
+                btnSubmit.setEnabled(false);
+                btnSubmit.setAlpha(0.5f);
+                disableAllCandidates();
+
+                // M3：对诗化 —— 1.5s 后自动进入下一题 / 全完成导航结算
+                handler.postDelayed(() -> {
+                    tvFeedback.setVisibility(View.GONE);
+                    viewModel.nextQuestion();
+                    Boolean finished = viewModel.getIsFinished().getValue();
+                    if (finished != null && finished) {
+                        navigateToSettlement();
+                    }
+                }, 1500);
             }
         });
 
         viewModel.getIsFinished().observe(getViewLifecycleOwner(), finished -> {
-            if (finished != null && finished) {
-                Integer correct = viewModel.getTotalCorrect().getValue();
-                int total = viewModel.getTotalQuestions();
-                String msg = "🎉 你完成了 " + total + " 题，答对 " + (correct != null ? correct : 0) + " 题！";
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show();
-                // M9 容错续局：完成即清除未完成局快照
-                GameSnapshot.clear(requireContext());
-                requireActivity().onBackPressed();
-            }
+            if (finished != null && finished) navigateToSettlement();
         });
 
         // 成就解锁：撒花 + Toast
@@ -256,6 +325,38 @@ public class QuizFragment extends Fragment {
                 viewModel.clearAchievement(); // 消费后清空，防止 LiveData 回放
             }
         });
+    }
+
+    /**
+     * M3：对诗化 —— 完成时导航到结算页（复用 nav_game_settlement 通用参数）。
+     * <p>传参 game_type="quiz" / score=本局得分 / stars / poem_id（最美一句，§9.2）。
+     * 结算页提供"再来一局"（回 nav_quiz）与"回大厅"。</p>
+     */
+    private void navigateToSettlement() {
+        if (navigatedToSettlement) return;
+        navigatedToSettlement = true;
+        Integer sc = viewModel.getGameScore().getValue();
+        int finalScore = sc != null ? sc : 0;
+        // 星级：复用 ViewModel 里的 calcQuizStars 语义 —— 满分(20×5=100)→3 星
+        int stars = Math.min(3, Math.max(1,
+                finalScore >= 100 ? 3 : (finalScore >= 75 ? 2 : 1)));
+
+        if (stars >= 3) {
+            if (getActivity() instanceof com.poetry.MainActivity) {
+                ((com.poetry.MainActivity) getActivity()).celebrate();
+            }
+        }
+
+        Bundle args = new Bundle();
+        args.putString("game_type", "quiz");
+        args.putInt("score", finalScore);
+        args.putInt("stars", stars);
+        args.putString("poem_id", viewModel.getBestPoemId());
+        // M9 容错续局：完成即清除未完成局快照
+        GameSnapshot.clear(requireContext());
+        if (getView() != null) {
+            Navigation.findNavController(getView()).navigate(R.id.nav_game_settlement, args);
+        }
     }
 
     /**
@@ -277,6 +378,16 @@ public class QuizFragment extends Fragment {
         btnSubmit.setAlpha(1f);
         btnNext.setVisibility(View.GONE);
         layoutCandidates.setEnabled(true);
+        tvFeedback.setVisibility(View.GONE);
+        accumulatedStars = Math.min(3, accumulatedStars); // 星星跨题累计，不重置
+
+        // M3：对诗化 —— 进题自动轻声朗读（受 M10 自动读题开关门控）
+        handler.removeCallbacks(autoReadRunnable);
+        autoReadRunnable = this::speakCurrentQuestion;
+        if (requireContext().getSharedPreferences("game_settings", android.content.Context.MODE_PRIVATE)
+                .getBoolean("auto_read", true)) {
+            handler.postDelayed(autoReadRunnable, 1500);
+        }
 
         // 逐行渲染
         for (int i = 0; i < q.displayLines.length; i++) {

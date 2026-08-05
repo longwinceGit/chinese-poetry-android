@@ -86,6 +86,9 @@
     <string name="couplet_wrong">❌ 再接再厉！</string>
     <string name="couplet_close_guess">差一点！是「%s」</string>
     <string name="couplet_finished">🎉 游戏结束！你得了 %1$d 分，%2$d 星！</string>
+    <!-- M3 对诗化填空反馈 -->
+    <string name="quiz_correct">✅ 全对，太棒了！</string>
+    <string name="quiz_wrong">🌱 再接再厉，记住它吧</string>
     <string name="settlement_best_line_fallback">本局最美一句，尽在诗词乐园</string>
     <string name="game_finish">完成挑战</string>
     <string name="game_progress">%d / %d</string>
