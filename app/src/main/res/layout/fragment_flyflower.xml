@@ -175,19 +175,27 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- 候选句容器（默认隐藏，点「提示一句」后显示） -->
-    <LinearLayout
-        android:id="@+id/ll_candidates"
+    <!-- 候选句容器（默认隐藏，点「提示一句」后显示；内容多时可滚动，不遮挡底部按钮） -->
+    <ScrollView
+        android:id="@+id/sv_candidates"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_marginTop="@dimen/spacing_lg"
-        android:orientation="vertical"
+        android:fillViewport="false"
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/btn_fly_hint"
+        app:layout_constraintBottom_toTopOf="@id/btn_fly_restart"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
 
-    <!-- 再来一局 -->
+        <LinearLayout
+            android:id="@+id/ll_candidates"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
+
+    <!-- 再来一局（固定在底部） -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_fly_restart"
         android:layout_width="0dp"
@@ -196,7 +204,7 @@
         android:text="@string/flyflower_restart"
         android:textSize="@dimen/text_size_body"
         app:cornerRadius="@dimen/radius_medium"
-        app:layout_constraintTop_toBottomOf="@id/ll_candidates"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

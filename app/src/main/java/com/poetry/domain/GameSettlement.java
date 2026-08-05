@@ -6,6 +6,7 @@ import com.poetry.data.LearningDatabase;
 import com.poetry.data.PoemRepository;
 import com.poetry.data.UserProfile;
 import com.poetry.data.model.Poem;
+import com.poetry.util.DebugLogger;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -55,6 +56,10 @@ public final class GameSettlement {
     public static void settle(LearningDatabase db, GameResult r,
                               AchievementEngine.AchievementListener listener) {
         if (db == null || r == null) return;
+
+        DebugLogger.i("GameSettlement",
+                "结算开始 gameType=" + r.gameType + " score=" + r.score
+                        + " stars=" + r.stars + " correct=" + r.correctCount + "/" + r.totalCount);
 
         // 1. 积分原子累加 + 等级提升（镜像 QuizViewModel.submitAnswer 语义）
         db.userProfileDao().addTotalPoints(r.score);

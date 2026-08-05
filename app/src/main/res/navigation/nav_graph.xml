@@ -120,4 +120,11 @@
             app:argType="integer"
             android:defaultValue="1" />
     </fragment>
+<!-- 调试日志面板 -->
+    <fragment
+        android:id="@+id/nav_debug_log"
+        android:name="com.poetry.ui.debug.DebugLogFragment"
+        android:label="调试日志"
+        tools:layout="@layout/fragment_debug_log" />
+
 </navigation>

@@ -4,6 +4,7 @@ import android.content.res.AssetManager;
 
 import com.poetry.data.model.Poem;
 import com.poetry.PoemLoader;
+import com.poetry.util.DebugLogger;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -85,7 +86,11 @@ public class PoemRepository {
         return executor.submit(new Callable<List<Poem>>() {
             @Override
             public List<Poem> call() throws Exception {
+                long start = System.currentTimeMillis();
                 List<Poem> poems = PoemLoader.loadAll(assets);
+                DebugLogger.i("PoemRepository",
+                        "诗词数据解析完成：" + poems.size() + " 首，耗时 "
+                                + (System.currentTimeMillis() - start) + "ms");
                 // 著名诗词（有释义）排在前面
                 Collections.sort(poems, new Comparator<Poem>() {
                     @Override
@@ -299,6 +304,43 @@ public class PoemRepository {
         if (allPoems.isEmpty()) return null;
         int idx = (int) (Math.random() * allPoems.size());
         return allPoems.get(idx);
+    }
+
+    /**
+     * 获取游戏专用题池：著名优先，普通兜底。
+     *
+     * <p>游戏题目必须出自著名诗词（体验要求），但 88 首释义名篇作为题池
+     * 过于稀薄——对诗一局 7 题、消消乐 6 对，若只从著名池出题，几局后即严重重复。
+     * 因此按比例混池：著名 80% + 普通 20%（去重、随机），保证题目质量的同时
+     * 不让题池匮乏。</p>
+     *
+     * <p>著名 = 有释义（{@link Poem#hasExplanation()}），即 poem_explanations.json
+     * 收录的 88 首名篇。著名池不足时按比例补入全库普通诗词。</p>
+     *
+     * @return 打乱后的游戏题池；诗词库为空时返回空列表
+     */
+    public List<Poem> getGamePool() {
+        if (allPoems.isEmpty()) return new ArrayList<>();
+        if (famousPoems.isEmpty()) {
+            List<Poem> all = new ArrayList<>(allPoems);
+            Collections.shuffle(all);
+            return all;
+        }
+
+        List<Poem> pool = new ArrayList<>(famousPoems);
+        // 从全库补足普通诗词至 25% 占比（20% 目标 + 余量），去重后随机取样
+        int targetTotal = Math.max(pool.size(), (int) Math.ceil(pool.size() / 0.8));
+        if (pool.size() < targetTotal) {
+            List<Poem> candidates = new ArrayList<>(allPoems);
+            candidates.removeAll(pool);   // 去重：普通 = 全库 − 著名
+            Collections.shuffle(candidates);
+            int need = targetTotal - pool.size();
+            for (int i = 0; i < need && i < candidates.size(); i++) {
+                pool.add(candidates.get(i));
+            }
+        }
+        Collections.shuffle(pool);
+        return pool;
     }
 
     /**

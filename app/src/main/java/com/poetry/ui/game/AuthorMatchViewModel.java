@@ -159,8 +159,6 @@ public class AuthorMatchViewModel extends AndroidViewModel {
         // 标记完成：触发 Fragment 观察者导航到结算页（此标志此前从未置 true，
         // 导致最后一题作答后无任何结算展示 —— 玩家看到的"无后续"即此原因）
         finished.setValue(true);
-        // 标记全部完成 → Fragment 据此导航到结算页（此前该标志从未置 true，导致最后一题后无响应）
-        finished.setValue(true);
 
         Integer sc = score.getValue();
         int finalScore = sc != null ? sc : 0;

@@ -276,5 +276,21 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
+        <!-- 调试日志入口 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_debug_log"
+            style="@style/Widget.Poetry.Button.Outlined"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/height_touch_target"
+            android:layout_marginStart="@dimen/spacing_page_horizontal"
+            android:layout_marginTop="@dimen/spacing_xl"
+            android:layout_marginEnd="@dimen/spacing_page_horizontal"
+            android:text="@string/profile_debug_log"
+            android:textSize="@dimen/text_size_body"
+            app:cornerRadius="@dimen/radius_medium"
+            app:layout_constraintTop_toBottomOf="@id/btn_share_app"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>

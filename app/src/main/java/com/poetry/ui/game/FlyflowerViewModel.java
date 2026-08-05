@@ -210,7 +210,8 @@ public class FlyflowerViewModel extends AndroidViewModel {
         List<String> result = new ArrayList<>();
         String k = keyword.getValue();
         if (k == null) return result;
-        List<Poem> all = repo.getAllPoems();
+        // 游戏题池：著名优先（88 首释义名篇占 80%，普通诗词兜底 20%）
+        List<Poem> all = repo.getGamePool();
         if (all == null) return result;
 
         List<String> pool = new ArrayList<>();

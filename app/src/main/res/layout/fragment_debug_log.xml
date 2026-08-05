@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_page"
+    android:padding="@dimen/spacing_page_horizontal">
+
+    <!-- 标题栏 -->
+    <LinearLayout
+        android:id="@+id/ll_header"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/debug_log_title"
+            android:textSize="@dimen/text_size_headline"
+            android:textColor="@color/text_title"
+            android:textStyle="bold"
+            android:fontFamily="serif" />
+
+        <TextView
+            android:id="@+id/tv_log_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_label"
+            android:textColor="@color/text_body_secondary"
+            tools:text="共 0 条" />
+    </LinearLayout>
+
+    <!-- 控制行：收集开关 + 清空 / 复制 / 导出 -->
+    <LinearLayout
+        android:id="@+id/ll_controls"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_lg"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        app:layout_constraintTop_toBottomOf="@id/ll_header"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switch_collect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/debug_log_enable"
+            android:textSize="@dimen/text_size_label"
+            android:checked="true" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_log_clear"
+            style="@style/Widget.Poetry.Button.Outlined"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/height_button"
+            android:minWidth="0dp"
+            android:insetLeft="0dp"
+            android:insetRight="0dp"
+            android:text="@string/debug_log_clear"
+            android:textSize="@dimen/text_size_label"
+            app:cornerRadius="@dimen/radius_medium" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_log_copy"
+            style="@style/Widget.Poetry.Button.Outlined"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/height_button"
+            android:layout_marginStart="@dimen/spacing_sm"
+            android:minWidth="0dp"
+            android:insetLeft="0dp"
+            android:insetRight="0dp"
+            android:text="@string/debug_log_copy"
+            android:textSize="@dimen/text_size_label"
+            app:cornerRadius="@dimen/radius_medium" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_log_export"
+            style="@style/Widget.Poetry.Button.Outlined"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/height_button"
+            android:layout_marginStart="@dimen/spacing_sm"
+            android:minWidth="0dp"
+            android:insetLeft="0dp"
+            android:insetRight="0dp"
+            android:text="@string/debug_log_export"
+            android:textSize="@dimen/text_size_label"
+            app:cornerRadius="@dimen/radius_medium" />
+    </LinearLayout>
+
+    <!-- 过滤行：关键词 + 级别 Chip -->
+    <EditText
+        android:id="@+id/et_log_filter"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_md"
+        android:hint="@string/debug_log_filter_hint"
+        android:inputType="text"
+        android:maxLines="1"
+        android:textSize="@dimen/text_size_body"
+        android:background="@drawable/bg_card"
+        android:paddingStart="@dimen/spacing_md"
+        android:paddingEnd="@dimen/spacing_md"
+        app:layout_constraintTop_toBottomOf="@id/ll_controls"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/chip_group_level"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_sm"
+        app:chipSpacingHorizontal="@dimen/spacing_chip_gap"
+        app:chipSpacingVertical="@dimen/spacing_chip_gap"
+        app:singleSelection="true"
+        app:layout_constraintTop_toBottomOf="@id/et_log_filter"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_level_all"
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/debug_level_all"
+            android:checkable="true"
+            android:checked="true" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_level_debug"
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/debug_level_debug"
+            android:checkable="true" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_level_info"
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/debug_level_info"
+            android:checkable="true" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_level_warn"
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/debug_level_warn"
+            android:checkable="true" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_level_error"
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/debug_level_error"
+            android:checkable="true" />
+    </com.google.android.material.chip.ChipGroup>
+
+    <!-- 日志列表 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_log"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="@dimen/spacing_md"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/spacing_page_bottom"
+        app:layout_constraintTop_toBottomOf="@id/chip_group_level"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- 空态提示 -->
+    <TextView
+        android:id="@+id/tv_log_empty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/debug_log_empty"
+        android:textSize="@dimen/text_size_body"
+        android:textColor="@color/text_body_secondary"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/recycler_log"
+        app:layout_constraintBottom_toBottomOf="@id/recycler_log"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

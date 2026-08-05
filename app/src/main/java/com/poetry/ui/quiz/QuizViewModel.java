@@ -97,7 +97,8 @@ public class QuizViewModel extends AndroidViewModel {
         questions.clear();
         // M10 月光祝福：本局种子 = 开局时间戳
         quizSeed = System.currentTimeMillis();
-        List<Poem> all = repo.getAllPoems();
+        // 游戏题池：著名优先（88 首释义名篇占 80%，普通诗词兜底 20%）
+        List<Poem> all = repo.getGamePool();
         if (all.isEmpty()) return;
         if (difficulty == null) difficulty = QuizDifficulty.NORMAL;
 

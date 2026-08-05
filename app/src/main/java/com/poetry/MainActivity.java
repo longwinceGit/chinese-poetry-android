@@ -15,6 +15,7 @@ import com.poetry.data.UserProfile;
 import com.poetry.domain.LearningEngine;
 import com.poetry.ui.widget.ConfettiView;
 import com.poetry.util.AppExecutors;
+import com.poetry.util.DebugLogger;
 
 import java.time.LocalDate;
 
@@ -53,6 +54,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // 调试日志初始化（崩溃捕获 + 环形缓冲），越早越好
+        DebugLogger.init(this);
+        DebugLogger.i("MainActivity", "onCreate: 应用启动");
+
         setContentView(R.layout.activity_main);
 
         // 获取撒花动画视图引用，供 celebrate() 方法使用

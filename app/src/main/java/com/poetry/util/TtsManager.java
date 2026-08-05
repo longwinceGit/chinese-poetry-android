@@ -313,7 +313,7 @@ public class TtsManager {
 
                 String body = "tok=" + URLEncoder.encode(accessToken, "UTF-8")
                         + "&cuid=tts_android_001&ctp=1&lan=zh"
-                        + "&spd=3&pit=5&vol=5&per=0&aue=3"
+                        + "&spd=3&pit=5&vol=5&per=1&aue=3"
                         + "&tex=" + URLEncoder.encode(text, "UTF-8");
 
                 HttpURLConnection conn = (HttpURLConnection)

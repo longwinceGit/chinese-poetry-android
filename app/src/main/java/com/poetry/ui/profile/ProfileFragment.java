@@ -68,6 +68,9 @@ public class ProfileFragment extends Fragment {
             Navigation.findNavController(v).navigate(R.id.nav_favorites));
         cardLearned.setOnClickListener(v ->
             Navigation.findNavController(v).navigate(R.id.nav_learned));
+        // 调试日志入口：跳转日志面板（DebugLogger 需已 init，见 MainActivity.onCreate）
+        view.findViewById(R.id.btn_debug_log).setOnClickListener(v ->
+            Navigation.findNavController(v).navigate(R.id.nav_debug_log));
     }
 
     /**

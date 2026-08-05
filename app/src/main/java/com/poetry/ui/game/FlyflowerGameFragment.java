@@ -50,6 +50,7 @@ public class FlyflowerGameFragment extends Fragment {
     private TextView tvTimer, tvProgress, tvKeyword, tvQuestion;
     private EditText etInput;
     private MaterialButton btnSubmit, btnHint, btnRestart;
+    private android.widget.ScrollView svCandidates;
     private LinearLayout llCandidates;
 
     private GameFeedback gameFeedback;
@@ -74,6 +75,8 @@ public class FlyflowerGameFragment extends Fragment {
         GameSnapshot.save(requireContext(), "flyflower", System.currentTimeMillis());
         registerBackCallback();
         viewModel.startFlyflower();
+        // 开局即刷新提示按钮剩余次数（XML 占位符无法自动格式化，需代码初始化）
+        updateHintButton();
     }
 
     /**
@@ -112,6 +115,7 @@ public class FlyflowerGameFragment extends Fragment {
         btnSubmit = v.findViewById(R.id.btn_fly_submit);
         btnHint = v.findViewById(R.id.btn_fly_hint);
         btnRestart = v.findViewById(R.id.btn_fly_restart);
+        svCandidates = v.findViewById(R.id.sv_candidates);
         llCandidates = v.findViewById(R.id.ll_candidates);
 
         // 顶部 GameFeedback 层
@@ -156,8 +160,7 @@ public class FlyflowerGameFragment extends Fragment {
 
     /** 执行飞花令重开逻辑（M9 确认后调用）。 */
     private void restartFlyflower() {
-        llCandidates.setVisibility(View.GONE);
-        llCandidates.removeAllViews();
+        hideCandidates();
         etInput.setText("");
         if (gameFeedback != null) {
             gameFeedback.resetCombo();
@@ -236,10 +239,18 @@ public class FlyflowerGameFragment extends Fragment {
                 if (ttsManager != null) {
                     ttsManager.speakPoem("", "", new String[]{line});
                 }
+                // 点选后收起候选句列表，防止重复点选同一句
+                hideCandidates();
             });
             llCandidates.addView(chip);
         }
-        llCandidates.setVisibility(View.VISIBLE);
+        svCandidates.setVisibility(View.VISIBLE);
+    }
+
+    /** 收起候选句列表并清空内容。 */
+    private void hideCandidates() {
+        svCandidates.setVisibility(View.GONE);
+        llCandidates.removeAllViews();
     }
 
     /** 更新「提示一句」按钮文案 / 禁用状态。 */

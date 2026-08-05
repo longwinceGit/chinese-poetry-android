@@ -118,7 +118,8 @@ public class GameViewModel extends AndroidViewModel {
      * </p>
      */
     public void startCoupletGame() {
-        List<Poem> pool = repo.getAllPoems();
+        // 游戏题池：著名优先（88 首释义名篇占 80%，普通诗词兜底 20%）
+        List<Poem> pool = repo.getGamePool();
         // 当日去重：跳过今日已用过的诗词 id，跨日自动重置
         List<Poem> filtered = filterTodayUsed(pool);
         // M9 自适应排等：难度档位 → 干扰项难度阶段（局部生效，§6.4）
@@ -390,7 +391,8 @@ public class GameViewModel extends AndroidViewModel {
      * </p>
      */
     public void startMatchGame() {
-        List<Poem> pool = repo.getAllPoems();
+        // 游戏题池：著名优先（88 首释义名篇占 80%，普通诗词兜底 20%）
+        List<Poem> pool = repo.getGamePool();
         // M4：当日去重（独立 prefs "match_dedup"，key "date_idlist"）
         List<Poem> filtered = filterTodayUsedMatch(pool);
         currentMatchGame = GameEngine.generateMatchGame(filtered, MATCH_PAIRS);

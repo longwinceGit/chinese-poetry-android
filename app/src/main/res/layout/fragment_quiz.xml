@@ -88,52 +88,60 @@
         app:layout_constraintEnd_toEndOf="parent"
         tools:text="《静夜思》— 李白" />
 
-    <LinearLayout
-        android:id="@+id/ll_poem_display"
+    <!-- 诗句展示 + 候选字 + 反馈：内容多时可滚动，不遮挡底部提交按钮 -->
+    <ScrollView
+        android:id="@+id/sv_quiz_content"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_marginTop="@dimen/spacing_xxl"
-        android:orientation="vertical"
-        android:gravity="center"
+        android:fillViewport="false"
         app:layout_constraintTop_toBottomOf="@id/tv_title"
+        app:layout_constraintBottom_toTopOf="@id/btn_submit"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
 
-    <com.google.android.material.chip.ChipGroup
-        android:id="@+id/chip_candidates"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/spacing_xl_2"
-        app:chipSpacingHorizontal="@dimen/spacing_chip_gap"
-        app:chipSpacingVertical="@dimen/spacing_chip_gap"
-        app:layout_constraintTop_toBottomOf="@id/ll_poem_display"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-    <!-- M3 对诗化：内联答题反馈（正确/错误），Fragment 动态控制 -->
-    <TextView
-        android:id="@+id/tv_feedback"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/spacing_lg"
-        android:textSize="@dimen/text_size_body"
-        android:gravity="center"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/chip_candidates"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:text="✅ 全对！" />
+            <LinearLayout
+                android:id="@+id/ll_poem_display"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center" />
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_candidates"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xl_2"
+                app:chipSpacingHorizontal="@dimen/spacing_chip_gap"
+                app:chipSpacingVertical="@dimen/spacing_chip_gap" />
+
+            <!-- M3 对诗化：内联答题反馈（正确/错误），Fragment 动态控制 -->
+            <TextView
+                android:id="@+id/tv_feedback"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_lg"
+                android:textSize="@dimen/text_size_body"
+                android:gravity="center"
+                android:visibility="gone"
+                tools:text="✅ 全对！" />
+        </LinearLayout>
+    </ScrollView>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_submit"
         style="@style/Widget.Poetry.Button.Outlined"
         android:layout_width="0dp"
         android:layout_height="@dimen/height_touch_target"
-        android:layout_marginTop="@dimen/spacing_xl_2"
         android:text="提交答案"
         android:textSize="@dimen/text_size_body"
         app:cornerRadius="@dimen/radius_medium"
-        app:layout_constraintTop_toBottomOf="@id/tv_feedback"
+        app:layout_constraintBottom_toTopOf="@id/btn_next"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -147,7 +155,7 @@
         app:cornerRadius="@dimen/radius_medium"
         app:icon="@drawable/ic_learn"
         app:iconGravity="textStart"
-        app:layout_constraintTop_toBottomOf="@id/btn_submit"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
