@@ -66,6 +66,12 @@
     <!-- 游戏交互色 -->
     <color name="match_card_success_bg">#C8E6C9</color>
 
+    <!-- M2 趣味反馈层：火苗连击条 / 星星进度环 -->
+    <color name="combo_fire">#FF6D00</color>
+    <color name="combo_fire_soft">#FFE0B2</color>
+    <color name="star_ring_progress">@color/score_gold</color>
+    <color name="star_ring_track">#E0DCD5</color>
+
     <!-- 通用色 -->
     <color name="green_500">#4CAF50</color>
     <color name="white">#FFFFFF</color>

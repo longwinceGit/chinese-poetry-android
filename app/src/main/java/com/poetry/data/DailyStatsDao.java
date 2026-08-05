@@ -38,6 +38,13 @@ public interface DailyStatsDao {
     @Query("UPDATE daily_stats SET gamesPlayed = gamesPlayed + 1 WHERE date = :date")
     void incrementGamesPlayed(String date);
 
+    @Query("UPDATE daily_stats SET pointsEarned = pointsEarned + :points WHERE date = :date")
+    void incrementPointsEarned(String date, int points);
+
+    /** 获取最近 N 天的每日统计（按日期倒序），供连续游戏天数成就判定。 */
+    @Query("SELECT * FROM daily_stats WHERE date >= :startDate ORDER BY date DESC LIMIT :limit")
+    List<DailyStats> getRecentDailyStats(String startDate, int limit);
+
     @Query("SELECT * FROM daily_stats WHERE date = :date")
     DailyStats getDailyStatsSync(String date);
 

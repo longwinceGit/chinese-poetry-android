@@ -69,7 +69,6 @@
 - 色彩取自传统意象：墨色茶褐（主色）+ 宣纸米白（背景）+ 印章朱红（强调）
 - 朝代标签配色：唐代朱红、宋代竹绿、元代靛蓝、清代紫……每个朝代有专属色
 - **深色模式** 完整适配，夜间阅读舒适护眼
-- **减少动画** 开关，关怀动画敏感人群
 - **无障碍** 支持：contentDescription 全覆盖，色值对比度达 WCAG AA 标准
 
 ### 产品亮点
@@ -152,12 +151,14 @@
 | **语言** | Java 8+ | 原生 Android 开发 |
 | **架构** | MVVM | ViewModel + LiveData + Repository |
 | **导航** | Navigation Component | 单 Activity + 多 Fragment + BottomNavigation |
-| **数据库** | Room (v2) | 用户档案 / 学习记录 / 每日统计 |
+| **数据库** | Room (v2) | 3 张表（learning_records / daily_stats / user_profile），3 个独立 DAO |
 | **UI** | ConstraintLayout + Material Components | 全量 ConstraintLayout 重写 |
 | **数据解析** | org.json (JSONTokener 流式) | 54 MB 诗词 JSON 分片解析 |
 | **依赖注入** | 手动单例（轻量无侵入） | Repository / 数据库 / 工具类单例 |
+| **线程管理** | AppExecutors（固定 3 线程 IO 池 + 主线程 Handler） | 统一替代散落的 new Thread() |
 | **语音** | Android TextToSpeech | 中文朗读（语速 0.85x） |
 | **拼音** | pinyin4j | 逐字带音调拼音标注 |
+| **分享卡片** | 自定义 Canvas（ShareCardGenerator） | 720px 古风卡片，RGB_565 + OOM 防护 |
 | **构建** | AGP 8.2.2 + Gradle 8.7 + JDK 17 | targetSdk 34, minSdk 21 |
 | **动画** | 自定义 ConfettiView | 粒子 + Emoji 混合庆祝动画 |
 
@@ -179,12 +180,18 @@
 ├─────────────────────────────────────────────────────┤
 │                 数据层 (data)                         │
 │  PoemRepository → PoemLoader (JSON assets)           │
-│  LearningDatabase → PoemDao (Room SQLite)            │
+│  LearningDatabase → 3 个独立 DAO (Room SQLite)       │
+│    ├─ LearningRecordDao（收藏/已学/答题/游戏记录）    │
+│    ├─ DailyStatsDao（每日统计/签到日历）              │
+│    └─ UserProfileDao（积分/等级/成就/主题）            │
 │  Poem / LearningRecord / UserProfile / DailyStats    │
 ├─────────────────────────────────────────────────────┤
 │                 工具层 (util)                         │
 │  PinyinHelper │ TtsManager │ PinyinLineView          │
-│  ConfettiView (widget)                               │
+│  PoemArgs │ AppExecutors                             │
+├─────────────────────────────────────────────────────┤
+│                自定义控件层 (ui/widget)               │
+│  ConfettiView │ ShareCardGenerator │ StatsBarChart   │
 ├─────────────────────────────────────────────────────┤
 │                 资源层 (assets)                       │
 │  91,196 首诗词 JSON (54 MB 分片)                    │
@@ -203,9 +210,11 @@ com.poetry/
 ├── data/                                ← 数据层
 │   ├── PoemRepository.java              ← 诗词数据仓库（单例，线程池异步加载）
 │   ├── LearningDatabase.java            ← Room 数据库定义 (v4, 3 表 + 3 迁移)
-│   ├── PoemDao.java                     ← Room DAO（160+ 行，30+ 查询方法）
+│   ├── LearningRecordDao.java           ← 学习记录 DAO（收藏/已学/答题/游戏 40+ 查询）
+│   ├── DailyStatsDao.java               ← 每日统计 DAO（签到日历/学习趋势/原子递增）
+│   ├── UserProfileDao.java              ← 用户档案 DAO（积分原子递增/等级/成就/主题）
 │   ├── UserProfile.java                 ← 用户档案实体（积分/等级/连续天数/成就/主题/currentTheme）
-│   ├── LearningRecord.java              ← 学习记录实体（收藏/已学/答题/游戏）
+│   ├── LearningRecord.java              ← 学习记录实体（收藏/已学/答题/游戏，4 索引）
 │   ├── DailyStats.java                  ← 每日统计实体（打卡日历数据源 + 图表数据查询）
 │   └── model/
 │       └── Poem.java                    ← 诗词数据模型（11 个字段）
@@ -217,13 +226,16 @@ com.poetry/
 │   ├── AchievementEngine.java           ← 12 项成就自动检测 + 解锁回调
 │   └── ThemeManager.java                ← 9 个主题按等级/连续天数解锁
 │
-├── ui/                                  ← 表现层（10 Fragment + 4 Adapter）
+├── ui/                                  ← 表现层（11 Fragment + 4 Adapter）
 │   ├── home/ HomeFragment + HomeViewModel           ← 首页 Tab
 │   ├── detail/ DetailFragment + DetailViewModel     ← 诗词详情页
 │   ├── learning/ LearningFragment + LearningViewModel ← 学习成就 Tab
 │   ├── profile/ ProfileFragment + ProfileViewModel  ← 个人档案 Tab
 │   ├── quiz/ QuizFragment + QuizViewModel           ← 填空挑战（二级页面）
-│   ├── favorites/ FavoritesFragment + FavoritesViewModel ← 收藏列表（二级页面）
+│   ├── favorites/
+│   │   ├── FavoritesFragment + FavoritesViewModel   ← 收藏列表（二级页面）
+│   │   ├── LearnedListFragment + LearnedListViewModel ← 已学列表（二级页面）
+│   │   └── FavoriteAdapter              ← 收藏/已学共用适配器（心形按钮可开关）
 │   ├── game/
 │   │   ├── GameHubFragment               ← 游戏大厅 Tab
 │   │   ├── CoupletGameFragment           ← 诗词接龙（二级页面）
@@ -231,17 +243,19 @@ com.poetry/
 │   │   └── GameViewModel                 ← 游戏共用 ViewModel
 │   ├── adapter/
 │   │   ├── PoemAdapter.java              ← 首页网格适配器（弹簧动画）
-│   │   ├── FavoriteAdapter.java          ← 收藏列表适配器（滑动删除）
 │   │   ├── AchievementAdapter.java       ← 成就网格适配器
 │   │   └── MatchCardAdapter.java         ← 消消乐卡片适配器（3 种状态）
 │   └── widget/
 │       ├── ConfettiView.java             ← 庆祝动画（60 粒子，180 帧）
 │       ├── StatsBarChart.java            ← 学习趋势柱状图（Canvas 自绘）
-│       └── PinyinLineView.java           ← 逐字拼音视图（自定义 LinearLayout）
+│       └── ShareCardGenerator.java       ← 古风分享卡生成器（Canvas，RGB_565 + OOM 防护）
 │
 └── util/                                ← 工具层
     ├── PinyinHelper.java                 ← pinyin4j 封装（带声调标注）
-    └── TtsManager.java                   ← TTS 朗读封装
+    ├── PinyinLineView.java               ← 逐字拼音视图（自定义 LinearLayout）
+    ├── TtsManager.java                   ← TTS 朗读封装
+    ├── PoemArgs.java                     ← 导航参数工具类（Bundle 打包/解包，类型安全）
+    └── AppExecutors.java                 ← 全局线程池（IO 3 线程 + 主线程 Handler）
 ```
 
 ### 2.3 模块依赖关系
@@ -256,13 +270,14 @@ HomeFragment ←→ HomeViewModel ←→ PoemRepository ←→ PoemLoader
   │  ↓ LiveData                                        ↓ JSON assets (54 MB)
   │  poems / categories / dailyPoem                nav.json → dynasty_index.json → poems
   │  totalCount / loadingState                     poem_explanations.json → Map<title|author, text>
-  └─→ navigate(DetailFragment) [Safe Args 传 9 参]
+  │  isSearching                                       ↑ warmupIndices() 后台构建倒排索引
+  └─→ navigate(DetailFragment) [PoemArgs 传 6 参: id/title/author/dynasty/lines/explanation]
        │
 DetailFragment ←→ DetailViewModel
-  ├─→ PinyinLineView (逐字拼音, MIN_CELL_DP=20dp)
+  ├─→ PinyinLineView (逐字拼音, MIN_CELL_DP=22dp)
   ├─→ TtsManager (TTS 朗读)
-  ├─→ LearningDatabase (收藏/已学状态)
-  └─→ generateShareCard() (Canvas 绘制分享卡片)
+  ├─→ LearningDatabase (收藏/已学状态, 完整元数据写入)
+  └─→ ShareCardGenerator (Canvas 绘制分享卡片, AppExecutors 后台执行)
 
 GameHubFragment
   ├─→ navigate(CoupletGameFragment) [对诗]
@@ -277,9 +292,14 @@ MatchGameFragment ←→ GameViewModel ←→ GameEngine
 LearningFragment / ProfileFragment
   ├─→ LearningDatabase (LiveData 实时查询)
   ├─→ StatsBarChart (Canvas 自绘 7 日趋势)  [LearningFragment]
-  ├─→ navigate(FavoritesFragment) [ProfileFragment → 收藏入口]
-  │    └─→ FavoritesFragment ←→ FavoritesViewModel ←→ PoemDao.getFavorites()
+  ├─→ navigate(FavoritesFragment)  [ProfileFragment → 收藏入口]
+  │    └─→ FavoritesFragment ←→ FavoritesViewModel ←→ LearningRecordDao.getFavorites()
+  │         └─→ 点击诗词项 → PoemRepository.findPoemById() (O(1) 索引) → navigate(DetailFragment)
+  ├─→ navigate(LearnedListFragment)  [ProfileFragment → 已学入口]
+  │    └─→ LearnedListFragment ←→ LearnedListViewModel ←→ LearningRecordDao.getLearnedPoems()
   │         └─→ 点击诗词项 → PoemRepository.findPoemById() → navigate(DetailFragment)
+  │         └─→ FavoriteAdapter (setShowUnfavButton(false), 隐藏取消收藏按钮)
+  └─→ repairRecords(): 首次加载自动补齐缺失 title/author/dynasty 的旧记录
   ↓
 AchievementEngine (成就检测 → 回调触发庆祝)
 LearningEngine   (积分/等级/连续学习算法)
@@ -308,14 +328,14 @@ App 启动
       │   └─ 自动绑定 tab 切换 → navController.navigate()
       │
       ├─ initDatabase()
-      │   └─ 后台线程:
+      │   └─ AppExecutors.io() 后台线程:
       │       ├─ LearningDatabase.getInstance(context)
       │       │   └─ Room.databaseBuilder("poetry_learning.db").build()
       │       │
-      │       ├─ poemDao().getUserProfileSync()
+      │       ├─ userProfileDao().getUserProfileSync()
       │       │   ├─ null → 新建 UserProfile (streak=1, level=1)
       │       │   └─ 存在 → LearningEngine.calcStreak() 续签
-      │       │       └─ streak ≥ 7 且每周倍数 → Toast 🎉
+      │       │       └─ streak ≥ 7 且 7 的倍数 → AppExecutors.main() Toast 🎉
       │       └─ （数据库就绪，无需等待即可渲染 UI）
       │
       └─ startDestination: nav_home (HomeFragment)
@@ -326,10 +346,10 @@ App 启动
 ```
 HomeFragment.onViewCreated()
   └─ viewModel.loadPoems()
-      └─ PoemRepository.loadPoemsAsync(assets)
-          └─ ExecutorService.submit(Callable):
+      └─ PoemRepository.loadPoemsAsync(assets)      ← AppExecutors.io() 后台线程
+          └─ Future.get() 等待完成:
               │
-              ├─ 1. PoemLoader.loadAll(assets)         ← 后台线程
+              ├─ 1. PoemLoader.loadAll(assets)
               │   ├─ 1a. readJsonArray("nav.json")
               │   │   └─ 遍历朝代 → 遍历文件 → 逐文件 readJsonArray
               │   │       └─ JSONTokener 流式解析（复用 StringBuilder）
@@ -346,9 +366,21 @@ HomeFragment.onViewCreated()
               ├─ 2. Collections.sort(poems, comparator)
               │   └─ 有释义的著名诗词排在前面（explanation != null 优先）
               │
-              └─ 3. buildCategories()
-                  └─ 按年代顺序: 先秦→春秋→魏晋→唐代→五代→宋代→元代→清代
-                  └─ 首项 "全部"，各朝代带图标 (📜🍂🏯🎋🐎🏮)
+              ├─ 3. 构建 poemIdIndex (HashMap)
+              │   └─ findPoemById() 从 O(n) 线性遍历优化为 O(1) 哈希查找
+              │
+              ├─ 4. 构建 famousPoems 列表（有释义的诗词）
+              │   └─ 每日推荐 getDailyPoem() 优先从其中选取
+              │
+              ├─ 5. buildCategories()
+              │   └─ navOrder 11 朝代: 先秦→春秋→春秋战国→魏晋→唐代→五代
+              │   │    →宋代→元代→明代→清代→近现代
+              │   ├─ 首项 "全部" (📜)
+              │   ├─ 各朝代带图标 (📜🍂🏯🌊🎋🐎🎭🏮🌅)
+              │   └─ 末尾固定 "其他" 分类 (📖, 收录非 11 朝代诗词)
+              │
+              └─ 6. repo.warmupIndices()   ← 后台构建搜索倒排索引（不阻塞 UI）
+                  └─ titleCharIndex / authorCharIndex (字符级) + fullTextCached
 
 加载中状态          loaded=false → loadingContainer VISIBLE
 加载完成回调        poems.postValue(allPoems) → Observer 触发渲染
@@ -388,18 +420,29 @@ PoemRepository.loadPoemsAsync() 完成后:
 ### 3.4 搜索流程
 
 ```
+数据加载完成 → repo.warmupIndices() 后台构建倒排索引:
+  buildIndices() × 91,196 首:
+    ├─ titleCharIndex:  Map<字符, Set<诗词index>>  标题字符级倒排索引
+    ├─ authorCharIndex: Map<字符, Set<诗词index>>  作者字符级倒排索引
+    └─ fullTextCached:  每首缓存全文，避免搜索时重复 StringBuilder 拼接
+  indicesBuilt = true（构建完成前搜索自动降级为全量扫描）
+
 用户输入 → TextWatcher.onTextChanged()
-  └─ 清除旧 Runnable → postDelayed(500ms)
+  └─ 清除旧 Runnable → postDelayed(500ms 防抖)
       └─ viewModel.search(query)
-          └─ PoemRepository.search(query)
-              ├─ 扫描 title / author / fullText 含 query
-              ├─ O(n) 线性扫描 91K 条（纯内存，无索引）
-              └─ 结果 > 500 → 截断至 500
+          ├─ searchCancelled 标志取消旧搜索（volatile，防旧结果覆盖新结果）
+          └─ PoemRepository.search(query)   ← AppExecutors.io() 后台执行
+              ├─ ① 标题字符交集: 用 titleCharIndex 取所有查询字符的交集
+              ├─ ② 作者字符并集: 并上 authorCharIndex 的匹配结果
+              ├─ ③ 退化全量扫描: 候选集为空时退化为全量遍历
+              └─ ④ 精确验证: contains 匹配 title / author / fullTextCached
+                   └─ 结果 > 500 → 截断至 500
 
 搜索模式:
   searchMode = true
   ├─ 禁用分类筛选
-  ├─ 禁用加载更多
+  ├─ 搜索支持分页: searchResults 全量缓存 + loadMore() 按页追加
+  ├─ 搜索框内 progressSearch 加载指示器
   └─ 全部加载时显示 "已加载全部结果" 提示
 ```
 
@@ -407,27 +450,26 @@ PoemRepository.loadPoemsAsync() 完成后:
 
 ```
 HomeFragment.navigateToDetail(poem)
-  └─ Safe Args → NavController.navigate(R.id.nav_detail, bundle)
-      └─ DetailFragment.readArgs()
-          └─ 从 Bundle 取 9 个参数（id/title/author/dynasty/category/tag/emoji/lines/explanation）
+  └─ PoemArgs.fromPoem(poem).toBundle() → NavController.navigate(R.id.nav_detail, args)
+      └─ DetailFragment: poemArgs = PoemArgs.fromBundle(getArguments())
+          └─ 6 个参数（id/title/author/dynasty/lines/explanation）
               │
-              ├─ 基础信息: tvTitle / tvEmoji / tvAuthor / tvDynasty
-              │
-              ├─ 标签: chipTag (朝代色 + tag 简写)
-              │   └─ 唐→tang→#C62828, 宋→song→#2E7D32, 先秦→qin→#5D4037
+              ├─ 基础信息: tvTitle / tvAuthor / tvDynasty
               │
               ├─ 诗句: renderPoemLines(showPinyin=false)
               │   └─ 每行 → createLineTextView() → addView
+              │   └─ maxCharsPerRow = max(5, (屏宽dp - 48dp) / 22dp)
               │
               ├─ 释义: renderExplanation()
               │   └─ hasExplanation() ? VISIBLE : GONE（自动显隐）
               │
               └─ 操作按钮:
                   ├─ 拼音: 切换 showPinyin → 重建 PinyinLineView 或 TextView
-                  ├─ 朗读: TtsManager.speak(标题+作者+诗句) / stop()
+                  ├─ 朗读: TtsManager.speakPoemStructured(标题+作者(朝代)+诗句) / stop()
                   ├─ 收藏: DetailViewModel.toggleFavorite() → Room + LiveData 驱动 UI
-                  ├─ 已学: DetailViewModel.markAsLearned() → Room 异步写入
-                  └─ 分享: Canvas 手绘 750×N px 古风卡片 → FileProvider → Intent.ACTION_SEND
+                  ├─ 已学: DetailViewModel.markAsLearned() → Room 写入 + daily_stats 递增
+                  └─ 分享: AppExecutors.io() → ShareCardGenerator.generate()
+                        (720px 古风卡片, RGB_565 + OOM 防护) → FileProvider → Intent.ACTION_SEND
 ```
 
 ### 3.6 游戏引擎运行逻辑
@@ -485,31 +527,65 @@ CoupletGameFragment.onViewCreated()
 得分公式: base(10) + streakBonus(streak×2)
 ```
 
-### 3.7 收藏功能运行逻辑
+### 3.7 收藏 / 已学功能运行逻辑
 
 ```
-入口: ProfileFragment → 点击 "我的收藏" ❤️ 卡片
-  └─→ NavController.navigate(R.id.nav_favorites)
-      └─→ FavoritesFragment.onViewCreated()
-          └─→ FavoritesViewModel (AndroidViewModel)
-              └─→ PoemDao.getFavorites()  ← Room @Query("SELECT * FROM learning_records WHERE favorite = 1")
+入口: ProfileFragment
+  ├─ 点击 "我的收藏" ❤️ 卡片 → navigate(R.id.nav_favorites)
+  │    └─→ FavoritesFragment.onViewCreated()
+  │        └─→ FavoritesViewModel (AndroidViewModel)
+  │            └─→ LearningRecordDao.getFavorites()
+  │                ← Room @Query("SELECT * FROM learning_records WHERE favorite = 1")
+  │
+  └─ 点击 "已学诗词" 📖 卡片 → navigate(R.id.nav_learned)
+       └─→ LearnedListFragment.onViewCreated()
+           └─→ LearnedListViewModel (AndroidViewModel)
+               └─→ LearningRecordDao.getLearnedPoems()
+                   ← Room @Query("SELECT * FROM learning_records WHERE learnedAt > 0 ORDER BY learnedAt DESC")
 
-LiveData 驱动:
-  favorites LiveData<List<LearningRecord>>
-    └─→ observer → FavoriteAdapter.submitList()
-        └─→ 空列表 → tv_empty VISIBLE (引导文案)
+LiveData 驱动（两列表共用 FavoriteAdapter）:
+  records LiveData<List<LearningRecord>>
+    └─→ observer → adapter.setRecords()
+        ├─→ 空列表 → layout_empty VISIBLE (引导文案)
         └─→ 有数据 → RecyclerView 渲染
+    └─→ FavoriteAdapter null 安全显示:
+        ├─ title == null → "未知诗词"
+        ├─ author == null → "佚名"
+        └─ dynasty == null → "未知朝代"
+    └─→ 收藏列表: setShowUnfavButton(true)  → 显示 ❤️ 取消收藏按钮
+        └─→ 已学列表: setShowUnfavButton(false) → 隐藏按钮（不可取消）
+
+数据自愈 repairRecords()（两个列表首次加载时自动执行）:
+  └─ AppExecutors.io() 后台:
+      └─ 遍历 records，发现 title/author 为 null 的旧记录:
+          ├─ PoemRepository.findPoemById(poemId)   ← O(1) 索引查找完整 Poem
+          └─ 补齐 title/author/dynasty 后 insertLearningRecord() 回写
 
 列表操作:
-  ├─ 点击诗词项 → PoemRepository.findPoemById(poemId) → Bundle 打包 9 参数 → navigate(DetailFragment)
-  └─ 点击 ❤️ 按钮 → FavoritesViewModel.toggleFavorite(record)
-      └─→ PoemDao.removeFavorite(poemId)
-      └─→ Room LiveData 自动触发 → RecyclerView 刷新（动画移除）
+  ├─ 点击诗词项 → PoemRepository.findPoemById(poemId) → PoemArgs 6 参 → navigate(DetailFragment)
+  └─ 收藏列表点击 ❤️ → FavoritesViewModel.removeFavorite(poemId)
+      └─→ LearningRecordDao.removeFavorite() → Room LiveData 自动刷新
+
+详情页写入（DetailViewModel，保证列表元数据完整）:
+  ├─ checkStatus(poemId, title, author, dynasty) → 存储元数据 + 查询收藏/已学状态
+  ├─ toggleFavorite() 收藏时:
+  │   ├─ 已有记录 → 合并 favorite=true + 补齐 title/author/dynasty（保留 quizScore 等）
+  │   └─ 新记录 → 完整元数据写入，learnedAt = 0L（纯收藏，不标记为已学）
+  └─ markAsLearned() 标记已学时:
+      ├─ 已有记录 → 合并 learnedAt=now + 补齐元数据（保留 favorite/quizScore 等）
+      ├─ 新记录 → 完整元数据写入 + 继承已有收藏状态
+      └─ dailyStatsDao().incrementPoemsLearned(今天) → 供学习趋势图表使用
+
+计数语义（学习记录不再一刀切）:
+  ├─ getLearnedCount()/getLearnedCountSync() → WHERE learnedAt > 0（真实已学数）
+  ├─ getFavCountSync() → WHERE favorite = 1（收藏数）
+  └─ 纯收藏操作不增加"已学"计数，收藏与已学完全解耦
 
 设计要点:
-  - 复用 existing PoemDao.getFavorites() (无需新建 DAO 方法)
-  - PoemRepository.findPoemById() 按 poemId 在 91K 全量中查找完整 Poem 对象
-  - 取消收藏后 LiveData 自动刷新列表，无需手动 notify
+  - 复用 FavoriteAdapter：收藏/已学两列表共用，按钮显隐可配置
+  - PoemRepository.findPoemById() 用 poemIdIndex HashMap 实现 O(1) 查找
+  - repairRecords() 一次性修复历史遗留的残缺记录
+  - 取消收藏/新标记已学后 Room LiveData 自动刷新列表，无需手动 notify
 ```
 
 ---
@@ -555,16 +631,19 @@ PoemRepository (后台线程池, Future<List<Poem>>)
   └→ HomeViewModel.loadPoems()
       ├── poems          ← MutableLiveData<List<Poem>>     → RecyclerView 渲染
       ├── categories     ← MutableLiveData<List<String>>   → ChipGroup 重建
-      ├── dailyPoem      ← MutableLiveData<Poem>           → 每日卡片
+      ├── dailyPoem      ← MutableLiveData<Poem>           → 每日卡片（优先著名诗词）
       ├── totalCount     ← MutableLiveData<Integer>        → "共 N 首"
       ├── isLoading      ← MutableLiveData<Boolean>        → 加载动画
+      ├── isSearching    ← MutableLiveData<Boolean>        → 搜索加载指示器
       └── loadingMessage ← MutableLiveData<String>         → 加载提示文字
 
-LearningDatabase (Room)
-  └→ Fragment 直接 observe LiveData:
-      ├── getFavorites()         → LearningFragment
-      ├── getLearnedCount()      → ProfileFragment
-      └── getUserProfile()       → ProfileFragment
+LearningDatabase (Room, 3 个独立 DAO)
+  └→ Fragment / ViewModel 观察:
+      ├── LearningRecordDao.getFavorites()     → FavoritesFragment
+      ├── LearningRecordDao.getLearnedPoems()  → LearnedListFragment
+      ├── LearningRecordDao.getLearnedCount()  → ProfileFragment
+      ├── UserProfileDao.getUserProfile()      → ProfileFragment / HomeViewModel
+      └── 计数使用同步方法 (getFavCountSync / getLearnedCountSync) → ProfileViewModel
 ```
 
 ---
@@ -578,19 +657,20 @@ LearningDatabase (Room)
 | 📖 诗词 | HomeFragment | 每日推荐 + 朝代分类 + 网格浏览 + 搜索 |
 | 🎯 学习 | LearningFragment | 学习统计 + 打卡日历 + 7日趋势图 + 每日任务 |
 | 🎮 游戏 | GameHubFragment | 游戏大厅 → 对诗 / 消消乐 |
-| 👤 我的 | ProfileFragment | 等级进度 + 成就展示 + 主题切换 + 我的收藏入口 |
+| 👤 我的 | ProfileFragment | 等级进度 + 成就展示 + 主题切换 + 我的收藏入口 + 已学入口 + 分享应用 |
 
 ### 5.2 二级页面（导航栈）
 
 | 页面 | 导航方式 | 传参 |
 |------|---------|------|
-| 诗词详情 | Safe Args (9 参数) | id/title/author/dynasty/category/tag/emoji/lines/explanation |
+| 诗词详情 | PoemArgs (6 参数) | id/title/author/dynasty/lines/explanation |
 | 填空挑战 | nav_quiz | 全局 repo 取数据 |
 | 对诗 | nav_game_couplet | 全局 repo 取数据 |
 | 消消乐 | nav_game_match | 全局 repo 取数据 |
-| 收藏列表 | nav_favorites | 无传参（Room DAO 查询） |
+| 收藏列表 | nav_favorites | 无传参（LearningRecordDao 查询） |
+| 已学列表 | nav_learned | 无传参（LearningRecordDao 查询） |
 
-### 5.3 布局文件 (14 文件)
+### 5.3 布局文件 (15 文件)
 
 ```
 fragment_home.xml          ← 首页（每日卡片 + 分类 ChipGroup + RecyclerView）
@@ -598,7 +678,8 @@ fragment_detail.xml        ← 诗词详情（ConstraintLayout, 逐字拼音/释
 fragment_learning.xml      ← 学习成就（统计卡片 + 趋势图表 + 打卡日历 + 每日任务）
 fragment_profile.xml       ← 个人档案（等级进度条 + 成就 + 主题切换 + 收藏入口 + 无障碍）
 fragment_favorites.xml     ← 收藏列表（RecyclerView + 空状态引导）
-item_favorite.xml          ← 收藏列表项卡片（ConstraintLayout + 删除按钮）
+fragment_learned.xml       ← 已学列表（RecyclerView + 空状态引导）
+item_favorite.xml          ← 收藏/已学列表项卡片（ConstraintLayout + 心形按钮）
 fragment_quiz.xml          ← 填空挑战
 fragment_game_hub.xml      ← 游戏大厅（无障碍）
 fragment_game_match.xml    ← 消消乐（3 列网格 + 完成弹层）
@@ -685,10 +766,10 @@ PinyinHelper (pinyin4j 引擎):
     → ["chuáng","qián","míng","yuè","guāng"]
   标点/符号 → "" 空串（占位）
 
-PinyinLineView (自定义 View):
+PinyinLineView (自定义 View, 位于 util/):
   结构: 外层 VERTICAL → 内层多行 HORIZONTAL
   每行拆分: ceil(len / maxCharsPerRow)
-  maxCharsPerRow: (屏幕宽 - 48dp) / 20dp → 360dp 屏 ≈ 15 字/行
+  maxCharsPerRow: max(5, (屏宽dp - 48dp) / 22dp) → 360dp 屏 ≈ 14 字/行
   每列: 拼音(10sp, α=0.75) + 汉字(20sp), layout_weight=1 等分
 ```
 
@@ -741,20 +822,24 @@ TtsManager:
 
 | 决策 | 选择 | 理由 |
 |------|------|------|
-| 导航方式 | Navigation Component + Safe Args | 类型安全传参，Fragment 事务自动管理 |
-| 数据加载 | ExecutorService 单线程池 + Future | 避免阻塞主线程，Future 可取消 |
+| 导航方式 | Navigation Component + Bundle（PoemArgs 工具类） | 类型安全传参，Fragment 事务自动管理 |
+| 数据加载 | AppExecutors 线程池 + Future | 避免阻塞主线程，统一管理异步操作 |
 | 诗词排序 | explanation 非空优先 | 著名诗词（88 首）永远在第一页 |
 | 释义匹配 | `title\|author` key | 唯一索引，O(1) 查找 |
 | 分页策略 | Adapter 全量 + 切片显示 | 无网络请求，纯内存操作 |
+| 诗词查找 | poemIdIndex (HashMap) | findPoemById 从 O(n) 优化为 O(1) |
+| 搜索 | 字符级倒排索引 (titleCharIndex/authorCharIndex) + fullTextCached | 标题交集 + 作者并集 + 精确验证，warmupIndices 后台构建 |
 | 拼音渲染 | 自定义 LinearLayout (layout_weight) | 自适应屏幕宽度 + 多行折行 |
 | 游戏输入锁 | boolean lockInput + 动画回调 | 防止动画期间的重复点击 |
 | LiveData 通知 | 每次创建新 ArrayList 副本 | 解决 LiveData.setValue(sameRef) 不通知 Bug |
 | JSON 解析 | JSONTokener (非流式,但复用 SB) | org.json 简单可靠，54 MB 可在 3-5s 内完成 |
-| 数据库版本 | v4 + MIGRATION_1_2 + MIGRATION_2_3 + MIGRATION_3_4 | daily_stats 表 / 搜索索引 / currentTheme 非破坏性迁移 |
+| 数据库版本 | v4 + MIGRATION_1_2 + MIGRATION_2_3 + MIGRATION_3_4 | daily_stats 表 / 查询索引 / currentTheme 非破坏性迁移 |
+| DAO 组织 | 3 个独立 DAO（LearningRecord / DailyStats / UserProfile） | 按表拆分，职责单一 |
 | 暗色主题 | values-night/ 69 色中国风暗色调色板 | Material 3 DayNight + 系统跟随 |
-| 收藏功能 | Room DAO getFavorites() + Fragment | 实时 LiveData 自动刷新，支持滑动取消收藏 |
+| 收藏/已学 | 双列表共用 FavoriteAdapter + 完整元数据写入 | 收藏与已学解耦（learnedAt=0），旧记录 repairRecords 自愈 |
 | 统计图表 | Canvas 自绘 StatsBarChart | 零额外依赖，7 日柱状图 |
 | 成就庆祝 | AchievementEngine → Toast + ConfettiView | 4 Fragment 接入成就观察者 |
+| 分享卡片 | ShareCardGenerator（独立类, RGB_565 + OOM 防护） | 单一职责，后台线程生成 + FileProvider 分享 |
 | 无障碍 | 18 个 a11y_* 字符串 + contentDescription | TextView/按钮/适配器全覆盖 |
 
 ---
@@ -767,12 +852,13 @@ TtsManager:
 | APK 大小 | ~28 MB | < 30 MB |
 | 内存占用 | ~150 MB (全量加载) | < 100 MB |
 | 页面切换 | < 16ms (60fps) | ✅ |
-| 搜索响应 | < 50ms (内存扫描) | ✅ |
+| 搜索响应 | 倒排索引候选集 + 精确验证 | ✅ |
+| 诗词查找 | poemIdIndex O(1) 哈希查找 | ✅ |
 | 拼音切换 | < 16ms (View 重建) | ✅ |
 
 ---
 
-## 十一、已完成的优化 (E1–E8)
+## 十一、已完成的优化 (E1–E11)
 
 | 编号 | 模块 | 完成内容 |
 |------|------|---------|
@@ -784,12 +870,18 @@ TtsManager:
 | E6 | 收藏功能 | FavoritesFragment + FavoritesViewModel + FavoriteAdapter + 导航集成 |
 | E7 | 学习统计图表 | Canvas 自绘 StatsBarChart, 7 日学习走势柱状图 |
 | E8 | strings.xml | 无严重硬编码警告 |
+| E9 | 搜索性能 | 字符级倒排索引（titleCharIndex/authorCharIndex）+ fullTextCached，warmupIndices 后台构建，标题交集 + 作者并集 + 精确验证，毫秒级响应 |
+| E10 | 数据层重构 | 废弃 PoemDao，拆分 3 个独立 DAO（LearningRecord / DailyStats / UserProfile）；poemIdIndex HashMap 实现 findPoemById O(1) |
+| E11 | 导航 / 线程 / 分享 | SafeArgs 9 参 → PoemArgs 6 参类型安全 Bundle；AppExecutors 统一线程池替代散落 new Thread()；ShareCardGenerator 独立 Canvas 分享卡（RGB_565 + OOM 防护） |
 
 ### 后续优化方向
 
-1. **启动性能**: 首屏只加载 500 首著名诗词，其余延迟加载
-2. **搜索索引**: 进一步优化倒排索引 + fullText 缓存（代码已有骨架）
-3. **APK 瘦身**: 评估诗词数据压缩/精简方案
+1. **启动性能**: 首屏只加载 500 首著名诗词，其余延迟加载（骨架屏替代纯转圈）
+2. **APK 瘦身**: 评估诗词数据压缩/精简方案
+3. **设置页**: 补全"减少动画"开关与深色/跟随系统切换（`profile_settings`/`profile_about` 字符串已定义但页面未实现）
+4. **激励可见性**: 成就/主题全览入口（当前仅展示前 6 个），解锁成就"NEW"角标回溯
+
+> 完整 18 项 UX 优化清单见 [`UX_OPTIMIZATION.md`](./UX_OPTIMIZATION.md)（P0–P3 分级）。
 
 ---
 

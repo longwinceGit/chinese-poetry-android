@@ -15,7 +15,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
  * 使用 DCL（双重检查锁定）单例模式，保证线程安全。
  * 数据库文件：poetry_learning.db（存储在应用私有目录）。
  */
-@Database(entities = {LearningRecord.class, DailyStats.class, UserProfile.class}, version = 4, exportSchema = false)
+@Database(entities = {LearningRecord.class, DailyStats.class, UserProfile.class, GameHistory.class}, version = 5, exportSchema = false)
 public abstract class LearningDatabase extends RoomDatabase {
 
     /** 单例（volatile 保证可见性） */
@@ -27,6 +27,8 @@ public abstract class LearningDatabase extends RoomDatabase {
     public abstract DailyStatsDao dailyStatsDao();
     /** 获取用户档案 DAO */
     public abstract UserProfileDao userProfileDao();
+    /** 获取游戏历史 DAO */
+    public abstract GameHistoryDao gameHistoryDao();
 
     /** v1 → v2 数据库迁移：新增 daily_stats 表 */
     static final Migration MIGRATION_1_2 = new Migration(1, 2) {
@@ -61,6 +63,24 @@ public abstract class LearningDatabase extends RoomDatabase {
         }
     };
 
+    /** v4 → v5 数据库迁移：新增 game_history 表（非破坏性，老数据不丢） */
+    static final Migration MIGRATION_4_5 = new Migration(4, 5) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `game_history` ("
+                    + "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
+                    + "`gameType` TEXT NOT NULL, "
+                    + "`score` INTEGER NOT NULL, "
+                    + "`stars` INTEGER NOT NULL, "
+                    + "`correctCount` INTEGER NOT NULL, "
+                    + "`totalCount` INTEGER NOT NULL, "
+                    + "`playedAt` INTEGER NOT NULL, "
+                    + "`durationMillis` INTEGER NOT NULL)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_game_history_gameType ON game_history(gameType)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_game_history_playedAt ON game_history(playedAt)");
+        }
+    };
+
     /**
      * 获取数据库实例（DCL 单例）。
      * 首次调用时创建数据库文件并添加迁移策略。
@@ -76,7 +96,7 @@ public abstract class LearningDatabase extends RoomDatabase {
                         context.getApplicationContext(),
                         LearningDatabase.class,
                         "poetry_learning.db"
-                    ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build();
+                    ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build();
                 }
             }
         }

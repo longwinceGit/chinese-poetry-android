@@ -8,6 +8,7 @@
     android:background="@color/bg_page"
     android:padding="@dimen/spacing_page_horizontal">
 
+    <!-- 标题 + 倒计时 header 行 -->
     <LinearLayout
         android:id="@+id/ll_header"
         android:layout_width="0dp"
@@ -22,23 +23,23 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="📝 对诗"
+            android:text="@string/flyflower_title"
             android:textSize="@dimen/text_size_headline"
             android:textColor="@color/text_title"
             android:textStyle="bold"
             android:fontFamily="serif" />
 
         <TextView
-            android:id="@+id/tv_score"
+            android:id="@+id/tv_fly_timer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="@dimen/text_size_headline"
             android:textColor="@color/text_gold"
             android:textStyle="bold"
-            tools:text="得分: 0" />
+            tools:text="⏱ 60秒" />
     </LinearLayout>
 
-    <!-- M3：局内反馈层（星星进度环 + 连击条 + 飞分），由 Fragment 动态 addView -->
+    <!-- 局内反馈层（星星进度环 + 连击条 + 飞分），由 Fragment 动态 addView -->
     <FrameLayout
         android:id="@+id/fl_feedback"
         android:layout_width="0dp"
@@ -48,8 +49,9 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- 命中计数 -->
     <TextView
-        android:id="@+id/tv_progress"
+        android:id="@+id/tv_fly_progress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/spacing_lg"
@@ -58,15 +60,16 @@
         app:layout_constraintTop_toBottomOf="@id/fl_feedback"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        tools:text="第 1/7 题" />
+        tools:text="已接 0 句" />
 
+    <!-- 题目区：主题字 + 读题 -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_question"
         style="@style/Widget.Poetry.Card.Raised"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/spacing_xl_2"
-        app:layout_constraintTop_toBottomOf="@id/tv_progress"
+        app:layout_constraintTop_toBottomOf="@id/tv_fly_progress"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -76,110 +79,124 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/tv_question"
+                android:id="@+id/tv_fly_keyword"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="@dimen/text_size_headline"
                 android:textColor="@color/text_body"
                 android:gravity="center"
-                android:lineSpacingExtra="@dimen/line_height_body"
                 android:padding="@dimen/spacing_xxl"
                 android:fontFamily="serif"
-                tools:text="床前明月光，\n____？" />
+                tools:text="月" />
 
-            <!-- M3：读题 / 半句提示按钮行 -->
-            <LinearLayout
+            <TextView
+                android:id="@+id/tv_fly_question"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:textSize="@dimen/text_size_body"
+                android:textColor="@color/text_body_secondary"
                 android:gravity="center"
                 android:paddingStart="@dimen/spacing_lg"
                 android:paddingEnd="@dimen/spacing_lg"
-                android:paddingBottom="@dimen/spacing_md">
+                android:paddingBottom="@dimen/spacing_md"
+                tools:text="说一句带「月」的诗" />
 
-                <TextView
-                    android:id="@+id/btn_read"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:minHeight="@dimen/height_touch_target"
-                    android:minWidth="48dp"
-                    android:gravity="center"
-                    android:paddingStart="@dimen/spacing_md"
-                    android:paddingEnd="@dimen/spacing_md"
-                    android:text="@string/couplet_read"
-                    android:textSize="@dimen/text_size_body"
-                    android:textColor="@color/text_body_secondary"
-                    android:background="?attr/selectableItemBackground"
-                    android:clickable="true"
-                    android:focusable="true" />
-
-                <TextView
-                    android:id="@+id/btn_hint"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:minHeight="@dimen/height_touch_target"
-                    android:minWidth="48dp"
-                    android:gravity="center"
-                    android:paddingStart="@dimen/spacing_md"
-                    android:paddingEnd="@dimen/spacing_md"
-                    android:text="@string/couplet_hint"
-                    android:textSize="@dimen/text_size_body"
-                    android:textColor="@color/text_body_secondary"
-                    android:background="?attr/selectableItemBackground"
-                    android:clickable="true"
-                    android:focusable="true" />
-            </LinearLayout>
+            <!-- 🔊 读题按钮 -->
+            <TextView
+                android:id="@+id/btn_fly_read"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:minHeight="@dimen/height_touch_target"
+                android:minWidth="48dp"
+                android:gravity="center"
+                android:paddingStart="@dimen/spacing_md"
+                android:paddingEnd="@dimen/spacing_md"
+                android:paddingBottom="@dimen/spacing_md"
+                android:text="@string/couplet_read"
+                android:textSize="@dimen/text_size_body"
+                android:textColor="@color/text_body_secondary"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- M3：半句提示行（默认隐藏，点击 💡 后显示首字/首末字） -->
-    <TextView
-        android:id="@+id/tv_hint"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/spacing_sm"
-        android:textSize="@dimen/text_size_label"
-        android:textColor="@color/text_body_secondary"
-        android:gravity="center"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/card_question"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:text="💡 首字是「明」" />
-
+    <!-- 输入行：EditText + 对令按钮 -->
     <LinearLayout
-        android:id="@+id/ll_options"
+        android:id="@+id/ll_input"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/spacing_xl"
-        android:orientation="vertical"
-        app:layout_constraintTop_toBottomOf="@id/tv_hint"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        app:layout_constraintTop_toBottomOf="@id/card_question"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <EditText
+            android:id="@+id/et_fly_input"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="@string/flyflower_input_hint"
+            android:inputType="text"
+            android:maxLength="20"
+            android:imeOptions="actionDone"
+            android:singleLine="true"
+            android:textSize="@dimen/text_size_body"
+            android:textColor="@color/text_body"
+            android:textColorHint="@color/text_caption"
+            android:background="@drawable/bg_chip"
+            android:paddingStart="@dimen/spacing_md"
+            android:paddingEnd="@dimen/spacing_md"
+            android:minHeight="@dimen/height_touch_target" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_fly_submit"
+            android:layout_width="wrap_content"
+            android:layout_height="56dp"
+            android:layout_marginStart="@dimen/spacing_md"
+            android:text="@string/flyflower_submit"
+            android:textSize="@dimen/text_size_body"
+            app:cornerRadius="@dimen/radius_medium" />
+    </LinearLayout>
+
+    <!-- 「📖 提示一句」按钮 -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_fly_hint"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_marginTop="@dimen/spacing_lg"
+        android:text="@string/flyflower_hint_button"
+        android:textSize="@dimen/text_size_body"
+        app:cornerRadius="@dimen/radius_medium"
+        app:layout_constraintTop_toBottomOf="@id/ll_input"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <TextView
-        android:id="@+id/tv_feedback"
+    <!-- 候选句容器（默认隐藏，点「提示一句」后显示） -->
+    <LinearLayout
+        android:id="@+id/ll_candidates"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/spacing_lg"
-        android:textSize="@dimen/text_size_body"
-        android:gravity="center"
+        android:orientation="vertical"
         android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/ll_options"
+        app:layout_constraintTop_toBottomOf="@id/btn_fly_hint"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:text="✅ 正确！" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- 再来一局 -->
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_next"
+        android:id="@+id/btn_fly_restart"
         android:layout_width="0dp"
-        android:layout_height="@dimen/height_touch_target"
+        android:layout_height="56dp"
         android:layout_marginTop="@dimen/spacing_xxl"
-        android:text="@string/game_next"
+        android:text="@string/flyflower_restart"
         android:textSize="@dimen/text_size_body"
         app:cornerRadius="@dimen/radius_medium"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/tv_feedback"
+        app:layout_constraintTop_toBottomOf="@id/ll_candidates"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

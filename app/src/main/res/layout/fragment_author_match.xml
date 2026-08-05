@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_page"
+    android:paddingStart="@dimen/spacing_page_horizontal"
+    android:paddingEnd="@dimen/spacing_page_horizontal">
+
+    <!-- 头部：标题 + 得分 -->
+    <LinearLayout
+        android:id="@+id/ll_header"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/author_match_title"
+            android:textSize="@dimen/text_size_headline"
+            android:textColor="@color/text_title"
+            android:textStyle="bold"
+            android:fontFamily="serif" />
+
+        <TextView
+            android:id="@+id/tv_score"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_headline"
+            android:textColor="@color/text_gold"
+            android:textStyle="bold"
+            tools:text="得分: 0" />
+    </LinearLayout>
+
+    <!-- M3 局内反馈层（星星进度环 + 连击条 + 飞分），由 Fragment 动态 addView -->
+    <FrameLayout
+        android:id="@+id/fl_feedback"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_sm"
+        app:layout_constraintTop_toBottomOf="@id/ll_header"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- 进度 -->
+    <TextView
+        android:id="@+id/tv_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_lg"
+        android:textSize="@dimen/text_size_label"
+        android:textColor="@color/text_body_secondary"
+        app:layout_constraintTop_toBottomOf="@id/fl_feedback"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="第 1 / 5 题" />
+
+    <!-- 可滚动内容区（分辨率自适应：小屏可滑动） -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll_content"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="@dimen/spacing_md"
+        android:fillViewport="true"
+        app:layout_constraintTop_toBottomOf="@id/tv_progress"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- 题目卡：代表作一句 + 诗题小字 -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_question"
+                style="@style/Widget.Poetry.Card.Raised"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_xl_2">
+
+                    <TextView
+                        android:id="@+id/tv_question"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="@dimen/text_size_headline"
+                        android:textColor="@color/text_body"
+                        android:gravity="center"
+                        android:lineSpacingExtra="@dimen/line_height_body"
+                        android:fontFamily="serif"
+                        tools:text="床前明月光" />
+
+                    <TextView
+                        android:id="@+id/tv_poem_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_sm"
+                        android:textSize="@dimen/text_size_label"
+                        android:textColor="@color/text_body_secondary"
+                        android:gravity="center"
+                        tools:text="《静夜思》" />
+
+                    <!-- 读题按钮行 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:layout_marginTop="@dimen/spacing_sm">
+
+                        <TextView
+                            android:id="@+id/btn_read"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:minHeight="@dimen/height_touch_target"
+                            android:minWidth="48dp"
+                            android:gravity="center"
+                            android:paddingStart="@dimen/spacing_md"
+                            android:paddingEnd="@dimen/spacing_md"
+                            android:text="@string/author_match_read"
+                            android:textSize="@dimen/text_size_body"
+                            android:textColor="@color/text_body_secondary"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 连线说明 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_lg"
+                android:text="@string/author_match_instruction"
+                android:textSize="@dimen/text_size_body"
+                android:textColor="@color/text_body_secondary"
+                android:gravity="center" />
+
+            <!-- 三列候选作者卡（权重均分 → 分辨率自适应） -->
+            <LinearLayout
+                android:id="@+id/ll_options"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_lg"
+                android:orientation="horizontal"
+                android:baselineAligned="false" />
+
+            <!-- 反馈行 -->
+            <TextView
+                android:id="@+id/tv_feedback"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_lg"
+                android:textSize="@dimen/text_size_body"
+                android:gravity="center"
+                android:visibility="gone"
+                tools:text="✅ 连线成功！" />
+
+            <!-- 撤销误连（答错后出现） -->
+            <TextView
+                android:id="@+id/btn_undo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/height_touch_target"
+                android:minWidth="120dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/spacing_md"
+                android:gravity="center"
+                android:paddingStart="@dimen/spacing_md"
+                android:paddingEnd="@dimen/spacing_md"
+                android:text="@string/author_match_undo"
+                android:textSize="@dimen/text_size_body"
+                android:textColor="@color/text_body_secondary"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone"
+                tools:visibility="visible" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

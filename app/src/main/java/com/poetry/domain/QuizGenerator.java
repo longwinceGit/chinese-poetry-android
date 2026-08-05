@@ -1,6 +1,7 @@
 package com.poetry.domain;
 
 import com.poetry.data.model.Poem;
+import com.poetry.util.PinyinHelper;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,13 +15,20 @@ import java.util.Set;
  * 题目生成器 —— 生成三种游戏题型的纯逻辑层。
  *
  * 支持题型：
- * 1. 填空题（FillBlank）：随机挖掉诗句中的 1-3 个汉字，提供候选词
+ * 1. 填空题（FillBlank）：随机挖掉诗句中的 1-3 个汉字，提供候选词（干扰项按难度策略：Easy 差异明显 / Normal+Hard 优先同音）
  * 2. 接龙题（Couplet）：给出上句，从 4 个选项中选下句
  * 3. 配对题（Matching）：上半句 ↔ 下半句配对
  */
 public class QuizGenerator {
 
     private static final Random RANDOM = new Random();
+
+    /** 兜底文化用字池：数据池采样不足时补足候选字（不再作为唯一来源） */
+    private static final String[] FALLBACK_CHARS = {
+        "天", "人", "山", "水", "月", "风", "云", "花", "春", "秋",
+        "江", "河", "海", "日", "夜", "明", "白", "青", "金", "玉",
+        "长", "高", "深", "远", "归", "行", "来", "去", "上", "下",
+        "千", "万", "一", "三", "五", "大", "小", "新", "故", "寒"};
 
     /** 填空题题目结构 */
     public static class QuizQuestion {
@@ -49,13 +57,46 @@ public class QuizGenerator {
     }
 
     /**
-     * 生成一道填空题。
+     * 生成一道填空题（默认普通难度，向后兼容）。
      *
      * @param poem 诗词数据源
      * @return 题目对象，poem.lines 不满足条件时返回 null
      */
     public static QuizQuestion generateFillBlank(Poem poem) {
+        return generateFillBlank(poem, QuizDifficulty.NORMAL, Collections.emptyList());
+    }
+
+    /**
+     * 生成一道填空题（指定难度，使用内置兜底字池）。
+     *
+     * @param poem       诗词数据源
+     * @param difficulty 难度分级
+     * @return 题目对象，poem.lines 不满足条件时返回 null
+     */
+    public static QuizQuestion generateFillBlank(Poem poem, QuizDifficulty difficulty) {
+        return generateFillBlank(poem, difficulty, Collections.emptyList());
+    }
+
+    /**
+     * 生成一道填空题（指定难度 + 数据池汉字采样）。
+     *
+     * <p>干扰项策略（GAME_REDESIGN_FINAL.md §4.3 / §6.3）：
+     * <ul>
+     *   <li>Easy：挖 1 空，干扰项优先取与答案意象/读音差异明显的字 → 好答；</li>
+     *   <li>Normal：挖 1-2 空，优先取与答案同音或相近的字；</li>
+     *   <li>Hard：挖 2-3 空，同音 + 结构相似干扰更多，答案多义字优先。</li>
+     * </ul>
+     * 候选字数量按难度分级：Easy=5 / Normal=8 / Hard=10（含正确答案）。
+     *
+     * @param poem         诗词数据源
+     * @param difficulty   难度分级
+     * @param distractorPool 从数据池采样的汉字池（用于生成真实干扰项；为空时退回内置兜底字池）
+     * @return 题目对象，poem.lines 不满足条件时返回 null
+     */
+    public static QuizQuestion generateFillBlank(Poem poem, QuizDifficulty difficulty,
+                                                 List<Character> distractorPool) {
         if (poem.lines == null || poem.lines.length == 0) return null;
+        if (difficulty == null) difficulty = QuizDifficulty.NORMAL;
 
         QuizQuestion q = new QuizQuestion();
         q.poem = poem;
@@ -63,14 +104,14 @@ public class QuizGenerator {
         q.blanks = new ArrayList<>();
         q.displayLines = new String[poem.lines.length];
 
-        // 决定挖几个空（1-3个）
-        int blankCount = Math.min(1 + RANDOM.nextInt(3), poem.lines.length);
+        // 挖空数量按难度：Easy=1 / Normal=2 / Hard=3，且不超过行数
+        int blankCount = Math.min(difficulty.maxBlanks, poem.lines.length);
 
         // 收集所有可挖的位置（排除过短的行和单字行）
         List<int[]> candidates = new ArrayList<>();
         for (int i = 0; i < poem.lines.length; i++) {
             String line = poem.lines[i];
-            if (line.length() >= 4) {
+            if (line != null && line.length() >= 4) {
                 // 跳过前1个字符和后1个字符（保留首尾字提示）
                 for (int j = 1; j < line.length() - 1; j++) {
                     if (Character.isLetterOrDigit(line.charAt(j))) {
@@ -93,6 +134,8 @@ public class QuizGenerator {
             q.blanks.add(blank);
             blankAnswers.add(blank.answer);
         }
+        // 挖不出任何空（诗句全部过短）→ 返回 null，调用方跳过此题
+        if (q.blanks.isEmpty()) return null;
 
         // 构建显示文本（用____代替空格）
         String[] display = poem.lines.clone();
@@ -103,20 +146,123 @@ public class QuizGenerator {
         }
         q.displayLines = display;
 
-        // 生成候选词列表（正确答案 + 干扰项，最多6个）
-        Set<String> candidateSet = new LinkedHashSet<>(blankAnswers);
-        String[] distractors = {"天", "人", "山", "水", "月", "风", "云", "花", "春", "秋",
-                                "江", "河", "海", "日", "夜", "明", "白", "青", "金", "玉",
-                                "长", "高", "深", "远", "归", "行", "来", "去", "上", "下",
-                                "千", "万", "一", "三", "五", "大", "小", "新", "故", "寒"};
-        while (candidateSet.size() < Math.min(6, blankAnswers.size() + 4)) {
-            String d = distractors[RANDOM.nextInt(distractors.length)];
-            candidateSet.add(d);
-        }
-        q.candidates = new ArrayList<>(candidateSet);
+        // 生成候选词列表（正确答案 + 干扰项，数量按难度分级）
+        q.candidates = buildCandidates(blankAnswers, difficulty, distractorPool);
         Collections.shuffle(q.candidates, RANDOM);
 
         return q;
+    }
+
+    /**
+     * 构建候选字列表：答案 + 按难度策略生成的干扰项。
+     *
+     * @param blankAnswers   挖空的正确答案集合
+     * @param difficulty     难度分级
+     * @param distractorPool 数据池采样汉字池（可为空）
+     * @return 候选字列表，数量 = 难度对应的 candidateCount
+     */
+    private static List<String> buildCandidates(Set<String> blankAnswers, QuizDifficulty difficulty,
+                                                List<Character> distractorPool) {
+        Set<String> candidateSet = new LinkedHashSet<>(blankAnswers);
+        int target = Math.max(difficulty.candidateCount, blankAnswers.size() + 1);
+
+        // 可用干扰源：优先数据池采样，其次内置兜底字池
+        List<Character> pool = new ArrayList<>();
+        if (distractorPool != null) {
+            pool.addAll(distractorPool);
+        }
+        List<String> fallback = new ArrayList<>();
+        Collections.addAll(fallback, FALLBACK_CHARS);
+
+        // 打乱干扰源顺序
+        Collections.shuffle(pool, RANDOM);
+        Collections.shuffle(fallback, RANDOM);
+
+        // 先尝试数据池干扰（真实汉字），分两轮：
+        // 第一轮优先策略字（Easy：差异明显；Normal/Hard：同音相近）
+        // 第二轮补齐随机字
+        for (int pass = 0; pass < 2 && candidateSet.size() < target; pass++) {
+            for (char c : pool) {
+                if (candidateSet.size() >= target) break;
+                String s = String.valueOf(c);
+                if (candidateSet.contains(s)) continue;
+                boolean homophoneLike = isHomophoneLike(blankAnswers, c, difficulty);
+                if (pass == 0) {
+                    // 第一轮只取策略命中字
+                    if (homophoneLike) candidateSet.add(s);
+                } else {
+                    // 第二轮补齐：Easy 取读音差异明显的字，其余随机
+                    if (difficulty == QuizDifficulty.EASY && homophoneLike) continue;
+                    candidateSet.add(s);
+                }
+            }
+        }
+
+        // 数据池不足时用兜底字池补齐（避免无限循环：只取非策略命中字，保证多样）
+        Collections.shuffle(fallback, RANDOM);
+        for (String s : fallback) {
+            if (candidateSet.size() >= target) break;
+            candidateSet.add(s);
+        }
+
+        // 极端兜底：若仍不足（极小概率），用数字字串补足
+        int guard = 0;
+        while (candidateSet.size() < target && guard++ < 100) {
+            candidateSet.add("字" + guard);
+        }
+
+        List<String> result = new ArrayList<>(candidateSet);
+        Collections.shuffle(result, RANDOM);
+        return result;
+    }
+
+    /**
+     * 判断候选字与答案是否构成"同音/相近"干扰（Easy 之外难度的策略字）。
+     * 复用 PinyinHelper 拼音判定：完全同音（去声调后拼音一致）或首字母（声母）相同即算。
+     *
+     * @param blankAnswers 正确答案集合
+     * @param c            候选字
+     * @param difficulty   难度（Hard 放宽为声母相同也算，Easy 不启用同音策略）
+     * @return true 若构成同音/相近干扰
+     */
+    private static boolean isHomophoneLike(Set<String> blankAnswers, char c, QuizDifficulty difficulty) {
+        if (difficulty == QuizDifficulty.EASY) return false;
+        String pinyinC = PinyinHelper.toTonePinyin(c);
+        if (pinyinC == null || pinyinC.isEmpty()) return false;
+        String normalizedC = normalizePinyin(pinyinC);
+        if (normalizedC.isEmpty()) return false;
+
+        for (String answer : blankAnswers) {
+            if (answer == null || answer.isEmpty()) continue;
+            String pinyinA = PinyinHelper.toTonePinyin(answer.charAt(0));
+            if (pinyinA == null || pinyinA.isEmpty()) continue;
+            String normalizedA = normalizePinyin(pinyinA);
+            if (normalizedC.equals(normalizedA)) return true;             // 完全同音
+            if (difficulty == QuizDifficulty.HARD
+                    && normalizedC.charAt(0) == normalizedA.charAt(0)) {
+                return true;                                              // Hard：声母相同即算相近
+            }
+        }
+        return false;
+    }
+
+    /** 去掉拼音声调标记，用于同音判定（"月" yuè → "yue"）。 */
+    private static String normalizePinyin(String pinyin) {
+        if (pinyin == null || pinyin.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < pinyin.length(); i++) {
+            char c = pinyin.charAt(i);
+            switch (c) {
+                case 'ā': case 'á': case 'ǎ': case 'à': sb.append('a'); break;
+                case 'ē': case 'é': case 'ě': case 'è': sb.append('e'); break;
+                case 'ī': case 'í': case 'ǐ': case 'ì': sb.append('i'); break;
+                case 'ō': case 'ó': case 'ǒ': case 'ò': sb.append('o'); break;
+                case 'ū': case 'ú': case 'ǔ': case 'ù': sb.append('u'); break;
+                case 'ǖ': case 'ǘ': case 'ǚ': case 'ǜ': sb.append('ü'); break;
+                default: sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 
     /** 接龙题结构 */

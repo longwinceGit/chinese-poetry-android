@@ -129,6 +129,42 @@ public class ProfileFragment extends Fragment {
 
         // 🔴 B5 修复：主题展示
         buildThemes(profile);
+
+        // M10 主题闪：距上次 ≥3 天且存在可解锁的未使用主题时，轻提示一次并更新主题闪时间戳（§16.2 risk）
+        maybeTriggerThemeFlash(profile);
+    }
+
+    /**
+     * M10：主题闪（§7.3 / §16.2 risk line 779）。
+     * <p>基于 SharedPreferences("game_settings"/"theme_flash_last"，epoch-day）判断：距上次 ≥3 天，
+     * 且存在"已解锁但未当前使用"的主题时，Toast 轻提示，随后更新时间戳（不触碰解锁逻辑）。
+     */
+    private void maybeTriggerThemeFlash(UserProfile profile) {
+        if (profile == null) return;
+        try {
+            List<String> unlocked = ThemeManager.getCurrentUnlockedIds(profile);
+            List<ThemeManager.ThemeDef> all = ThemeManager.ALL_THEMES;
+            boolean hasUnused = false;
+            for (ThemeManager.ThemeDef t : all) {
+                if (unlocked.contains(t.id) && !t.id.equals(profile.currentTheme)) {
+                    hasUnused = true;
+                    break;
+                }
+            }
+            if (!hasUnused) return;
+
+            android.content.SharedPreferences prefs =
+                    requireContext().getSharedPreferences("game_settings", android.content.Context.MODE_PRIVATE);
+            long today = java.time.LocalDate.now().toEpochDay();
+            long last = prefs.getLong("theme_flash_last", 0L);
+            if (last == 0L || today - last >= 3L) {
+                prefs.edit().putLong("theme_flash_last", today).apply();
+                android.widget.Toast.makeText(requireContext(), R.string.theme_flash_toast,
+                        android.widget.Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception ignored) {
+            // 主题闪为纯增益非关键路径，异常不影响正常展示
+        }
     }
 
     /**

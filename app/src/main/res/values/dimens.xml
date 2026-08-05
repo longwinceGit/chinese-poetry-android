@@ -78,6 +78,8 @@
     <!-- ================================================================ -->
     <dimen name="height_button">48dp</dimen>
     <dimen name="height_button_small">36dp</dimen>
+    <!-- M10 56dp 触控区规范：可点击控件最小高度（F 双通道图标审计达标） -->
+    <dimen name="height_touch_target">56dp</dimen>
     <dimen name="height_search_bar">48dp</dimen>
     <dimen name="height_divider">1dp</dimen>
     <dimen name="height_divider_decorative">2dp</dimen>

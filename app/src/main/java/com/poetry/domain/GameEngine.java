@@ -46,6 +46,14 @@ public class GameEngine {
         public List<String> options;
         /** 当前轮次编号，从1开始 */
         public int roundNumber;
+        /** 本回合是否存在与答案首字相同的干扰项（用于善意补偿 +2 分判定） */
+        public boolean sameFirstChar;
+        /** 意象 emoji 标签（可为 null），当存在与答案首字相同的干扰项时用于区分选项 */
+        public String emojiTag;
+        /** 半句提示首字（由正确答案去掉标点后的首字符） */
+        public String hintFirstChar;
+        /** 半句提示末字（由正确答案去掉标点后的末字符） */
+        public String hintLastChar;
     }
 
     /**
@@ -59,6 +67,29 @@ public class GameEngine {
      * @return 接龙游戏 rounds 轮的题目列表，若池中可用诗词不足则少于 rounds 轮
      */
     public static List<CoupletRound> generateCoupletGame(List<Poem> pool, int rounds) {
+        return generateCoupletGame(pool, rounds, 0);
+    }
+
+    /**
+     * 生成接龙模式游戏数据（带难度梯度）。
+     *
+     * <p>干扰项难度梯度策略（M3 方案）：
+     * <ul>
+     *   <li>轮 1-2（前期）：干扰项尽量与答案<b>字长不同</b>（长度差 ≥2 或首字不同），
+     *       用"长度 + 意象"保成功，降低前期挫败；</li>
+     *   <li>轮 6-7（最后两轮，冲刺轮）：干扰项优先<b>等长</b>，且带语气词辅助，
+     *       提升冲刺难度；</li>
+     *   <li>中间轮：混合策略。</li>
+     * </ul>
+     * 干扰项一律排除省略号行（"…"）、空行、与题目/答案重复的句子。
+     *
+     * @param pool           诗词池，从中选取题目
+     * @param rounds         需要生成的轮次数
+     * @param difficultyPhase 难度阶段：0=自动按轮次推导，1=前期（长度不同优先），
+     *                        2=冲刺（等长优先），其他值按轮次自动推导
+     * @return 接龙游戏 rounds 轮的题目列表，若池中可用诗词不足则少于 rounds 轮
+     */
+    public static List<CoupletRound> generateCoupletGame(List<Poem> pool, int rounds, int difficultyPhase) {
         List<CoupletRound> game = new ArrayList<>();
         // 打乱诗词池顺序，确保每次生成的题目随机
         List<Poem> shuffled = new ArrayList<>(pool);
@@ -77,6 +108,11 @@ public class GameEngine {
             round.correctAnswer = poem.lines[pairIdx + 1]; // 下句作为正确答案
             round.roundNumber = found + 1;
 
+            // 半句提示：取正确答案去掉标点后的首/末字符
+            String cleanAnswer = stripPunctuation(round.correctAnswer);
+            round.hintFirstChar = cleanAnswer.isEmpty() ? "" : String.valueOf(cleanAnswer.charAt(0));
+            round.hintLastChar = cleanAnswer.isEmpty() ? "" : String.valueOf(cleanAnswer.charAt(cleanAnswer.length() - 1));
+
             round.options = new ArrayList<>();
             round.options.add(round.correctAnswer); // 加入正确答案
 
@@ -85,25 +121,153 @@ public class GameEngine {
             used.add(pairIdx);
             used.add(pairIdx + 1);
 
-            // 从诗词池中随机抽取干扰项，凑满4个选项
-            while (round.options.size() < 4) {
-                Poem other = pool.get(RANDOM.nextInt(pool.size()));
-                // 空数组守卫：lines 为 null 或长度为 0 时跳过，避免 nextInt(0) 崩溃
-                if (other.lines == null || other.lines.length == 0) continue;
-                int idx = RANDOM.nextInt(other.lines.length);
-                // 确保干扰项不重复且未被使用
-                if (!used.contains(idx) && !round.options.contains(other.lines[idx])) {
-                    round.options.add(other.lines[idx]);
-                    used.add(idx);
+            // 判定本回合难度阶段
+            int phase = difficultyPhase;
+            if (phase != 1 && phase != 2) {
+                // 自动推导：最后两轮为冲刺轮，前两轮为前期轮
+                if (found >= rounds - 2) {
+                    phase = 2; // 冲刺轮：等长优先
+                } else if (found < 2) {
+                    phase = 1; // 前期轮：长度不同优先
+                } else {
+                    phase = 0; // 中间轮：混合
                 }
+            }
+
+            // 从诗词池中抽取干扰项，凑满4个选项
+            while (round.options.size() < 4) {
+                String distractor = pickDistractor(pool, round, used, phase);
+                if (distractor == null) break; // 池中无更多可用干扰项，提前结束本轮
+                round.options.add(distractor);
             }
             // 打乱选项顺序，使正确答案位置随机
             Collections.shuffle(round.options, RANDOM);
+
+            // 判定是否存在与答案首字相同的干扰项（用于善意补偿 +2 分）
+            round.sameFirstChar = hasSameFirstCharDistractor(round);
+            // 意象 emoji 标签：由正确答案按字面简单映射
+            round.emojiTag = mapEmojiTag(round.correctAnswer);
+
             game.add(round);
             found++;
             if (found >= rounds) break;
         }
         return game;
+    }
+
+    /**
+     * 从诗词池中按难度阶段抽取一个干扰项。
+     *
+     * @param pool  诗词池
+     * @param round 当前回合（含正确答案、题目、已用索引）
+     * @param used  已用诗句索引集合（去重）
+     * @param phase 难度阶段：1=长度不同优先，2=等长优先，其他=混合
+     * @return 选中的干扰项句子，无可用时返回 null
+     */
+    private static String pickDistractor(List<Poem> pool, CoupletRound round,
+                                         Set<Integer> used, int phase) {
+        int answerLen = stripPunctuation(round.correctAnswer).length();
+        // 先按阶段偏好收集候选
+        List<String> preferred = new ArrayList<>();
+        List<String> fallback = new ArrayList<>();
+
+        for (int attempt = 0; attempt < 40; attempt++) {
+            Poem other = pool.get(RANDOM.nextInt(pool.size()));
+            if (other.lines == null || other.lines.length == 0) continue;
+            int idx = RANDOM.nextInt(other.lines.length);
+            String line = other.lines[idx];
+            // 排除省略号行、空行、与题目/答案重复、已用索引
+            if (line == null || line.isEmpty()) continue;
+            if (line.contains("…")) continue;
+            if (used.contains(idx)) continue;
+            if (round.options.contains(line)) continue;
+            if (line.equals(round.givenLine)) continue;
+
+            int lineLen = stripPunctuation(line).length();
+            boolean sameLen = lineLen == answerLen;
+            boolean diffLen = Math.abs(lineLen - answerLen) >= 2
+                    || !firstChar(line).equals(firstChar(round.correctAnswer));
+
+            if (phase == 1 && diffLen) {
+                preferred.add(line);
+            } else if (phase == 2 && sameLen) {
+                preferred.add(line);
+            } else if (phase == 0) {
+                // 混合：随机一半概率取等长，一半取不同长
+                if (RANDOM.nextBoolean() ? sameLen : diffLen) {
+                    preferred.add(line);
+                } else {
+                    fallback.add(line);
+                }
+            } else {
+                fallback.add(line);
+            }
+            if (preferred.size() >= 1) break;
+        }
+
+        if (!preferred.isEmpty()) {
+            String chosen = preferred.get(RANDOM.nextInt(preferred.size()));
+            markUsed(pool, round, used, chosen);
+            return chosen;
+        }
+        if (!fallback.isEmpty()) {
+            String chosen = fallback.get(RANDOM.nextInt(fallback.size()));
+            markUsed(pool, round, used, chosen);
+            return chosen;
+        }
+        return null;
+    }
+
+    /** 将选中的干扰项句子标记为已用（按内容匹配索引）。 */
+    private static void markUsed(List<Poem> pool, CoupletRound round, Set<Integer> used, String line) {
+        for (Poem p : pool) {
+            if (p.lines == null) continue;
+            for (int i = 0; i < p.lines.length; i++) {
+                if (p.lines[i].equals(line)) {
+                    used.add(i);
+                    return;
+                }
+            }
+        }
+    }
+
+    /** 判断是否存在与答案首字相同的干扰项（非答案本体）。 */
+    private static boolean hasSameFirstCharDistractor(CoupletRound round) {
+        String answerFirst = firstChar(round.correctAnswer);
+        if (answerFirst.isEmpty()) return false;
+        for (String opt : round.options) {
+            if (opt.equals(round.correctAnswer)) continue;
+            if (firstChar(opt).equals(answerFirst)) return true;
+        }
+        return false;
+    }
+
+    /** 按字面简单映射意象 emoji：含"月"→🌙、含"花/春"→🌸、含"雪/冬/寒"→❄️、其他→null。 */
+    private static String mapEmojiTag(String answer) {
+        if (answer == null) return null;
+        if (answer.contains("月")) return "🌙";
+        if (answer.contains("花") || answer.contains("春")) return "🌸";
+        if (answer.contains("雪") || answer.contains("冬") || answer.contains("寒")) return "❄️";
+        return null;
+    }
+
+    /** 去掉标点符号，返回纯汉字/字符。 */
+    private static String stripPunctuation(String s) {
+        if (s == null) return "";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (Character.isLetterOrDigit(c) || Character.isIdeographic(c)) {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
+    /** 取句子去掉标点后的首字符。 */
+    private static String firstChar(String s) {
+        String clean = stripPunctuation(s);
+        return clean.isEmpty() ? "" : String.valueOf(clean.charAt(0));
     }
 
     // ==================== 消消乐模式（诗词对句配对消除） ====================
@@ -166,13 +330,26 @@ public class GameEngine {
         for (Poem poem : shuffled) {
             // 跳过诗句少于2句的诗词
             if (poem.lines == null || poem.lines.length < 2) continue;
-            // 跳过太短或含省略号的行（避免显示异常）
-            if (poem.lines[0].length() < 2 || poem.lines[1].length() < 2) continue;
-            if (poem.lines[0].contains("…") || poem.lines[1].contains("…")) continue;
+
+            // 收集所有合法的相邻联起始索引 i：
+            // lines[i] 与 lines[i+1] 都存在、长度均 >= 2、且都不含省略号"…"
+            List<Integer> validIdx = new ArrayList<>();
+            for (int i = 0; i + 1 < poem.lines.length; i++) {
+                String up = poem.lines[i];
+                String down = poem.lines[i + 1];
+                if (up == null || down == null) continue;
+                if (up.length() < 2 || down.length() < 2) continue;
+                if (up.contains("…") || down.contains("…")) continue;
+                validIdx.add(i);
+            }
+            if (validIdx.isEmpty()) continue;
+
+            // 随机选取一联（不再强制 lines[0]/lines[1]）
+            int pairIdx = validIdx.get(RANDOM.nextInt(validIdx.size()));
 
             // 创建上句卡片
             MatchCard first = new MatchCard();
-            first.text = poem.lines[0];
+            first.text = poem.lines[pairIdx];
             first.pairId = count;
             first.isFirstHalf = true;
             first.matched = false;
@@ -182,7 +359,7 @@ public class GameEngine {
 
             // 创建下句卡片
             MatchCard second = new MatchCard();
-            second.text = poem.lines[1];
+            second.text = poem.lines[pairIdx + 1];
             second.pairId = count;
             second.isFirstHalf = false;
             second.matched = false;
@@ -233,13 +410,10 @@ public class GameEngine {
     // ==================== 积分计算 ====================
 
     /**
-     * 计算接龙模式的得分。
+     * 计算接龙模式的得分（旧签名，兼容其他调用）。
      *
-     * <p>得分由基础分和连击奖励分组成：
-     * <ul>
-     *   <li>答对：基础分 10 分 + 连击奖励（连击数 × 2）</li>
-     *   <li>答错：0 分</li>
-     * </ul>
+     * <p>委托新签名 {@link #calcCoupletScore(int, boolean, int, boolean)}，
+     * 其中 pickedSameFirstChar 固定为 false（无首字相同补偿）。
      *
      * @param roundNumber  当前轮次编号（保留参数，可用于扩展）
      * @param correct      是否答对
@@ -247,27 +421,78 @@ public class GameEngine {
      * @return 本轮得分
      */
     public static int calcCoupletScore(int roundNumber, boolean correct, int streakBonus) {
-        int base = correct ? 10 : 0;
-        int streak = correct ? streakBonus * 2 : 0;
-        return base + streak;
+        return calcCoupletScore(roundNumber, correct, streakBonus, false);
     }
 
     /**
-     * 计算消消乐模式的得分。
+     * 计算接龙模式的得分（M3 新公式）。
      *
-     * <p>得分逻辑：理想情况下 totalPairs 次尝试即可完成（每次都对），
-     * 实际尝试次数越多，扣分越多。基础分 50 分，每次额外尝试扣 3 分，
-     * 最低不低于 5 分。
+     * <p>单轮得分 = (答对 ? 12 : 0) + (答对 ? combo : 0) + (选中与答案首字相同的干扰项 ? 2 : 0)。
+     * 其中 combo = 连续答对数。满分参考 7 轮全对 = 12*7 + (1+2+3+4+5+6+7) = 112。
      *
-     * @param attempts    实际尝试次数（点击配对的次数）
-     * @param totalPairs  需要配对的总对数
-     * @return 消消乐模式得分，最低 5 分
+     * @param roundNumber        当前轮次编号（保留参数，可用于扩展）
+     * @param correct            是否答对
+     * @param streak             当前连击数（连续答对数）
+     * @param pickedSameFirstChar 是否选中了与答案首字相同但非答案本体的干扰项（善意补偿 +2）
+     * @return 本轮得分
      */
-    public static int calcMatchScore(int attempts, int totalPairs) {
-        // 理想次数 = totalPairs（每次都对），实际次数越多分越低
-        int ideal = totalPairs;
-        int base = 50;
-        int penalty = Math.max(0, attempts - ideal) * 3;
-        return Math.max(5, base - penalty);
+    public static int calcCoupletScore(int roundNumber, boolean correct, int streak, boolean pickedSameFirstChar) {
+        int base = correct ? 12 : 0;
+        int combo = correct ? streak : 0;
+        int closeGuess = pickedSameFirstChar ? 2 : 0;
+        return base + combo + closeGuess;
+    }
+
+    /**
+     * 根据总分换算接龙星级（M3 阈值，待测试）。
+     *
+     * @param score 本局总分
+     * @return 星级：score ≥ 84 → 3 星；≥ 56 → 2 星；否则 → 1 星
+     */
+    public static int calcCoupletStars(int score) {
+        if (score >= 84) return 3;
+        if (score >= 56) return 2;
+        return 1;
+    }
+
+    /**
+     * 计算消消乐模式的得分（M4 新公式）。
+     *
+     * <p>得分 = 40 * 已配对对数 + 时间奖励（限时内完成时），保底 40 分。
+     * 时间奖励 = min((timeLimitSeconds - usedSeconds) * 3, 300)，仅在限时内完成时计入。</p>
+     *
+     * @param attempts          实际尝试次数（点击配对的次数）
+     * @param totalPairs        需要配对的总对数
+     * @param matchedPairs      已成功配对的对数
+     * @param usedSeconds       本局已用秒数
+     * @param timeLimitSeconds  限时秒数（0 表示不限时）
+     * @param completedInTime   是否在限时内完成
+     * @return 消消乐模式得分，保底 40 分
+     */
+    public static int calcMatchScore(int attempts, int totalPairs, int matchedPairs,
+                                     long usedSeconds, int timeLimitSeconds, boolean completedInTime) {
+        int base = 40 * matchedPairs;
+        int timeBonus = (completedInTime && timeLimitSeconds > 0)
+                ? Math.min((int) ((timeLimitSeconds - usedSeconds) * 3), 300) : 0;
+        return Math.max(40, base + timeBonus);   // 保底 40
+    }
+
+    /**
+     * 计算消消乐模式的星级（M4）。
+     *
+     * <p>未完成时：有配对成功 → 1 星，否则 0 星。
+     * 完成时：≤7 次尝试 → 3 星；≤9 次 → 2 星；否则 → 1 星。</p>
+     *
+     * @param attempts     实际尝试次数
+     * @param totalPairs   需要配对的总对数
+     * @param completed    是否完成游戏
+     * @param matchedPairs 已成功配对的对数
+     * @return 星级 0..3
+     */
+    public static int calcMatchStars(int attempts, int totalPairs, boolean completed, int matchedPairs) {
+        if (!completed) return matchedPairs > 0 ? 1 : 0;
+        if (attempts <= 7) return 3;   // ≤7 次尝试完成 → 3星
+        if (attempts <= 9) return 2;   // ≤9 → 2星
+        return 1;
     }
 }

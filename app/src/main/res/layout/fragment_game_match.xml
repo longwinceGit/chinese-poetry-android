@@ -24,20 +24,41 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="🃏 诗词消消乐"
+            android:text="@string/match_title"
             android:textSize="@dimen/text_size_headline"
             android:textColor="@color/text_title"
             android:textStyle="bold"
             android:fontFamily="serif" />
 
         <TextView
+            android:id="@+id/tv_match_timer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_body"
+            android:textColor="@color/text_title"
+            android:textStyle="bold"
+            android:visibility="gone"
+            tools:text="⏱ 90s" />
+
+        <TextView
             android:id="@+id/tv_match_progress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_md"
             android:textSize="@dimen/text_size_body"
             android:textColor="@color/text_body_secondary"
             tools:text="0 / 6" />
     </LinearLayout>
+
+    <!-- M4：局内反馈层（星星进度环 + 连击条 + 飞分），由 Fragment 动态 addView -->
+    <FrameLayout
+        android:id="@+id/fl_feedback"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_sm"
+        app:layout_constraintTop_toBottomOf="@id/ll_header"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- 玩法说明 -->
     <TextView
@@ -45,11 +66,11 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/spacing_md"
-        android:text="找到每首诗的上句和下句，点击两张卡片配对消除 👇"
+        android:text="@string/match_instruction"
         android:textSize="@dimen/text_size_label"
         android:textColor="@color/text_body_secondary"
         android:gravity="center"
-        app:layout_constraintTop_toBottomOf="@id/ll_header"
+        app:layout_constraintTop_toBottomOf="@id/fl_feedback"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -87,9 +108,9 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_match_restart"
         android:layout_width="0dp"
-        android:layout_height="@dimen/height_button"
+        android:layout_height="@dimen/height_touch_target"
         android:layout_marginBottom="@dimen/spacing_xl"
-        android:text="🔄 再来一局"
+        android:text="@string/match_restart"
         android:textSize="@dimen/text_size_body"
         app:cornerRadius="@dimen/radius_medium"
         style="@style/Widget.Poetry.Button.Outlined"
@@ -123,7 +144,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_md"
-            android:text="恭喜全部消除！"
+            android:text="@string/match_complete_toast"
             android:textSize="@dimen/text_size_headline"
             android:textColor="@color/text_title"
             android:textStyle="bold"

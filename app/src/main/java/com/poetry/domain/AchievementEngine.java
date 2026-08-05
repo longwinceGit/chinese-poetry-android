@@ -1,5 +1,6 @@
 package com.poetry.domain;
 
+import com.poetry.data.DailyStats;
 import com.poetry.data.LearningDatabase;
 import com.poetry.data.LearningRecord;
 import com.poetry.data.UserProfile;
@@ -7,14 +8,23 @@ import com.poetry.data.UserProfile;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * 成就引擎 —— 检测并解锁用户成就。
  *
- * 定义了 12 种成就，通过 {@link #checkAndUnlock(LearningDatabase, AchievementListener)}
+ * 定义了 19 种成就（12 项原有 + 7 项 M7 新增），通过 {@link #checkAndUnlock(LearningDatabase, AchievementListener)}
  * 在积分/学习/游戏等关键节点被调用，检测条件满足后自动解锁。
+ *
+ * <p>M7 新增成就分两类：
+ * <ul>
+ *   <li><b>累计型</b>（flyflower_20 / star_30 / play_3_days / play_7_days / month_poem_collect）：
+ *       由 {@link #checkAndUnlock} 在结算时通过数据库标量判定；</li>
+ *   <li><b>触发型</b>（star_first_3 / couplet_first_perfect）：仅由 {@link GameSettlement}
+ *       在满足触发条件后经 {@link #unlockDirect} 解锁，标量判定恒为 false。</li>
+ * </ul>
  *
  * 用户档案中的成就以 JSON 数组（["first_poem","poem_10"]）存储。
  */
@@ -50,6 +60,14 @@ public class AchievementEngine {
         ALL_ACHIEVEMENTS.add(new AchievementDef("game_10", "游戏高手", "完成10次游戏", "🎮"));
         ALL_ACHIEVEMENTS.add(new AchievementDef("level_5", "小有名气", "达到等级5", "🌟"));
         ALL_ACHIEVEMENTS.add(new AchievementDef("level_9", "千古诗圣", "达到满级9", "👑"));
+        // ===== M7 新增 7 项成就（仅追加，不改动上方 12 项）=====
+        ALL_ACHIEVEMENTS.add(new AchievementDef("flyflower_20", "飞花令主", "飞花令累计命中20句", "🎤"));
+        ALL_ACHIEVEMENTS.add(new AchievementDef("star_30", "三星集邮家", "累计获得30颗星(跨全部游戏)", "⭐"));
+        ALL_ACHIEVEMENTS.add(new AchievementDef("couplet_first_perfect", "一气呵成", "对诗一局全对", "💯"));
+        ALL_ACHIEVEMENTS.add(new AchievementDef("play_3_days", "天天报到", "连续3天各玩≥1局游戏", "📅"));
+        ALL_ACHIEVEMENTS.add(new AchievementDef("play_7_days", "七日诗虫", "连续7天各玩≥1局", "🗓️"));
+        ALL_ACHIEVEMENTS.add(new AchievementDef("star_first_3", "三连星", "任一游戏首次获得3星", "🌟"));
+        ALL_ACHIEVEMENTS.add(new AchievementDef("month_poem_collect", "收藏达人·进阶", "累计从游戏结算收藏10句", "🏷️"));
     }
 
     /** 成就解锁回调接口 */
@@ -76,9 +94,16 @@ public class AchievementEngine {
         int perfectQuizCount = db.learningRecordDao().getPerfectQuizCountSync(10);
         int gameCount = getGameCount(db);
 
+        // M7：累计型新成就所需的额外标量（一次查询，循环内复用）
+        long flyflowerHits = db.gameHistoryDao().getFlyflowerHitSum();
+        long starSum = db.gameHistoryDao().getStarSum();
+        int collectCount = db.gameHistoryDao().getCollectCount();
+        int consecutivePlayDays = countConsecutivePlayDays(db);
+
         for (AchievementDef def : ALL_ACHIEVEMENTS) {
             if (unlocked.contains(def.id)) continue;
-            if (matches(def.id, learned, favCount, perfectQuizCount, gameCount, profile)) {
+            if (matchesWithDb(def.id, db, learned, favCount, perfectQuizCount, gameCount,
+                    profile, flyflowerHits, starSum, collectCount, consecutivePlayDays)) {
                 newlyUnlocked.add(def.id);
                 if (listener != null) {
                     listener.onAchievementUnlocked(def);
@@ -90,6 +115,118 @@ public class AchievementEngine {
             unlocked.addAll(newlyUnlocked);
             db.userProfileDao().updateAchievements(toJson(unlocked));
         }
+    }
+
+    /**
+     * 直接解锁一项触发型成就（幂等：已解锁则无操作）。
+     *
+     * <p>用于 {@code star_first_3} / {@code couplet_first_perfect} 这类"本局触发"型成就，
+     * 由 {@link GameSettlement} 在满足触发条件后调用。这些成就在标量 {@code matches} 中恒为
+     * false（避免在任意结算时被 {@code checkAndUnlock} 误解锁），仅通过本方法按触发条件解锁。
+     *
+     * @param db       数据库实例
+     * @param id       成就 ID
+     * @param listener 解锁回调（新解锁时触发，可为 null）
+     */
+    public static void unlockDirect(LearningDatabase db, String id, AchievementListener listener) {
+        if (db == null || id == null) return;
+        UserProfile profile = db.userProfileDao().getUserProfileSync();
+        if (profile == null) return;
+
+        List<String> unlocked = parseIds(profile.achievements);
+        if (unlocked.contains(id)) return; // 幂等：已解锁
+
+        if (!matchesTrigger(id)) return; // 仅触发型成就可经此解锁
+
+        unlocked.add(id);
+        db.userProfileDao().updateAchievements(toJson(unlocked));
+        if (listener != null) {
+            for (AchievementDef def : ALL_ACHIEVEMENTS) {
+                if (id.equals(def.id)) {
+                    listener.onAchievementUnlocked(def);
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * 触发型成就判定：仅 {@code star_first_3} / {@code couplet_first_perfect} 返回 true。
+     *
+     * <p>这两个成就不依赖任何数据库标量，只由 {@link GameSettlement} 在满足触发条件后
+     * 通过 {@link #unlockDirect} 解锁，故在标量 {@code matches} 中恒为 false。
+     */
+    private static boolean matchesTrigger(String id) {
+        return "star_first_3".equals(id) || "couplet_first_perfect".equals(id);
+    }
+
+    /**
+     * 带数据库访问的成就判定（M7 扩展）。
+     *
+     * <p>原有 12 项沿用 {@link #matches} 的标量判定；新增累计型成就（flyflower_20 / star_30 /
+     * play_3_days / play_7_days / month_poem_collect）需要数据库查询，在此处理。
+     * 触发型成就（star_first_3 / couplet_first_perfect）在此恒为 false，仅经
+     * {@link #unlockDirect} + {@link #matchesTrigger} 解锁。
+     */
+    private static boolean matchesWithDb(String id, LearningDatabase db,
+                                         int learned, int favCount, int perfectQuizCount,
+                                         int gameCount, UserProfile profile,
+                                         long flyflowerHits, long starSum,
+                                         int collectCount, int consecutivePlayDays) {
+        switch (id) {
+            case "flyflower_20": return flyflowerHits >= 20;
+            case "star_30": return starSum >= 30;
+            case "play_3_days": return consecutivePlayDays >= 3;
+            case "play_7_days": return consecutivePlayDays >= 7;
+            case "month_poem_collect": return collectCount >= 10;
+            case "star_first_3":
+            case "couplet_first_perfect":
+                // 触发型成就：标量判定恒 false，仅经 unlockDirect 解锁
+                return false;
+            default:
+                return matches(id, learned, favCount, perfectQuizCount, gameCount, profile);
+        }
+    }
+
+    /**
+     * 统计最近连续"玩过游戏"的天数（成就 play_3_days / play_7_days）。
+     *
+     * <p>从今天（若今天无游戏则从昨天）开始，向前逐日回溯，统计连续满足
+     * {@code gamesPlayed > 0} 的天数。查询最近 7 天数据即可覆盖 7 天连续判定。
+     */
+    private static int countConsecutivePlayDays(LearningDatabase db) {
+        LocalDate today = LocalDate.now();
+        List<DailyStats> recent = db.dailyStatsDao()
+                .getRecentDailyStats(today.minusDays(7).toString(), 7);
+        return countConsecutivePlayDays(recent, today);
+    }
+
+    /** 从今天（或昨天）向前回溯统计连续游戏天数。 */
+    private static int countConsecutivePlayDays(List<DailyStats> recent, LocalDate today) {
+        if (recent == null || recent.isEmpty()) return 0;
+
+        // 建立 date -> gamesPlayed 映射
+        java.util.Map<String, Integer> byDate = new java.util.HashMap<>();
+        for (DailyStats s : recent) {
+            if (s != null && s.date != null) {
+                byDate.put(s.date, s.gamesPlayed);
+            }
+        }
+
+        // 起点：今天有游戏则从今天开始，否则从昨天开始
+        LocalDate cursor = today;
+        if (byDate.getOrDefault(today.toString(), 0) <= 0) {
+            cursor = today.minusDays(1);
+        }
+
+        int count = 0;
+        while (count < 7) {
+            Integer played = byDate.get(cursor.toString());
+            if (played == null || played <= 0) break;
+            count++;
+            cursor = cursor.minusDays(1);
+        }
+        return count;
     }
 
     /** 根据成就 ID 判断条件是否满足 */

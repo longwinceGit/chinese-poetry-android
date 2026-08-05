@@ -103,9 +103,8 @@ public class MatchCardAdapter extends RecyclerView.Adapter<MatchCardAdapter.Card
             tv.setAlpha(1.0f);
             tv.setClickable(false);
         } else if (card.selected) {
-            // 选中状态前先确保可见
+            // 选中状态（翻开）：显示诗句文本
             tv.setVisibility(View.VISIBLE);
-            // 选中状态：赭石色边框 + 浅色背景 + 微缩放
             bg.setColor(ContextCompat.getColor(ctx, R.color.tertiary_container));
             bg.setStroke(dp2px(ctx, 1.5f), ContextCompat.getColor(ctx, R.color.tertiary));
             tv.setText(card.isFirstHalf ? "📜 " + card.text : "🎋 " + card.text);
@@ -115,7 +114,7 @@ public class MatchCardAdapter extends RecyclerView.Adapter<MatchCardAdapter.Card
             tv.setScaleX(1.04f);
             tv.setScaleY(1.04f);
         } else {
-            // 正常状态
+            // 正常状态（全正面可见）：显示诗句
             tv.setVisibility(View.VISIBLE);
             bg.setColor(ContextCompat.getColor(ctx, R.color.surface));
             bg.setStroke(1, ContextCompat.getColor(ctx, R.color.divider));
@@ -131,7 +130,9 @@ public class MatchCardAdapter extends RecyclerView.Adapter<MatchCardAdapter.Card
 
         // 为消消乐卡片设置无障碍描述
         String cardLabel = card.isFirstHalf ? "上句：" : "下句：";
-        tv.setContentDescription(ctx.getString(R.string.a11y_match_card_format, cardLabel + card.text));
+        tv.setContentDescription(card.matched
+                ? ""
+                : ctx.getString(R.string.a11y_match_card_format, cardLabel + card.text));
 
         // 清除旧监听器，重新设置
         tv.setOnClickListener(v -> {

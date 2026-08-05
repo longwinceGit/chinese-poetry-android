@@ -10,14 +10,20 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.activity.OnBackPressedCallback;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.poetry.R;
 import com.poetry.data.model.Poem;
+import com.poetry.domain.QuizDifficulty;
 import com.poetry.domain.QuizGenerator;
+import com.poetry.util.DifficultyProfile;
+import com.poetry.util.GameSnapshot;
+import com.poetry.util.TtsManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,7 +45,7 @@ public class QuizFragment extends Fragment {
     private TextView tvPoemTitle, tvScore;
     private LinearLayout layoutLines;
     private ViewGroup layoutCandidates;
-    private View btnBack, btnTip, btnSubmit, btnNext;
+    private View btnBack, btnTip, btnSubmit, btnNext, btnReadPoem;
     private List<TextView> blankViews = new ArrayList<>();
     private List<String> userAnswers = new ArrayList<>();
     /** 候选词 chip 视图，用于撤销时恢复 */
@@ -47,6 +53,9 @@ public class QuizFragment extends Fragment {
     private int currentBlankIndex = 0;
     /** 用于 View.setTag 的 key，标记候选词对应的空位索引 */
     private static final int TAG_KEY = 0x7f090001;
+
+    /** 读题辅助（方案 §8.4）：🔊 一键朗读题干，答对自动朗读完整句 */
+    private TtsManager tts;
 
     /**
      * 创建 QuizFragment 实例的静态工厂方法。
@@ -82,10 +91,62 @@ public class QuizFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         initViews(view);
+        tts = new TtsManager(requireContext());
         viewModel = new ViewModelProvider(this).get(QuizViewModel.class);
         observeData();
         setupListeners();
+        // M9 自适应排等：按最近表现映射难度（0→EASY, 1→NORMAL, 2→HARD），在 startQuiz 前设置
+        viewModel.setDifficulty(mapDifficulty(DifficultyProfile.getLevel(requireContext())));
+        // M9 容错续局：开局保存未完成局快照
+        GameSnapshot.save(requireContext(), "quiz", System.currentTimeMillis());
+        registerBackCallback();
         viewModel.startQuiz();
+    }
+
+    /**
+     * M9：把难度档位（0/1/2）映射为 {@link QuizDifficulty}。
+     */
+    private static QuizDifficulty mapDifficulty(int level) {
+        switch (level) {
+            case DifficultyProfile.LEVEL_HARD: return QuizDifficulty.HARD;
+            case DifficultyProfile.LEVEL_NORMAL: return QuizDifficulty.NORMAL;
+            default: return QuizDifficulty.EASY;
+        }
+    }
+
+    /**
+     * M9：全屏防误触返回（§8.1）——游戏中按返回需二次确认。
+     * <p>游戏进行中（未完成）拦截返回并弹确认框；完成后直接返回。
+     */
+    private void registerBackCallback() {
+        requireActivity().getOnBackPressedDispatcher().addCallback(
+                getViewLifecycleOwner(), new OnBackPressedCallback(true) {
+                    @Override
+                    public void handleOnBackPressed() {
+                        Boolean finished = viewModel.getIsFinished().getValue();
+                        if (finished != null && finished) {
+                            setEnabled(false);
+                            requireActivity().getOnBackPressedDispatcher().onBackPressed();
+                            return;
+                        }
+                        new MaterialAlertDialogBuilder(requireContext())
+                                .setTitle(R.string.confirm_exit_title)
+                                .setMessage(R.string.confirm_exit_message)
+                                .setPositiveButton(R.string.confirm_action_yes, (d, w) -> {
+                                    setEnabled(false);
+                                    requireActivity().getOnBackPressedDispatcher().onBackPressed();
+                                })
+                                .setNegativeButton(R.string.confirm_action_no, null)
+                                .show();
+                    }
+                });
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (tts != null) tts.shutdown();
+        tts = null;
     }
 
     /**
@@ -100,6 +161,7 @@ public class QuizFragment extends Fragment {
         layoutCandidates = v.findViewById(R.id.chip_candidates);
         btnSubmit = v.findViewById(R.id.btn_submit);
         btnNext = v.findViewById(R.id.btn_next);
+        btnReadPoem = v.findViewById(R.id.btn_read_poem);
         btnNext.setVisibility(View.GONE);
     }
 
@@ -124,6 +186,21 @@ public class QuizFragment extends Fragment {
         btnNext.setOnClickListener(v -> {
             viewModel.nextQuestion();
         });
+
+        // 🔊 读题辅助（§8.4）：一键朗读整首诗
+        if (btnReadPoem != null) {
+            btnReadPoem.setOnClickListener(v -> speakCurrentQuestion());
+        }
+    }
+
+    /**
+     * 朗读当前题目的完整诗句（🔊 读题辅助）。
+     */
+    private void speakCurrentQuestion() {
+        if (tts == null) return;
+        QuizGenerator.QuizQuestion q = viewModel.getCurrentQuestion().getValue();
+        if (q == null || q.poem == null) return;
+        tts.speakPoem(q.poem.title, q.poem.author, q.poem.lines);
     }
 
     /**
@@ -148,6 +225,8 @@ public class QuizFragment extends Fragment {
                 btnNext.setVisibility(View.VISIBLE);
                 if (correct) {
                     Toast.makeText(requireContext(), "✅ 回答正确！", Toast.LENGTH_SHORT).show();
+                    // 答对自动朗读完整句（§5.2 读题辅助）
+                    speakCurrentQuestion();
                 } else {
                     Toast.makeText(requireContext(), "❌ 再想想哦~", Toast.LENGTH_SHORT).show();
                 }
@@ -160,6 +239,8 @@ public class QuizFragment extends Fragment {
                 int total = viewModel.getTotalQuestions();
                 String msg = "🎉 你完成了 " + total + " 题，答对 " + (correct != null ? correct : 0) + " 题！";
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show();
+                // M9 容错续局：完成即清除未完成局快照
+                GameSnapshot.clear(requireContext());
                 requireActivity().onBackPressed();
             }
         });
@@ -311,6 +392,8 @@ public class QuizFragment extends Fragment {
                 chip.setTextColor(ContextCompat.getColor(requireContext(), R.color.on_surface));
                 chip.setBackgroundResource(R.drawable.bg_chip_active);
                 chip.setPadding(24, 12, 24, 12);
+                chip.setMinHeight((int) (56 * getResources().getDisplayMetrics().density));
+                chip.setGravity(android.view.Gravity.CENTER);
                 chip.setClickable(true);
                 chip.setFocusable(true);
 

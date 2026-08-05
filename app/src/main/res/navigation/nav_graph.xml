@@ -88,4 +88,36 @@
         android:name="com.poetry.ui.game.MatchGameFragment"
         android:label="消消乐"
         tools:layout="@layout/fragment_game_match" />
+
+    <fragment
+        android:id="@+id/nav_game_flyflower"
+        android:name="com.poetry.ui.game.FlyflowerGameFragment"
+        android:label="飞花令"
+        tools:layout="@layout/fragment_flyflower" />
+
+    <!-- M8 作者连线（P2 可选） -->
+    <fragment
+        android:id="@+id/nav_game_author"
+        android:name="com.poetry.ui.game.AuthorMatchFragment"
+        android:label="作者连线"
+        tools:layout="@layout/fragment_author_match" />
+
+    <!-- M2 结算页骨架 -->
+    <fragment
+        android:id="@+id/nav_game_settlement"
+        android:name="com.poetry.ui.game.GameSettlementFragment"
+        android:label="本局完成"
+        tools:layout="@layout/fragment_game_settlement">
+        <argument
+            android:name="game_type"
+            app:argType="string" />
+        <argument
+            android:name="score"
+            app:argType="integer"
+            android:defaultValue="0" />
+        <argument
+            android:name="stars"
+            app:argType="integer"
+            android:defaultValue="1" />
+    </fragment>
 </navigation>

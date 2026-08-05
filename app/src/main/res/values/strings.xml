@@ -55,8 +55,79 @@
     <string name="game_wrong">错误</string>
     <string name="game_restart">再来一局</string>
     <string name="game_next">下一题</string>
+    <string name="game_read">朗读整句</string>
+
+    <!-- M2 大厅升级：挑战区 / 成绩回廊 / 今日角标 -->
+    <string name="game_challenge_area">今日挑战</string>
+    <string name="game_best_area">成绩回廊</string>
+    <string name="game_best_score">最高分 %d</string>
+    <string name="game_star_progress">%d 星</string>
+    <string name="game_recall">上次你最爱的是「%s」</string>
+    <string name="game_today_challenge">🔥 今日挑战</string>
+    <string name="game_today_played">✓ 今天玩过</string>
+
+    <!-- M2 结算页骨架 -->
+    <string name="settlement_title">本局完成</string>
+    <string name="settlement_score">得分</string>
+    <string name="settlement_favorite_line">收藏本句</string>
+    <string name="settlement_listen_again">再听一遍</string>
+    <string name="settlement_share">分享</string>
+    <string name="settlement_replay">再来一局</string>
+    <string name="settlement_back_home">回大厅</string>
+    <string name="settlement_collected">已收藏</string>
+    <string name="settlement_share_failed">分享失败，请重试</string>
+
+    <!-- M3 对诗升级：提示 / 读题 / 意象标签 -->
+    <string name="couplet_hint">💡 半句提示</string>
+    <string name="couplet_hint_full">💡 首字：%1$s · 末字：%2$s</string>
+    <string name="couplet_hint_first">💡 首字是「%s」</string>
+    <string name="couplet_read">🔊 读题</string>
+    <string name="couplet_correct">✅ 回答正确！</string>
+    <string name="couplet_wrong">❌ 再接再厉！</string>
+    <string name="couplet_close_guess">差一点！是「%s」</string>
+    <string name="couplet_finished">🎉 游戏结束！你得了 %1$d 分，%2$d 星！</string>
+    <string name="settlement_best_line_fallback">本局最美一句，尽在诗词乐园</string>
     <string name="game_finish">完成挑战</string>
     <string name="game_progress">%d / %d</string>
+    <!-- M3 对诗升级：意象标签选项的小字（作者 · 朝代） -->
+    <string name="couplet_option_subtitle">— %1$s · %2$s</string>
+
+    <!-- M4 消消乐升级：翻牌记忆玩法 -->
+    <string name="match_title">🃏 诗词连连看</string>
+    <string name="match_instruction">所有诗句都已亮出，找到上句和下句配对消除吧 👇</string>
+    <string name="match_timer_format">⏱ %d秒</string>
+    <string name="match_complete_toast">🎉 全部消除！</string>
+    <string name="match_timeout_tip">⏰ 时间到！已按当前进度结算</string>
+    <string name="match_restart">🔄 再来一局</string>
+
+    <!-- M6 飞花令升级：限时接飞花 -->
+    <string name="game_flyflower">飞花令</string>
+    <string name="game_flyflower_desc">限时接飞花，说带指定字的诗句</string>
+    <string name="flyflower_title">🎤 飞花令</string>
+    <string name="flyflower_question">说一句带「%1$s」的诗</string>
+    <string name="flyflower_input_hint">输入一句带「%1$s」的诗（最多 20 字）</string>
+    <string name="flyflower_submit">对令</string>
+    <string name="flyflower_hint_button">📖 提示一句（剩 %1$d 次）</string>
+    <string name="flyflower_hint_exhausted">提示已用完，点「对令」或再玩一局吧</string>
+    <string name="flyflower_miss">这句没有「%1$s」哦，再想想～</string>
+    <string name="flyflower_hit">✨ 接中！「%1$s」</string>
+    <string name="flyflower_progress">已接 %1$d 句</string>
+    <string name="flyflower_timeout">⏰ 时间到！本局接中 %1$d 句</string>
+    <string name="flyflower_restart">🔄 再来一局</string>
+    <string name="a11y_game_flyflower_card">飞花令游戏卡片</string>
+    <string name="a11y_flyflower_keyword">主题字 %1$s</string>
+    <string name="a11y_flyflower_candidate">候选句 %1$s</string>
+
+    <!-- M9 自适应排等 + 容错续局（§6.4 / §8.5） -->
+    <string name="continue_game_hint">↩️ 继续上次！你上次玩到一半的是 %1$s</string>
+    <string name="confirm_restart_title">真的重来吗</string>
+    <string name="confirm_restart_message">会丢掉这局的星星哦</string>
+    <string name="confirm_exit_title">要退出吗</string>
+    <string name="confirm_exit_message">玩到一半就退出，下次可以继续哦</string>
+    <string name="confirm_action_yes">确定</string>
+    <string name="confirm_action_no">再想想</string>
+    <string name="confirm_clear_title">清空记录?</string>
+    <string name="confirm_clear_message">已获得的积分和等级不会变哦</string>
 
     <!-- 诗词详情 -->
     <string name="detail_title_info">诗词详情</string>
@@ -129,4 +200,34 @@
     <string name="retry">重试</string>
     <string name="no_data">暂无内容</string>
     <string name="share_text">我正在用「诗词乐园」学习古诗词，已学%d首，你也来试试吧！</string>
+
+    <!-- M10 惊喜彩蛋：月光祝福 -->
+    <string name="blessed_round_title">🌕 满月祝福</string>
+    <string name="blessed_round_desc">答对 ×2 分</string>
+
+    <!-- M10 惊喜彩蛋：名句彩卡 -->
+    <string name="settlement_famous_card_title">📜 本局最美名句</string>
+    <string name="settlement_famous_poem_fmt">「%1$s」 —— %2$s · %3$s</string>
+
+    <!-- M10 自动读题开关 -->
+    <string name="menu_auto_read">🗣️ 自动读题</string>
+
+    <!-- M10 主题闪 -->
+    <string name="theme_flash_toast">🎨 你今天的主题惊喜在等你</string>
+
+    <!-- M8 作者连线（Author Match，P2 可选） -->
+    <string name="game_author">作者连线</string>
+    <string name="game_author_desc">连出作者与代表作</string>
+    <string name="a11y_game_author_card">作者连线游戏，把作者与代表作连起来</string>
+    <string name="author_match_title">🔗 作者连线</string>
+    <string name="author_match_instruction">看看这句诗是谁写的？点一位作者连上它 👇</string>
+    <string name="author_match_progress">第 %1$d / %2$d 题</string>
+    <string name="author_match_correct">✅ 连线成功！</string>
+    <string name="author_match_wrong">❌ 是「%1$s」写的哦</string>
+    <string name="author_match_undo">↩️ 撤销连线</string>
+    <string name="author_match_read">🔊 读题</string>
+    <string name="author_match_finished">🎉 本局完成！你得了 %1$d 分，%2$d 星！</string>
+    <string name="a11y_author_question">代表作：%1$s</string>
+    <string name="a11y_author_option">作者 %1$s，%2$s</string>
+    <string name="a11y_author_undo">撤销刚才的连线</string>
 </resources>
